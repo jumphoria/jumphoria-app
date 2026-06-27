@@ -1,4 +1,10 @@
 
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jumphoria - Rezeptbuch</title>
 <style>
   /* ====== TOKENS (Jumphoria Gold) ====== */
   :root{
@@ -326,6 +332,9 @@
     .row2{ grid-template-columns:1fr; }
   }
 </style>
+</head>
+<body>
+
 <div id="app" class="app"></div>
 
 <!-- ===================== SUPABASE SETUP ===================== -->
@@ -1205,3 +1214,6 @@ sb.auth.onAuthStateChange((_event, session)=>{
 checkSession();
 render();
 </script>
+
+</body>
+</html>
