@@ -401,6 +401,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const LOGO_BASE64 = "https://primary.jwwb.nl/public/k/f/d/temp-mmnnzteyzhbsctkmkimw/image-high-d8ai6i.png";
 
+const ADMIN_USER_ID = "dba54348-3f58-4028-a746-ae7e4b0964c7";
 const ALL_TAGS = ["Vegan","Vegetarisch","Fr\u00fchst\u00fcck","Hauptgericht","Snack","Dessert","Low Carb","High Protein","Meal Prep","Schnell"];
 const KCAL_BANDS = ["100 kcal","200 kcal","300 kcal","400 kcal"];
 const DAYPLAN_TARGETS = [1200, 1400, 1600, 1800];
@@ -568,7 +569,7 @@ function renderAppShell(){
 
     ${state.mainTab === 'today' ? renderWeek() : state.mainTab === 'shopping' ? renderShoppingList() : state.mainTab === 'dayplans' ? renderDayPlans() : renderRecipesTab()}
 
-    <button class="fab" id="add-fab" title="Neues Rezept">+</button>
+    ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="fab" id="add-fab" title="Neues Rezept">+</button>` : ""}
 
     ${state.modalOpen ? renderModal() : ""}
     ${state.planRecipeId ? renderPlanPopup() : ""}
@@ -1004,7 +1005,7 @@ function renderDetail(){
           <p class="ztext">${escapeHtml(r.steps||"")}</p>
         </div>
         <div class="modal-actions">
-          <button class="btn-outline" id="edit-from-detail">Bearbeiten</button>
+          ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="btn-outline" id="edit-from-detail">Bearbeiten</button>` : ""}
         </div>
       </div>
     </div>
@@ -1064,11 +1065,14 @@ function bindAppEvents(){
   const clearKcalBtn = document.getElementById("clear-kcal-filter");
   if(clearKcalBtn) clearKcalBtn.addEventListener("click", ()=>{ state.activeKcalBand=null; render(); });
 
-  document.getElementById("add-fab").addEventListener("click", ()=>{
-    state.modalOpen = true; state.editingRecipe = null; state.photoDataUrl = null; state.selectedTags = [];
-    state.ingredientRows = [{amount:"", unit:"g", name:""}];
-    render();
-  });
+  const addFab = document.getElementById("add-fab");
+  if(addFab){
+    addFab.addEventListener("click", ()=>{
+      state.modalOpen = true; state.editingRecipe = null; state.photoDataUrl = null; state.selectedTags = [];
+      state.ingredientRows = [{amount:"", unit:"g", name:""}];
+      render();
+    });
+  }
 
   document.querySelectorAll(".card").forEach(card=>{
     card.addEventListener("click", (e)=>{
@@ -1400,21 +1404,24 @@ function bindDetailEvents(){
       render();
     });
   }
-  document.getElementById("edit-from-detail").addEventListener("click", ()=>{
-    state.editingRecipe = state.detailRecipe;
-    state.selectedTags = [...(state.detailRecipe.tags||[])];
-    state.photoDataUrl = state.detailRecipe.photo_url || null;
-    state.ingredientRows = (state.detailRecipe.ingredients_structured && state.detailRecipe.ingredients_structured.length)
-      ? state.detailRecipe.ingredients_structured.map(row => ({
-          amount: row.amount !== null && row.amount !== undefined ? row.amount : "",
-          unit: row.unit || "g",
-          name: row.name || ""
-        }))
-      : [{amount:"", unit:"g", name:""}];
-    state.detailRecipe = null;
-    state.modalOpen = true;
-    render();
-  });
+  const editFromDetailBtn = document.getElementById("edit-from-detail");
+  if(editFromDetailBtn){
+    editFromDetailBtn.addEventListener("click", ()=>{
+      state.editingRecipe = state.detailRecipe;
+      state.selectedTags = [...(state.detailRecipe.tags||[])];
+      state.photoDataUrl = state.detailRecipe.photo_url || null;
+      state.ingredientRows = (state.detailRecipe.ingredients_structured && state.detailRecipe.ingredients_structured.length)
+        ? state.detailRecipe.ingredients_structured.map(row => ({
+            amount: row.amount !== null && row.amount !== undefined ? row.amount : "",
+            unit: row.unit || "g",
+            name: row.name || ""
+          }))
+        : [{amount:"", unit:"g", name:""}];
+      state.detailRecipe = null;
+      state.modalOpen = true;
+      render();
+    });
+  }
 }
 
 function closeModal(){
