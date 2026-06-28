@@ -238,7 +238,7 @@
     border:1.5px solid var(--line); font-size:14px; background:var(--paper);
   }
   .search-input:focus{ outline:none; border-color:var(--pine); }
-  .tag-filters{ display:flex; gap:6px; flex-wrap:wrap; }
+  .tag-filters{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
   .tag-chip{
     padding:6px 13px; border-radius:20px; font-size:12.5px; cursor:pointer;
     border:1.5px solid var(--line); background:var(--paper); color:var(--ink-on-paper);
@@ -584,7 +584,7 @@ function renderRecipesTab(){
       ${ALL_TAGS.map(t => `<span class="tag-chip ${state.activeTag===t?'active':''}" data-tag="${t}">${t}</span>`).join("")}
       ${state.activeTag ? `<span class="tag-chip" id="clear-tag-filter">\u2715 Filter</span>` : ""}
     </div>
-    <div class="tag-filters" id="kcal-filters" style="margin-top:-8px;">
+    <div class="tag-filters" id="kcal-filters">
       ${KCAL_BANDS.map(b => `<span class="tag-chip kcal-chip ${state.activeKcalBand===b?'active':''}" data-band="${b}">${b}</span>`).join("")}
       ${state.activeKcalBand ? `<span class="tag-chip" id="clear-kcal-filter">\u2715 Filter</span>` : ""}
     </div>
