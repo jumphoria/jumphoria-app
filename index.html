@@ -126,6 +126,8 @@
     border:1px solid var(--line);
   }
   .today-entry-info{ display:flex; flex-direction:column; gap:3px; }
+  .today-entry-info.today-entry-clickable{ cursor:pointer; }
+  .today-entry-info.today-entry-clickable:hover strong{ color:var(--pine-dark); text-decoration:underline; }
   .today-entry-info strong{ color:var(--ink-on-paper); font-size:15px; }
   .today-entry-info span{ color:var(--ink-on-paper); opacity:0.7; font-size:13px; }
   .today-remove{
@@ -646,7 +648,7 @@ function renderWeek(){
                   const kcalForEntry = recipe.kcal != null ? Math.round(recipe.kcal * factor) : null;
                   return `
                     <div class="today-entry">
-                      <div class="today-entry-info">
+                      <div class="today-entry-info today-entry-clickable" data-recipe-id="${recipe.id}">
                         <strong>${escapeHtml(recipe.title)}</strong>
                         <span>${e.servings_logged} Portion${e.servings_logged==1?'':'en'}${kcalForEntry!==null?` \u00b7 ${kcalForEntry} kcal`:''}</span>
                       </div>
@@ -1099,6 +1101,16 @@ function bindAppEvents(){
       const { error } = await sb.from("daily_log").delete().eq("id", logId);
       if(error){ alert("Fehler: " + error.message); return; }
       await loadWeekLog();
+    });
+  });
+
+  document.querySelectorAll(".today-entry-clickable").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const recipe = state.recipes.find(r => r.id === el.dataset.recipeId);
+      if(!recipe) return;
+      state.detailRecipe = recipe;
+      state.detailServings = recipe.servings || 1;
+      render();
     });
   });
 
