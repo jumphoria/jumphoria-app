@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -8,16 +7,16 @@
 <style>
   /* ====== TOKENS (Jumphoria Gold) ====== */
   :root{
-    --cream:#7C9070;       /* sattes Salbei-/Olivgruen wie auf der Homepage */
-    --paper:#EFE7D8;       /* warmer Creme-Ton fuer Karten/Flaechen */
-    --ink:#F7F3E8;         /* helle, warme Schrift fuer den gruenen Hintergrund */
-    --ink-on-paper:#3A4A30; /* dunkles Waldgruen fuer Text auf Creme-Karten */
-    --ink-soft:#E8E4D0;    /* gedaempfte helle Schrift auf gruenem Hintergrund */
-    --pine:#C99A3B;        /* kraeftiges Gold als Hauptakzent */
-    --pine-dark:#A87E2A;   /* dunkleres Gold fuer Hover */
-    --terracotta:#D97B5E;  /* warmer Korallton als zweiter Akzent */
-    --terracotta-soft:#F3DCD2; /* heller Korall-Hintergrund fuer Tags */
-    --line:#D8CFB8;        /* warme, helle Trennlinien */
+    --cream:#7C9070;
+    --paper:#EFE7D8;
+    --ink:#F7F3E8;
+    --ink-on-paper:#3A4A30;
+    --ink-soft:#E8E4D0;
+    --pine:#C99A3B;
+    --pine-dark:#A87E2A;
+    --terracotta:#D97B5E;
+    --terracotta-soft:#F3DCD2;
+    --line:#D8CFB8;
     --shadow: 0 6px 18px rgba(58,74,48,0.18), 0 1px 3px rgba(58,74,48,0.12);
   }
 
@@ -103,7 +102,6 @@
     padding:9px 12px; font-size:13px; margin-bottom:14px;
   }
 
-  /* ====== TOOLBAR ====== */
   /* ====== MAIN TABS ====== */
   .main-tabs{ display:flex; gap:8px; margin-bottom:22px; border-bottom:2px solid var(--line); }
   .main-tab{
@@ -391,23 +389,22 @@
 
 <div id="app" class="app"></div>
 
-<!-- ===================== SUPABASE SETUP ===================== -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// ---- HIER DEINE SUPABASE-DATEN EINTRAGEN ----
 const SUPABASE_URL = "https://syudsmgimysxhmjicuuw.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5dWRzbWdpbXlzeGhtamljdXV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNDgyNzksImV4cCI6MjA5NzkyNDI3OX0.4uxZr-37Gjs9bUfYxf51JHn69Zv4I3V02rkunq7q6TE";
-// ---------------------------------------------
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const LOGO_BASE64 = "https://primary.jwwb.nl/public/k/f/d/temp-mmnnzteyzhbsctkmkimw/image-high-d8ai6i.png";
-
 const ADMIN_USER_ID = "dba54348-3f58-4028-a746-ae7e4b0964c7";
 const ALL_TAGS = ["Vegan","Vegetarisch","Fr\u00fchst\u00fcck","Hauptgericht","Snack","Dessert","Low Carb","High Protein","Meal Prep","Schnell"];
 const KCAL_BANDS = ["100 kcal","200 kcal","300 kcal","400 kcal"];
 const DAYPLAN_TARGETS = [1200, 1400, 1600, 1800];
 const WEEKDAY_NAMES = ["Mo","Di","Mi","Do","Fr","Sa","So"];
+
+// ── NUR diese Felder für die Listenansicht laden (spart ~70% Egress) ──
+const LIST_COLUMNS = "id,title,kcal,protein,carbs,fat,tags,photo_url,servings,meal_type,created_at";
 
 function getKcalBand(kcal, servings){
   if(kcal == null) return null;
@@ -435,7 +432,7 @@ function getCurrentWeekDates(){
 
 let state = {
   user: null,
-  view: "loading",       // loading | login | register | app
+  view: "loading",
   recipes: [],
   search: "",
   activeTag: null,
@@ -475,7 +472,7 @@ function render(){
   bindAppEvents();
 }
 
-/* ---------- AUTH VIEW ---------- */
+/* ---------- AUTH ---------- */
 function renderAuth(){
   const isLogin = state.view === "login";
   return `
@@ -486,24 +483,15 @@ function renderAuth(){
         <p class="auth-sub">${isLogin ? "Melde dich an, um deine Rezepte zu sehen." : "Lege dein kostenloses Jumphoria-Konto an."}</p>
         ${state.error ? `<div class="auth-error">${state.error}</div>` : ""}
         <form id="auth-form">
-          <div class="field">
-            <label>E-Mail</label>
-            <input type="email" id="auth-email" required placeholder="du@beispiel.de">
-          </div>
-          <div class="field">
-            <label>Passwort</label>
-            <input type="password" id="auth-password" required placeholder="Mindestens 6 Zeichen" minlength="6">
-          </div>
+          <div class="field"><label>E-Mail</label><input type="email" id="auth-email" required placeholder="du@beispiel.de"></div>
+          <div class="field"><label>Passwort</label><input type="password" id="auth-password" required placeholder="Mindestens 6 Zeichen" minlength="6"></div>
           <button type="submit" class="btn btn-block">${isLogin ? "Anmelden" : "Registrieren"}</button>
         </form>
         <div class="auth-toggle">
-          ${isLogin
-            ? `Noch kein Konto? <a id="to-register">Jetzt registrieren</a>`
-            : `Schon registriert? <a id="to-login">Zum Login</a>`}
+          ${isLogin ? `Noch kein Konto? <a id="to-register">Jetzt registrieren</a>` : `Schon registriert? <a id="to-login">Zum Login</a>`}
         </div>
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
 function bindAuthEvents(){
@@ -514,7 +502,6 @@ function bindAuthEvents(){
     const password = document.getElementById("auth-password").value;
     const submitBtn = e.target.querySelector("button");
     submitBtn.disabled = true; submitBtn.textContent = "Einen Moment \u2026";
-
     try{
       if(state.view === "login"){
         const { error } = await sb.auth.signInWithPassword({ email, password });
@@ -522,19 +509,12 @@ function bindAuthEvents(){
       } else {
         const { error } = await sb.auth.signUp({ email, password });
         if(error) throw error;
-        state.error = "";
-        alert("Konto erstellt! Falls eine Best\u00e4tigungsmail n\u00f6tig ist, pr\u00fcfe dein Postfach. Du kannst dich jetzt anmelden.");
-        state.view = "login";
-        render();
-        return;
+        alert("Konto erstellt! Falls eine Best\u00e4tigungsmail n\u00f6tig ist, pr\u00fcfe dein Postfach.");
+        state.view = "login"; render(); return;
       }
       await checkSession();
-    }catch(err){
-      state.error = translateError(err.message);
-      render();
-    }
+    }catch(err){ state.error = translateError(err.message); render(); }
   });
-
   const toReg = document.getElementById("to-register");
   if(toReg) toReg.addEventListener("click", ()=>{ state.view="register"; state.error=""; render(); });
   const toLogin = document.getElementById("to-login");
@@ -542,7 +522,7 @@ function bindAuthEvents(){
 }
 
 function translateError(msg){
-  if(!msg) return "Etwas ist schiefgelaufen. Versuch es erneut.";
+  if(!msg) return "Etwas ist schiefgelaufen.";
   if(msg.includes("Invalid login credentials")) return "E-Mail oder Passwort ist falsch.";
   if(msg.includes("already registered")) return "Diese E-Mail ist schon registriert.";
   if(msg.includes("Password")) return "Das Passwort muss mindestens 6 Zeichen haben.";
@@ -553,26 +533,20 @@ function translateError(msg){
 function renderAppShell(){
   return `
     <div class="top">
-      <div class="brand">
-        <img class="brand-logo" src="${LOGO_BASE64}" alt="Jumphoria">
-      </div>
+      <div class="brand"><img class="brand-logo" src="${LOGO_BASE64}" alt="Jumphoria"></div>
       <div class="user-pill">
         <span>${state.user?.email || ""}</span>
         <button class="btn-ghost" id="logout-btn">Abmelden</button>
       </div>
     </div>
-
     <div class="main-tabs">
       <button class="main-tab ${state.mainTab==='recipes'?'active':''}" data-tab="recipes">Rezepte</button>
       <button class="main-tab ${state.mainTab==='today'?'active':''}" data-tab="today">Woche</button>
       <button class="main-tab ${state.mainTab==='shopping'?'active':''}" data-tab="shopping">Einkauf</button>
       <button class="main-tab ${state.mainTab==='dayplans'?'active':''}" data-tab="dayplans">Tagespl\u00e4ne</button>
     </div>
-
-    ${state.mainTab === 'today' ? renderWeek() : state.mainTab === 'shopping' ? renderShoppingList() : state.mainTab === 'dayplans' ? renderDayPlans() : renderRecipesTab()}
-
+    ${state.mainTab==='today' ? renderWeek() : state.mainTab==='shopping' ? renderShoppingList() : state.mainTab==='dayplans' ? renderDayPlans() : renderRecipesTab()}
     ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="fab" id="add-fab" title="Neues Rezept">+</button>` : ""}
-
     ${state.modalOpen ? renderModal() : ""}
     ${state.planRecipeId ? renderPlanPopup() : ""}
     ${state.pickerOpen ? renderRecipePickerPopup() : ""}
@@ -600,75 +574,53 @@ function renderRecipesTab(){
 function renderWeek(){
   const entries = state.weekLog || [];
   const weekDates = getCurrentWeekDates();
-
   if(entries.length === 0){
-    return `
-      <div class="empty-state">
-        <h3>Noch nichts f\u00fcr diese Woche geplant</h3>
-        <p>Geh zu "Rezepte" und tippe bei einem Rezept auf "+ Geplant", um Tage auszuw\u00e4hlen.</p>
-      </div>
-    `;
+    return `<div class="empty-state"><h3>Noch nichts f\u00fcr diese Woche geplant</h3><p>Geh zu "Rezepte" und tippe bei einem Rezept auf "+ Geplant".</p></div>`;
   }
-
-  return `
-    <div class="week-list">
-      ${weekDates.map((date, idx) => {
-        const dayEntries = entries.filter(e => e.log_date === date);
-        let kcalSum = 0, proteinSum = 0, carbsSum = 0, fatSum = 0;
-        dayEntries.forEach(e => {
-          const recipe = state.recipes.find(r => r.id === e.recipe_id);
-          if(!recipe) return;
-          const factor = e.servings_logged / (recipe.servings || 1);
-          if(recipe.kcal != null) kcalSum += recipe.kcal * factor;
-          if(recipe.protein != null) proteinSum += recipe.protein * factor;
-          if(recipe.carbs != null) carbsSum += recipe.carbs * factor;
-          if(recipe.fat != null) fatSum += recipe.fat * factor;
-        });
-        const dateObj = new Date(date + "T00:00:00");
-        const dayLabel = WEEKDAY_NAMES[idx] + ", " + dateObj.getDate() + "." + (dateObj.getMonth()+1) + ".";
-        const isToday = date === new Date().toISOString().slice(0,10);
-
-        return `
-          <div class="week-day ${isToday ? 'is-today' : ''}">
-            <div class="week-day-header">
-              <h4>${dayLabel}${isToday ? ' \u2022 heute' : ''}</h4>
-              ${dayEntries.length > 0 ? `
-                <div class="week-day-macros">
-                  <span class="week-day-kcal">${Math.round(kcalSum)} kcal</span>
-                  <span class="week-day-macro-detail">E ${Math.round(proteinSum)}g \u00b7 KH ${Math.round(carbsSum)}g \u00b7 F ${Math.round(fatSum)}g</span>
+  return `<div class="week-list">${weekDates.map((date, idx) => {
+    const dayEntries = entries.filter(e => e.log_date === date);
+    let kcalSum=0, proteinSum=0, carbsSum=0, fatSum=0;
+    dayEntries.forEach(e => {
+      const recipe = state.recipes.find(r => r.id === e.recipe_id);
+      if(!recipe) return;
+      const factor = e.servings_logged / (recipe.servings || 1);
+      if(recipe.kcal != null) kcalSum += recipe.kcal * factor;
+      if(recipe.protein != null) proteinSum += recipe.protein * factor;
+      if(recipe.carbs != null) carbsSum += recipe.carbs * factor;
+      if(recipe.fat != null) fatSum += recipe.fat * factor;
+    });
+    const dateObj = new Date(date + "T00:00:00");
+    const dayLabel = WEEKDAY_NAMES[idx] + ", " + dateObj.getDate() + "." + (dateObj.getMonth()+1) + ".";
+    const isToday = date === new Date().toISOString().slice(0,10);
+    return `
+      <div class="week-day ${isToday?'is-today':''}">
+        <div class="week-day-header">
+          <h4>${dayLabel}${isToday?' \u2022 heute':''}</h4>
+          ${dayEntries.length > 0 ? `<div class="week-day-macros"><span class="week-day-kcal">${Math.round(kcalSum)} kcal</span><span class="week-day-macro-detail">E ${Math.round(proteinSum)}g \u00b7 KH ${Math.round(carbsSum)}g \u00b7 F ${Math.round(fatSum)}g</span></div>` : ""}
+        </div>
+        ${dayEntries.length === 0 ? `<p class="week-day-empty">Nichts geplant</p>` : `
+          <div class="today-list">
+            ${dayEntries.map(e => {
+              const recipe = state.recipes.find(r => r.id === e.recipe_id);
+              if(!recipe) return "";
+              const factor = e.servings_logged / (recipe.servings || 1);
+              const kcalForEntry = recipe.kcal != null ? Math.round(recipe.kcal * factor) : null;
+              return `<div class="today-entry">
+                <div class="today-entry-info today-entry-clickable" data-recipe-id="${recipe.id}">
+                  <strong>${escapeHtml(recipe.title)}</strong>
+                  <span>${e.servings_logged} Portion${e.servings_logged==1?'':'en'}${kcalForEntry!==null?` \u00b7 ${kcalForEntry} kcal`:''}</span>
                 </div>
-              ` : ""}
-            </div>
-            ${dayEntries.length === 0 ? `<p class="week-day-empty">Nichts geplant</p>` : `
-              <div class="today-list">
-                ${dayEntries.map(e => {
-                  const recipe = state.recipes.find(r => r.id === e.recipe_id);
-                  if(!recipe) return "";
-                  const factor = e.servings_logged / (recipe.servings || 1);
-                  const kcalForEntry = recipe.kcal != null ? Math.round(recipe.kcal * factor) : null;
-                  return `
-                    <div class="today-entry">
-                      <div class="today-entry-info today-entry-clickable" data-recipe-id="${recipe.id}">
-                        <strong>${escapeHtml(recipe.title)}</strong>
-                        <span>${e.servings_logged} Portion${e.servings_logged==1?'':'en'}${kcalForEntry!==null?` \u00b7 ${kcalForEntry} kcal`:''}</span>
-                      </div>
-                      <button type="button" class="today-remove" data-log-id="${e.id}">\u2715</button>
-                    </div>
-                  `;
-                }).join("")}
-              </div>
-            `}
-          </div>
-        `;
-      }).join("")}
-    </div>
-  `;
+                <button type="button" class="today-remove" data-log-id="${e.id}">\u2715</button>
+              </div>`;
+            }).join("")}
+          </div>`}
+      </div>`;
+  }).join("")}</div>`;
 }
 
 function buildShoppingItems(){
   const entries = state.weekLog || [];
   const itemMap = {};
-
   entries.forEach(e => {
     const recipe = state.recipes.find(r => r.id === e.recipe_id);
     if(!recipe || !recipe.ingredients_structured) return;
@@ -677,36 +629,35 @@ function buildShoppingItems(){
       if(!ing.name) return;
       const unit = ing.amount !== null && ing.amount !== undefined ? (ing.unit || "") : "";
       const key = (unit + "_" + ing.name).toLowerCase().replace(/[^a-z0-9_]/g, "");
-      if(!itemMap[key]){
-        itemMap[key] = { key, name: ing.name, unit: unit, amount: 0, hasAmount: ing.amount !== null && ing.amount !== undefined };
-      }
-      if(ing.amount !== null && ing.amount !== undefined){
-        itemMap[key].amount += ing.amount * factor;
-      }
+      if(!itemMap[key]){ itemMap[key] = { key, name: ing.name, unit, amount: 0, hasAmount: ing.amount !== null && ing.amount !== undefined }; }
+      if(ing.amount !== null && ing.amount !== undefined){ itemMap[key].amount += ing.amount * factor; }
     });
   });
-
   return Object.values(itemMap).sort((a,b) => a.name.localeCompare(b.name));
 }
 
-function renderDayPlans(){
-  if(state.activeDayPlanTarget){
-    return renderDayPlanDetail(state.activeDayPlanTarget);
+function renderShoppingList(){
+  const items = buildShoppingItems();
+  if(items.length === 0){
+    return `<div class="empty-state"><h3>Einkaufsliste ist leer</h3><p>Plane Rezepte im "Woche"-Tab ein, dann erscheinen hier automatisch die Zutaten.</p></div>`;
   }
-  return `
-    <div class="dayplan-target-grid">
-      ${DAYPLAN_TARGETS.map(target => {
-        const count = (state.dayPlans||[]).filter(p => p.target_kcal === target).length;
-        return `
-          <button type="button" class="dayplan-target-card" data-target="${target}">
-            <strong>${target}</strong>
-            <span>kcal / Tag</span>
-            <small>${count} Tagesplan${count===1?'':'e'}</small>
-          </button>
-        `;
-      }).join("")}
-    </div>
-  `;
+  return `<div class="shopping-list">${items.map(item => {
+    const checked = state.shoppingChecks && state.shoppingChecks[item.key];
+    const displayAmount = item.hasAmount ? (item.amount % 1 === 0 ? item.amount.toFixed(0) : item.amount.toFixed(1)) + item.unit + " " : "";
+    return `<label class="shopping-item ${checked?'is-checked':''}">
+      <input type="checkbox" class="shopping-checkbox" data-key="${escapeAttr(item.key)}" ${checked?'checked':''}>
+      <span class="shopping-check-icon">${checked?'\u2713':''}</span>
+      <span class="shopping-text">${displayAmount}${escapeHtml(item.name)}</span>
+    </label>`;
+  }).join("")}</div>`;
+}
+
+function renderDayPlans(){
+  if(state.activeDayPlanTarget){ return renderDayPlanDetail(state.activeDayPlanTarget); }
+  return `<div class="dayplan-target-grid">${DAYPLAN_TARGETS.map(target => {
+    const count = (state.dayPlans||[]).filter(p => p.target_kcal === target).length;
+    return `<button type="button" class="dayplan-target-card" data-target="${target}"><strong>${target}</strong><span>kcal / Tag</span><small>${count} Tagesplan${count===1?'':'e'}</small></button>`;
+  }).join("")}</div>`;
 }
 
 function renderDayPlanDetail(target){
@@ -717,129 +668,62 @@ function renderDayPlanDetail(target){
       <h3>${target} kcal Tagespl\u00e4ne</h3>
       <button type="button" class="btn" id="new-dayplan-btn">+ Neuer Tagesplan</button>
     </div>
-    ${plans.length === 0 ? `
-      <div class="empty-state">
-        <h3>Noch kein Tagesplan f\u00fcr ${target} kcal</h3>
-        <p>Erstelle einen Tagesplan und f\u00fcge Rezepte aus den Kategorien Fr\u00fchst\u00fcck, Mittag, Abend und Snack hinzu.</p>
-      </div>
-    ` : plans.map(plan => renderDayPlanCard(plan)).join("")}
-  `;
+    ${plans.length === 0 ? `<div class="empty-state"><h3>Noch kein Tagesplan f\u00fcr ${target} kcal</h3></div>` : plans.map(plan => renderDayPlanCard(plan)).join("")}`;
 }
 
 function renderDayPlanCard(plan){
   const items = (state.dayPlanItems||[]).filter(i => i.day_plan_id === plan.id);
-  const slots = [
-    {key:"fruehstueck", label:"Fr\u00fchst\u00fcck"},
-    {key:"mittag", label:"Mittag"},
-    {key:"abend", label:"Abend"},
-    {key:"snack", label:"Snack"}
-  ];
+  const slots = [{key:"fruehstueck",label:"Fr\u00fchst\u00fcck"},{key:"mittag",label:"Mittag"},{key:"abend",label:"Abend"},{key:"snack",label:"Snack"}];
   let totalKcal = 0;
   items.forEach(it => {
     const recipe = state.recipes.find(r => r.id === it.recipe_id);
-    if(recipe && recipe.kcal != null){
-      totalKcal += recipe.kcal * (it.servings / (recipe.servings || 1));
-    }
+    if(recipe && recipe.kcal != null){ totalKcal += recipe.kcal * (it.servings / (recipe.servings || 1)); }
   });
-  return `
-    <div class="dayplan-card">
-      <div class="dayplan-card-header">
-        <strong>${escapeHtml(plan.title)}</strong>
-        <span>${Math.round(totalKcal)} kcal gesamt</span>
-        <button type="button" class="today-remove" data-dayplan-id="${plan.id}" title="Tagesplan l\u00f6schen">\u2715</button>
-      </div>
-      ${slots.map(slot => {
-        const item = items.find(i => i.slot === slot.key);
-        const recipe = item ? state.recipes.find(r => r.id === item.recipe_id) : null;
-        return `
-          <div class="dayplan-slot">
-            <span class="dayplan-slot-label">${slot.label}</span>
-            ${recipe ? `
-              <span class="dayplan-slot-recipe">${escapeHtml(recipe.title)}</span>
-              <button type="button" class="btn-outline dayplan-swap-btn" data-dayplan-id="${plan.id}" data-slot="${slot.key}">Tauschen</button>
-            ` : `
-              <button type="button" class="btn-outline dayplan-swap-btn" data-dayplan-id="${plan.id}" data-slot="${slot.key}">+ Rezept w\u00e4hlen</button>
-            `}
-          </div>
-        `;
-      }).join("")}
+  return `<div class="dayplan-card">
+    <div class="dayplan-card-header">
+      <strong>${escapeHtml(plan.title)}</strong>
+      <span>${Math.round(totalKcal)} kcal gesamt</span>
+      <button type="button" class="today-remove" data-dayplan-id="${plan.id}" title="L\u00f6schen">\u2715</button>
     </div>
-  `;
+    ${slots.map(slot => {
+      const item = items.find(i => i.slot === slot.key);
+      const recipe = item ? state.recipes.find(r => r.id === item.recipe_id) : null;
+      return `<div class="dayplan-slot">
+        <span class="dayplan-slot-label">${slot.label}</span>
+        ${recipe ? `<span class="dayplan-slot-recipe">${escapeHtml(recipe.title)}</span><button type="button" class="btn-outline dayplan-swap-btn" data-dayplan-id="${plan.id}" data-slot="${slot.key}">Tauschen</button>`
+                 : `<button type="button" class="btn-outline dayplan-swap-btn" data-dayplan-id="${plan.id}" data-slot="${slot.key}">+ Rezept w\u00e4hlen</button>`}
+      </div>`;
+    }).join("")}
+  </div>`;
 }
 
 function renderRecipePickerPopup(){
   const search = state.pickerSearch || "";
   const filtered = state.recipes.filter(r => !search || r.title.toLowerCase().includes(search.toLowerCase()));
-  return `
-    <div class="overlay" id="picker-overlay">
-      <div class="modal plan-modal">
-        <button class="modal-close" id="picker-close">\u2715</button>
-        <h2>Rezept w\u00e4hlen</h2>
-        <input class="search-input" id="picker-search" placeholder="Rezept suchen \u2026" value="${escapeAttr(search)}" style="margin-bottom:14px;">
-        <div class="picker-list">
-          ${filtered.map(r => `
-            <button type="button" class="picker-item" data-recipe-id="${r.id}">
-              <span>${escapeHtml(r.title)}</span>
-              ${r.kcal != null ? `<span class="picker-kcal">${Math.round(r.kcal/(r.servings||1))} kcal</span>` : ""}
-            </button>
-          `).join("")}
-          ${filtered.length === 0 ? `<p style="color:var(--ink-on-paper); opacity:0.6;">Keine Rezepte gefunden.</p>` : ""}
-        </div>
-      </div>
+  return `<div class="overlay" id="picker-overlay"><div class="modal plan-modal">
+    <button class="modal-close" id="picker-close">\u2715</button>
+    <h2>Rezept w\u00e4hlen</h2>
+    <input class="search-input" id="picker-search" placeholder="Rezept suchen \u2026" value="${escapeAttr(search)}" style="margin-bottom:14px;">
+    <div class="picker-list">
+      ${filtered.map(r => `<button type="button" class="picker-item" data-recipe-id="${r.id}"><span>${escapeHtml(r.title)}</span>${r.kcal != null ? `<span class="picker-kcal">${Math.round(r.kcal/(r.servings||1))} kcal</span>` : ""}</button>`).join("")}
+      ${filtered.length === 0 ? `<p style="color:var(--ink-on-paper); opacity:0.6;">Keine Rezepte gefunden.</p>` : ""}
     </div>
-  `;
-}
-
-function renderShoppingList(){
-  const items = buildShoppingItems();
-  if(items.length === 0){
-    return `
-      <div class="empty-state">
-        <h3>Einkaufsliste ist leer</h3>
-        <p>Plane Rezepte im "Woche"-Tab ein, dann erscheinen hier automatisch die ben\u00f6tigten Zutaten.</p>
-      </div>
-    `;
-  }
-  return `
-    <div class="shopping-list">
-      ${items.map(item => {
-        const checked = state.shoppingChecks && state.shoppingChecks[item.key];
-        const displayAmount = item.hasAmount
-          ? (item.amount % 1 === 0 ? item.amount.toFixed(0) : item.amount.toFixed(1)) + item.unit + " "
-          : "";
-        return `
-          <label class="shopping-item ${checked ? 'is-checked' : ''}">
-            <input type="checkbox" class="shopping-checkbox" data-key="${escapeAttr(item.key)}" ${checked ? 'checked' : ''}>
-            <span class="shopping-check-icon">${checked ? '\u2713' : ''}</span>
-            <span class="shopping-text">${displayAmount}${escapeHtml(item.name)}</span>
-          </label>
-        `;
-      }).join("")}
-    </div>
-  `;
+  </div></div>`;
 }
 
 function renderPlanPopup(){
   const recipe = state.recipes.find(r => r.id === state.planRecipeId);
   if(!recipe) return "";
   const weekDates = getCurrentWeekDates();
-  return `
-    <div class="overlay" id="plan-overlay">
-      <div class="modal plan-modal">
-        <button class="modal-close" id="plan-close">\u2715</button>
-        <h2>${escapeHtml(recipe.title)}</h2>
-        <p style="color:var(--ink-on-paper); opacity:0.75; font-size:14px; margin:0 0 16px;">F\u00fcr welche Tage einplanen?</p>
-        <div class="day-pick-row">
-          ${WEEKDAY_NAMES.map((name, idx) => `
-            <button type="button" class="day-pick ${state.planSelectedDays.includes(weekDates[idx])?'active':''}" data-date="${weekDates[idx]}">${name}</button>
-          `).join("")}
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn" id="plan-confirm">Hinzuf\u00fcgen</button>
-        </div>
-      </div>
+  return `<div class="overlay" id="plan-overlay"><div class="modal plan-modal">
+    <button class="modal-close" id="plan-close">\u2715</button>
+    <h2>${escapeHtml(recipe.title)}</h2>
+    <p style="color:var(--ink-on-paper); opacity:0.75; font-size:14px; margin:0 0 16px;">F\u00fcr welche Tage einplanen?</p>
+    <div class="day-pick-row">
+      ${WEEKDAY_NAMES.map((name, idx) => `<button type="button" class="day-pick ${state.planSelectedDays.includes(weekDates[idx])?'active':''}" data-date="${weekDates[idx]}">${name}</button>`).join("")}
     </div>
-  `;
+    <div class="modal-actions"><button type="button" class="btn" id="plan-confirm">Hinzuf\u00fcgen</button></div>
+  </div></div>`;
 }
 
 function renderGrid(){
@@ -849,190 +733,136 @@ function renderGrid(){
     const matchesKcalBand = !state.activeKcalBand || getKcalBand(r.kcal, r.servings) === state.activeKcalBand;
     return matchesSearch && matchesTag && matchesKcalBand;
   });
-
   if(filtered.length === 0){
-    return `
-      <div class="empty-state">
-        <h3>Noch keine Rezepte hier</h3>
-        <p>Tippe auf das + unten rechts, um dein erstes Rezept anzulegen.</p>
-      </div>
-    `;
+    return `<div class="empty-state"><h3>Noch keine Rezepte hier</h3><p>Tippe auf das + unten rechts, um dein erstes Rezept anzulegen.</p></div>`;
   }
-
-  return `
-    <div class="grid">
-      ${filtered.map(r => {
-        const kcalPerServing = (r.kcal != null && r.servings) ? Math.round(r.kcal / r.servings) : null;
-        return `
-        <div class="card" data-id="${r.id}">
-          <div class="card-hole"></div>
-          ${r.photo_url
-            ? `<img class="card-photo" src="${r.photo_url}" alt="${escapeAttr(r.title)}">`
-            : `<div class="card-photo empty">\u{1F372}</div>`}
-          ${kcalPerServing !== null ? `<div class="kcal-badge">${kcalPerServing} kcal</div>` : ""}
-          <div class="card-body">
-            <h3 class="recipe-title">${escapeHtml(r.title)}</h3>
-            <div class="card-tags">
-              ${(r.tags||[]).slice(0,3).map(t=>`<span class="tag-badge">${t}</span>`).join("")}
-            </div>
-            <button type="button" class="today-add-btn" data-recipe-id="${r.id}">+ Geplant</button>
-          </div>
-        </div>
-      `;}).join("")}
-    </div>
-  `;
+  return `<div class="grid">${filtered.map(r => {
+    const kcalPerServing = (r.kcal != null && r.servings) ? Math.round(r.kcal / r.servings) : null;
+    return `<div class="card" data-id="${r.id}">
+      <div class="card-hole"></div>
+      ${r.photo_url ? `<img class="card-photo" src="${r.photo_url}" alt="${escapeAttr(r.title)}">` : `<div class="card-photo empty">\u{1F372}</div>`}
+      ${kcalPerServing !== null ? `<div class="kcal-badge">${kcalPerServing} kcal</div>` : ""}
+      <div class="card-body">
+        <h3 class="recipe-title">${escapeHtml(r.title)}</h3>
+        <div class="card-tags">${(r.tags||[]).slice(0,3).map(t=>`<span class="tag-badge">${t}</span>`).join("")}</div>
+        <button type="button" class="today-add-btn" data-recipe-id="${r.id}">+ Geplant</button>
+      </div>
+    </div>`;
+  }).join("")}</div>`;
 }
 
-/* ---------- ADD/EDIT MODAL ---------- */
 function renderModal(){
   const r = state.editingRecipe || { title:"", steps:"", tags:[], servings:4 };
   const rows = state.ingredientRows && state.ingredientRows.length ? state.ingredientRows : [{amount:"", unit:"g", name:""}];
-  return `
-    <div class="overlay" id="modal-overlay">
-      <div class="modal">
-        <button class="modal-close" id="modal-close">\u2715</button>
-        <h2>${state.editingRecipe ? "Rezept bearbeiten" : "Neues Rezept"}</h2>
-        <form id="recipe-form">
-          <div class="photo-drop" id="photo-drop">
-            ${state.photoDataUrl
-              ? `<img src="${state.photoDataUrl}" alt="Vorschau">`
-              : `\u{1F4F7} Foto hinzuf\u00fcgen (optional)<br><small>Tippen zum Ausw\u00e4hlen</small>`}
-            <input type="file" id="photo-input" accept="image/*">
-          </div>
-          <div class="field">
-            <label>Titel</label>
-            <input type="text" id="r-title" required value="${escapeAttr(r.title)}" placeholder="z. B. Linsensuppe">
-          </div>
-          <div class="field">
-            <label>Ergibt wie viele Portionen?</label>
-            <input type="number" id="r-servings" min="1" step="1" value="${r.servings||4}" style="max-width:120px;">
-          </div>
-          <div class="field">
-            <label>N\u00e4hrwerte gesamt (f\u00fcr alle Portionen zusammen, optional)</label>
-            <div class="macro-row">
-              <div class="macro-field"><span>kcal</span><input type="number" id="r-kcal" min="0" step="any" value="${r.kcal!=null?r.kcal:''}"></div>
-              <div class="macro-field"><span>Eiwei\u00df (g)</span><input type="number" id="r-protein" min="0" step="any" value="${r.protein!=null?r.protein:''}"></div>
-              <div class="macro-field"><span>KH (g)</span><input type="number" id="r-carbs" min="0" step="any" value="${r.carbs!=null?r.carbs:''}"></div>
-              <div class="macro-field"><span>Fett (g)</span><input type="number" id="r-fat" min="0" step="any" value="${r.fat!=null?r.fat:''}"></div>
-            </div>
-          </div>
-          <div class="field">
-            <label>Kategorien</label>
-            <div class="tag-select-row" id="tag-select-row">
-              ${ALL_TAGS.map(t => `<span class="tag-pick ${state.selectedTags.includes(t)?'active':''}" data-tag="${t}">${t}</span>`).join("")}
-            </div>
-          </div>
-          <div class="field">
-            <label>Zutaten</label>
-            <div id="ingredient-rows">
-              ${rows.map((row, i) => `
-                <div class="ingredient-row" data-idx="${i}">
-                  <input type="number" class="ing-amount" placeholder="Menge" value="${row.amount!==undefined?escapeAttr(String(row.amount)):''}" step="any" style="width:70px;">
-                  <select class="ing-unit" style="width:80px;">
-                    ${["g","kg","ml","l","stk","tl","el","prise"].map(u => `<option value="${u}" ${row.unit===u?'selected':''}>${u}</option>`).join("")}
-                  </select>
-                  <input type="text" class="ing-name" placeholder="Zutat, z.B. Rinderhack" value="${escapeAttr(row.name||'')}" style="flex:1;">
-                  <button type="button" class="ing-remove" data-idx="${i}" title="Entfernen">\u2715</button>
-                </div>
-              `).join("")}
-            </div>
-            <button type="button" id="add-ingredient-row" class="btn-outline" style="margin-top:8px; font-size:13px; padding:6px 14px;">+ Zutat hinzuf\u00fcgen</button>
-          </div>
-          <div class="field">
-            <label>Zubereitung</label>
-            <textarea id="r-steps" rows="6" placeholder="Schritt f\u00fcr Schritt \u2026">${escapeHtml(r.steps||"")}</textarea>
-          </div>
-          <div class="modal-actions">
-            <button type="submit" class="btn">Speichern</button>
-            ${state.editingRecipe ? `<button type="button" class="btn-danger" id="delete-recipe">Rezept l\u00f6schen</button>` : ""}
-          </div>
-        </form>
+  return `<div class="overlay" id="modal-overlay"><div class="modal">
+    <button class="modal-close" id="modal-close">\u2715</button>
+    <h2>${state.editingRecipe ? "Rezept bearbeiten" : "Neues Rezept"}</h2>
+    <form id="recipe-form">
+      <div class="photo-drop" id="photo-drop">
+        ${state.photoDataUrl ? `<img src="${state.photoDataUrl}" alt="Vorschau">` : `\u{1F4F7} Foto hinzuf\u00fcgen (optional)<br><small>Tippen zum Ausw\u00e4hlen</small>`}
+        <input type="file" id="photo-input" accept="image/*">
       </div>
-    </div>
-  `;
+      <div class="field"><label>Titel</label><input type="text" id="r-title" required value="${escapeAttr(r.title)}" placeholder="z. B. Linsensuppe"></div>
+      <div class="field"><label>Ergibt wie viele Portionen?</label><input type="number" id="r-servings" min="1" step="1" value="${r.servings||4}" style="max-width:120px;"></div>
+      <div class="field">
+        <label>N\u00e4hrwerte gesamt (f\u00fcr alle Portionen zusammen, optional)</label>
+        <div class="macro-row">
+          <div class="macro-field"><span>kcal</span><input type="number" id="r-kcal" min="0" step="any" value="${r.kcal!=null?r.kcal:''}"></div>
+          <div class="macro-field"><span>Eiwei\u00df (g)</span><input type="number" id="r-protein" min="0" step="any" value="${r.protein!=null?r.protein:''}"></div>
+          <div class="macro-field"><span>KH (g)</span><input type="number" id="r-carbs" min="0" step="any" value="${r.carbs!=null?r.carbs:''}"></div>
+          <div class="macro-field"><span>Fett (g)</span><input type="number" id="r-fat" min="0" step="any" value="${r.fat!=null?r.fat:''}"></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Kategorien</label>
+        <div class="tag-select-row" id="tag-select-row">
+          ${ALL_TAGS.map(t => `<span class="tag-pick ${state.selectedTags.includes(t)?'active':''}" data-tag="${t}">${t}</span>`).join("")}
+        </div>
+      </div>
+      <div class="field">
+        <label>Zutaten</label>
+        <div id="ingredient-rows">
+          ${rows.map((row, i) => `<div class="ingredient-row" data-idx="${i}">
+            <input type="number" class="ing-amount" placeholder="Menge" value="${row.amount!==undefined?escapeAttr(String(row.amount)):''}" step="any" style="width:70px;">
+            <select class="ing-unit" style="width:80px;">
+              ${["g","kg","ml","l","stk","tl","el","prise"].map(u => `<option value="${u}" ${row.unit===u?'selected':''}>${u}</option>`).join("")}
+            </select>
+            <input type="text" class="ing-name" placeholder="Zutat, z.B. Rinderhack" value="${escapeAttr(row.name||'')}" style="flex:1;">
+            <button type="button" class="ing-remove" data-idx="${i}" title="Entfernen">\u2715</button>
+          </div>`).join("")}
+        </div>
+        <button type="button" id="add-ingredient-row" class="btn-outline" style="margin-top:8px; font-size:13px; padding:6px 14px;">+ Zutat hinzuf\u00fcgen</button>
+      </div>
+      <div class="field"><label>Zubereitung</label><textarea id="r-steps" rows="6" placeholder="Schritt f\u00fcr Schritt \u2026">${escapeHtml(r.steps||"")}</textarea></div>
+      <div class="modal-actions">
+        <button type="submit" class="btn">Speichern</button>
+        ${state.editingRecipe ? `<button type="button" class="btn-danger" id="delete-recipe">Rezept l\u00f6schen</button>` : ""}
+      </div>
+    </form>
+  </div></div>`;
 }
 
-/* ---------- DETAIL VIEW ---------- */
 function renderDetail(){
   const r = state.detailRecipe;
   const baseServings = r.servings || 1;
   const currentServings = state.detailServings || baseServings;
   const scale = currentServings / baseServings;
 
+  // Falls Detail noch lädt
+  if(r._loading){
+    return `<div class="overlay" id="detail-overlay"><div class="modal">
+      <button class="modal-close" id="detail-close">\u2715</button>
+      <h2>${escapeHtml(r.title)}</h2>
+      <div class="loading">Zutaten werden geladen \u2026</div>
+    </div></div>`;
+  }
+
   const hasStructured = r.ingredients_structured && r.ingredients_structured.length > 0;
   let ingredientsHtml;
   if(hasStructured){
     ingredientsHtml = r.ingredients_structured.map(ing => {
-      if(ing.amount === null || ing.amount === undefined){
-        return `<li>${escapeHtml(ing.name)}</li>`;
-      }
+      if(ing.amount === null || ing.amount === undefined) return `<li>${escapeHtml(ing.name)}</li>`;
       const scaledAmount = ing.amount * scale;
       const displayAmount = scaledAmount % 1 === 0 ? scaledAmount.toFixed(0) : scaledAmount.toFixed(1);
       return `<li>${displayAmount}${ing.unit} ${escapeHtml(ing.name)}</li>`;
     }).join("");
   } else {
-    const ingredientsList = (r.ingredients||"").split("\n").filter(Boolean);
-    ingredientsHtml = ingredientsList.map(i=>`<li>${escapeHtml(i)}</li>`).join("");
+    ingredientsHtml = (r.ingredients||"").split("\n").filter(Boolean).map(i=>`<li>${escapeHtml(i)}</li>`).join("");
   }
 
-  return `
-    <div class="overlay" id="detail-overlay">
-      <div class="modal">
-        <button class="modal-close" id="detail-close">\u2715</button>
-        ${r.photo_url ? `<img class="detail-photo" src="${r.photo_url}" alt="${escapeAttr(r.title)}">` : ""}
-        <h2>${escapeHtml(r.title)}</h2>
-        <div class="card-tags" style="margin-bottom:10px;">
-          ${(r.tags||[]).map(t=>`<span class="tag-badge">${t}</span>`).join("")}
-        </div>
-        ${r.servings ? `
-        <div class="servings-stepper">
-          <span>Portionen:</span>
-          <button type="button" id="servings-minus" class="stepper-btn">\u2212</button>
-          <span class="servings-value">${currentServings}</span>
-          <button type="button" id="servings-plus" class="stepper-btn">+</button>
-        </div>` : ""}
-        ${r.kcal != null ? `
-        <div class="macro-summary">
-          <div class="macro-pill"><strong>${Math.round(r.kcal*scale)}</strong><span>kcal</span></div>
-          ${r.protein != null ? `<div class="macro-pill"><strong>${Math.round(r.protein*scale)}g</strong><span>Eiwei\u00df</span></div>` : ""}
-          ${r.carbs != null ? `<div class="macro-pill"><strong>${Math.round(r.carbs*scale)}g</strong><span>KH</span></div>` : ""}
-          ${r.fat != null ? `<div class="macro-pill"><strong>${Math.round(r.fat*scale)}g</strong><span>Fett</span></div>` : ""}
-        </div>` : ""}
-        <div class="detail-section">
-          <h4>Zutaten</h4>
-          <ul>${ingredientsHtml}</ul>
-        </div>
-        <div class="detail-section">
-          <h4>Zubereitung</h4>
-          <p class="ztext">${escapeHtml(r.steps||"")}</p>
-        </div>
-        <div class="modal-actions">
-          ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="btn-outline" id="edit-from-detail">Bearbeiten</button>` : ""}
-        </div>
-      </div>
+  return `<div class="overlay" id="detail-overlay"><div class="modal">
+    <button class="modal-close" id="detail-close">\u2715</button>
+    ${r.photo_url ? `<img class="detail-photo" src="${r.photo_url}" alt="${escapeAttr(r.title)}">` : ""}
+    <h2>${escapeHtml(r.title)}</h2>
+    <div class="card-tags" style="margin-bottom:10px;">${(r.tags||[]).map(t=>`<span class="tag-badge">${t}</span>`).join("")}</div>
+    ${r.servings ? `<div class="servings-stepper"><span>Portionen:</span><button type="button" id="servings-minus" class="stepper-btn">\u2212</button><span class="servings-value">${currentServings}</span><button type="button" id="servings-plus" class="stepper-btn">+</button></div>` : ""}
+    ${r.kcal != null ? `<div class="macro-summary">
+      <div class="macro-pill"><strong>${Math.round(r.kcal*scale)}</strong><span>kcal</span></div>
+      ${r.protein != null ? `<div class="macro-pill"><strong>${Math.round(r.protein*scale)}g</strong><span>Eiwei\u00df</span></div>` : ""}
+      ${r.carbs != null ? `<div class="macro-pill"><strong>${Math.round(r.carbs*scale)}g</strong><span>KH</span></div>` : ""}
+      ${r.fat != null ? `<div class="macro-pill"><strong>${Math.round(r.fat*scale)}g</strong><span>Fett</span></div>` : ""}
+    </div>` : ""}
+    <div class="detail-section"><h4>Zutaten</h4><ul>${ingredientsHtml}</ul></div>
+    <div class="detail-section"><h4>Zubereitung</h4><p class="ztext">${escapeHtml(r.steps||"")}</p></div>
+    <div class="modal-actions">
+      ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="btn-outline" id="edit-from-detail">Bearbeiten</button>` : ""}
     </div>
-  `;
+  </div></div>`;
 }
 
-/* ---------- EVENT BINDING ---------- */
+/* ---------- EVENTS ---------- */
 function bindAppEvents(){
   document.getElementById("logout-btn").addEventListener("click", async ()=>{
     await sb.auth.signOut();
-    state.user = null; state.recipes = []; state.view = "login";
-    render();
+    state.user = null; state.recipes = []; state.view = "login"; render();
   });
 
   document.querySelectorAll(".main-tab").forEach(tab=>{
     tab.addEventListener("click", ()=>{
       state.mainTab = tab.dataset.tab;
       if(state.mainTab === "today") loadWeekLog();
-      if(state.mainTab === "shopping"){
-        loadWeekLog();
-        loadShoppingChecks();
-      }
-      if(state.mainTab === "dayplans"){
-        loadDayPlans();
-      }
+      if(state.mainTab === "shopping"){ loadWeekLog(); loadShoppingChecks(); }
+      if(state.mainTab === "dayplans") loadDayPlans();
       render();
     });
   });
@@ -1040,29 +870,20 @@ function bindAppEvents(){
   const searchInput = document.getElementById("search-input");
   if(searchInput){
     searchInput.addEventListener("input", (e)=>{
-      state.search = e.target.value;
-      render();
+      state.search = e.target.value; render();
       document.getElementById("search-input").focus();
       document.getElementById("search-input").selectionStart = document.getElementById("search-input").value.length;
     });
   }
 
   document.querySelectorAll("#tag-filters .tag-chip[data-tag]").forEach(chip=>{
-    chip.addEventListener("click", ()=>{
-      const tag = chip.dataset.tag;
-      state.activeTag = state.activeTag === tag ? null : tag;
-      render();
-    });
+    chip.addEventListener("click", ()=>{ state.activeTag = state.activeTag === chip.dataset.tag ? null : chip.dataset.tag; render(); });
   });
   const clearBtn = document.getElementById("clear-tag-filter");
   if(clearBtn) clearBtn.addEventListener("click", ()=>{ state.activeTag=null; render(); });
 
   document.querySelectorAll("#kcal-filters .kcal-chip[data-band]").forEach(chip=>{
-    chip.addEventListener("click", ()=>{
-      const band = chip.dataset.band;
-      state.activeKcalBand = state.activeKcalBand === band ? null : band;
-      render();
-    });
+    chip.addEventListener("click", ()=>{ state.activeKcalBand = state.activeKcalBand === chip.dataset.band ? null : chip.dataset.band; render(); });
   });
   const clearKcalBtn = document.getElementById("clear-kcal-filter");
   if(clearKcalBtn) clearKcalBtn.addEventListener("click", ()=>{ state.activeKcalBand=null; render(); });
@@ -1070,19 +891,31 @@ function bindAppEvents(){
   const addFab = document.getElementById("add-fab");
   if(addFab){
     addFab.addEventListener("click", ()=>{
-      state.modalOpen = true; state.editingRecipe = null; state.photoDataUrl = null; state.selectedTags = [];
-      state.ingredientRows = [{amount:"", unit:"g", name:""}];
-      render();
+      state.modalOpen = true; state.editingRecipe = null; state.photoDataUrl = null;
+      state.selectedTags = []; state.ingredientRows = [{amount:"", unit:"g", name:""}]; render();
     });
   }
 
   document.querySelectorAll(".card").forEach(card=>{
-    card.addEventListener("click", (e)=>{
+    card.addEventListener("click", async (e)=>{
       if(e.target.closest(".today-add-btn")) return;
-      const recipe = state.recipes.find(r=>r.id === card.dataset.id);
-      state.detailRecipe = recipe;
-      state.detailServings = recipe.servings || 1;
+      const baseRecipe = state.recipes.find(r=>r.id === card.dataset.id);
+      // Zeige sofort die Karte mit Ladeanzeige
+      state.detailRecipe = { ...baseRecipe, _loading: true };
+      state.detailServings = baseRecipe.servings || 1;
       render();
+      // Lade die vollständigen Daten (ingredients, steps, ingredients_structured)
+      const { data, error } = await sb.from("recipes")
+        .select("id,title,kcal,protein,carbs,fat,tags,photo_url,servings,meal_type,ingredients,steps,ingredients_structured")
+        .eq("id", baseRecipe.id)
+        .single();
+      if(!error && data){
+        state.detailRecipe = data;
+        render();
+      } else {
+        state.detailRecipe = { ...baseRecipe, _loading: false };
+        render();
+      }
     });
   });
 
@@ -1090,8 +923,7 @@ function bindAppEvents(){
     btn.addEventListener("click", (e)=>{
       e.stopPropagation();
       state.planRecipeId = btn.dataset.recipeId;
-      state.planSelectedDays = [];
-      render();
+      state.planSelectedDays = []; render();
     });
   });
 
@@ -1105,74 +937,52 @@ function bindAppEvents(){
   });
 
   document.querySelectorAll(".today-entry-clickable").forEach(el=>{
-    el.addEventListener("click", ()=>{
-      const recipe = state.recipes.find(r => r.id === el.dataset.recipeId);
-      if(!recipe) return;
-      state.detailRecipe = recipe;
-      state.detailServings = recipe.servings || 1;
+    el.addEventListener("click", async ()=>{
+      const baseRecipe = state.recipes.find(r => r.id === el.dataset.recipeId);
+      if(!baseRecipe) return;
+      state.detailRecipe = { ...baseRecipe, _loading: true };
+      state.detailServings = baseRecipe.servings || 1;
       render();
+      const { data, error } = await sb.from("recipes")
+        .select("id,title,kcal,protein,carbs,fat,tags,photo_url,servings,meal_type,ingredients,steps,ingredients_structured")
+        .eq("id", baseRecipe.id).single();
+      if(!error && data){ state.detailRecipe = data; render(); }
     });
   });
 
   document.querySelectorAll(".shopping-checkbox").forEach(cb=>{
     cb.addEventListener("change", async ()=>{
       const key = cb.dataset.key;
-      const newChecked = cb.checked;
-      state.shoppingChecks[key] = newChecked;
-      render();
+      state.shoppingChecks[key] = cb.checked; render();
       try{
         const weekStart = getCurrentWeekDates()[0];
-        if(newChecked){
-          const { error } = await sb.from("shopping_checked").upsert({
-            user_id: state.user.id,
-            item_key: key,
-            week_start: weekStart,
-            checked: true
-          }, { onConflict: "user_id,item_key,week_start" });
-          if(error) console.error(error);
+        if(cb.checked){
+          await sb.from("shopping_checked").upsert({ user_id: state.user.id, item_key: key, week_start: weekStart, checked: true }, { onConflict: "user_id,item_key,week_start" });
         } else {
-          const { error } = await sb.from("shopping_checked").delete()
-            .eq("user_id", state.user.id).eq("item_key", key).eq("week_start", weekStart);
-          if(error) console.error(error);
+          await sb.from("shopping_checked").delete().eq("user_id", state.user.id).eq("item_key", key).eq("week_start", weekStart);
         }
       }catch(err){ console.error(err); }
     });
   });
 
   document.querySelectorAll(".dayplan-target-card").forEach(card=>{
-    card.addEventListener("click", ()=>{
-      state.activeDayPlanTarget = parseInt(card.dataset.target, 10);
-      render();
-    });
+    card.addEventListener("click", ()=>{ state.activeDayPlanTarget = parseInt(card.dataset.target, 10); render(); });
   });
 
   const backBtn = document.getElementById("back-to-targets");
-  if(backBtn) backBtn.addEventListener("click", ()=>{
-    state.activeDayPlanTarget = null;
-    render();
-  });
+  if(backBtn) backBtn.addEventListener("click", ()=>{ state.activeDayPlanTarget = null; render(); });
 
   const newPlanBtn = document.getElementById("new-dayplan-btn");
   if(newPlanBtn) newPlanBtn.addEventListener("click", async ()=>{
-    const title = prompt("Name f\u00fcr diesen Tagesplan (z.B. 'Variante 1'):", `${state.activeDayPlanTarget} kcal Tag`);
+    const title = prompt("Name f\u00fcr diesen Tagesplan:", `${state.activeDayPlanTarget} kcal Tag`);
     if(!title) return;
-    try{
-      const { error } = await sb.from("day_plans").insert({
-        user_id: state.user.id,
-        title: title,
-        target_kcal: state.activeDayPlanTarget
-      });
-      if(error) throw error;
-      await loadDayPlans();
-    }catch(err){ alert("Fehler: " + err.message); }
+    const { error } = await sb.from("day_plans").insert({ user_id: state.user.id, title, target_kcal: state.activeDayPlanTarget });
+    if(error){ alert("Fehler: " + error.message); return; }
+    await loadDayPlans();
   });
 
   document.querySelectorAll(".dayplan-swap-btn").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      state.pickerOpen = { dayPlanId: btn.dataset.dayplanId, slot: btn.dataset.slot };
-      state.pickerSearch = "";
-      render();
-    });
+    btn.addEventListener("click", ()=>{ state.pickerOpen = { dayPlanId: btn.dataset.dayplanId, slot: btn.dataset.slot }; state.pickerSearch = ""; render(); });
   });
 
   document.querySelectorAll("[data-dayplan-id].today-remove").forEach(btn=>{
@@ -1191,113 +1001,70 @@ function bindAppEvents(){
 }
 
 function bindRecipePickerEvents(){
-  document.getElementById("picker-overlay").addEventListener("click", (e)=>{
-    if(e.target.id === "picker-overlay"){ state.pickerOpen = null; render(); }
-  });
-  document.getElementById("picker-close").addEventListener("click", ()=>{
-    state.pickerOpen = null; render();
-  });
+  document.getElementById("picker-overlay").addEventListener("click", (e)=>{ if(e.target.id==="picker-overlay"){ state.pickerOpen=null; render(); } });
+  document.getElementById("picker-close").addEventListener("click", ()=>{ state.pickerOpen=null; render(); });
   document.getElementById("picker-search").addEventListener("input", (e)=>{
-    state.pickerSearch = e.target.value;
-    render();
-    const el = document.getElementById("picker-search");
-    el.focus();
-    el.selectionStart = el.value.length;
+    state.pickerSearch = e.target.value; render();
+    const el = document.getElementById("picker-search"); el.focus(); el.selectionStart = el.value.length;
   });
   document.querySelectorAll(".picker-item").forEach(btn=>{
     btn.addEventListener("click", async ()=>{
       const recipeId = btn.dataset.recipeId;
       const { dayPlanId, slot } = state.pickerOpen;
       const recipe = state.recipes.find(r => r.id === recipeId);
+      const existing = state.dayPlanItems.find(i => i.day_plan_id === dayPlanId && i.slot === slot);
       try{
-        const existing = state.dayPlanItems.find(i => i.day_plan_id === dayPlanId && i.slot === slot);
         if(existing){
-          const { error } = await sb.from("day_plan_items").update({
-            recipe_id: recipeId, servings: recipe.servings || 1
-          }).eq("id", existing.id);
+          const { error } = await sb.from("day_plan_items").update({ recipe_id: recipeId, servings: recipe.servings || 1 }).eq("id", existing.id);
           if(error) throw error;
         } else {
-          const { error } = await sb.from("day_plan_items").insert({
-            day_plan_id: dayPlanId, recipe_id: recipeId, slot: slot, servings: recipe.servings || 1
-          });
+          const { error } = await sb.from("day_plan_items").insert({ day_plan_id: dayPlanId, recipe_id: recipeId, slot, servings: recipe.servings || 1 });
           if(error) throw error;
         }
-        state.pickerOpen = null;
-        await loadDayPlans();
+        state.pickerOpen = null; await loadDayPlans();
       }catch(err){ alert("Fehler: " + err.message); }
     });
   });
 }
 
 function bindPlanPopupEvents(){
-  document.getElementById("plan-overlay").addEventListener("click", (e)=>{
-    if(e.target.id === "plan-overlay"){ state.planRecipeId = null; render(); }
-  });
-  document.getElementById("plan-close").addEventListener("click", ()=>{
-    state.planRecipeId = null; render();
-  });
+  document.getElementById("plan-overlay").addEventListener("click", (e)=>{ if(e.target.id==="plan-overlay"){ state.planRecipeId=null; render(); } });
+  document.getElementById("plan-close").addEventListener("click", ()=>{ state.planRecipeId=null; render(); });
   document.querySelectorAll(".day-pick").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       const date = btn.dataset.date;
-      if(state.planSelectedDays.includes(date)){
-        state.planSelectedDays = state.planSelectedDays.filter(d=>d!==date);
-      } else {
-        state.planSelectedDays.push(date);
-      }
+      if(state.planSelectedDays.includes(date)){ state.planSelectedDays = state.planSelectedDays.filter(d=>d!==date); }
+      else { state.planSelectedDays.push(date); }
       render();
     });
   });
   document.getElementById("plan-confirm").addEventListener("click", async ()=>{
-    if(state.planSelectedDays.length === 0){
-      alert("Bitte w\u00e4hle mindestens einen Tag aus.");
-      return;
-    }
+    if(state.planSelectedDays.length === 0){ alert("Bitte w\u00e4hle mindestens einen Tag aus."); return; }
     const recipe = state.recipes.find(r => r.id === state.planRecipeId);
     const confirmBtn = document.getElementById("plan-confirm");
     confirmBtn.disabled = true; confirmBtn.textContent = "Wird hinzugef\u00fcgt \u2026";
-    try{
-      const rows = state.planSelectedDays.map(date => ({
-        user_id: state.user.id,
-        recipe_id: state.planRecipeId,
-        log_date: date,
-        servings_logged: recipe.servings || 1
-      }));
-      const { error } = await sb.from("daily_log").insert(rows);
-      if(error) throw error;
-      state.planRecipeId = null;
-      await loadWeekLog();
-    }catch(err){
-      alert("Fehler: " + err.message);
-      confirmBtn.disabled = false; confirmBtn.textContent = "Hinzuf\u00fcgen";
-    }
+    const rows = state.planSelectedDays.map(date => ({ user_id: state.user.id, recipe_id: state.planRecipeId, log_date: date, servings_logged: recipe.servings || 1 }));
+    const { error } = await sb.from("daily_log").insert(rows);
+    if(error){ alert("Fehler: " + error.message); confirmBtn.disabled=false; confirmBtn.textContent="Hinzuf\u00fcgen"; return; }
+    state.planRecipeId = null; await loadWeekLog();
   });
 }
 
 function bindModalEvents(){
-  document.getElementById("modal-overlay").addEventListener("click", (e)=>{
-    if(e.target.id === "modal-overlay") closeModal();
-  });
+  document.getElementById("modal-overlay").addEventListener("click", (e)=>{ if(e.target.id==="modal-overlay") closeModal(); });
   document.getElementById("modal-close").addEventListener("click", closeModal);
-
-  document.getElementById("photo-drop").addEventListener("click", ()=>{
-    document.getElementById("photo-input").click();
-  });
+  document.getElementById("photo-drop").addEventListener("click", ()=>{ document.getElementById("photo-input").click(); });
   document.getElementById("photo-input").addEventListener("change", (e)=>{
-    const file = e.target.files[0];
-    if(!file) return;
+    const file = e.target.files[0]; if(!file) return;
     const reader = new FileReader();
     reader.onload = ()=>{ state.photoDataUrl = reader.result; render(); };
     reader.readAsDataURL(file);
   });
-
   document.querySelectorAll("#tag-select-row .tag-pick").forEach(chip=>{
     chip.addEventListener("click", ()=>{
       const tag = chip.dataset.tag;
-      if(state.selectedTags.includes(tag)){
-        state.selectedTags = state.selectedTags.filter(t=>t!==tag);
-      } else {
-        state.selectedTags.push(tag);
-      }
+      if(state.selectedTags.includes(tag)){ state.selectedTags = state.selectedTags.filter(t=>t!==tag); }
+      else { state.selectedTags.push(tag); }
       render();
     });
   });
@@ -1312,21 +1079,16 @@ function bindModalEvents(){
   }
 
   document.getElementById("add-ingredient-row").addEventListener("click", ()=>{
-    syncIngredientRowsFromDOM();
-    state.ingredientRows.push({amount:"", unit:"g", name:""});
-    render();
+    syncIngredientRowsFromDOM(); state.ingredientRows.push({amount:"", unit:"g", name:""}); render();
   });
-
   document.querySelectorAll(".ing-remove").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       syncIngredientRowsFromDOM();
-      const idx = parseInt(btn.dataset.idx, 10);
-      state.ingredientRows.splice(idx, 1);
+      state.ingredientRows.splice(parseInt(btn.dataset.idx, 10), 1);
       if(state.ingredientRows.length === 0) state.ingredientRows.push({amount:"", unit:"g", name:""});
       render();
     });
   });
-
   document.querySelectorAll("#ingredient-rows input, #ingredient-rows select").forEach(el=>{
     el.addEventListener("input", syncIngredientRowsFromDOM);
     el.addEventListener("change", syncIngredientRowsFromDOM);
@@ -1336,20 +1098,12 @@ function bindModalEvents(){
     e.preventDefault();
     const submitBtn = e.target.querySelector("button[type=submit]");
     submitBtn.disabled = true; submitBtn.textContent = "Speichert \u2026";
-
     syncIngredientRowsFromDOM();
-    const cleanRows = state.ingredientRows
-      .filter(row => row.name && row.name.trim())
-      .map(row => ({
-        amount: row.amount !== "" ? parseFloat(row.amount) : null,
-        unit: row.unit,
-        name: row.name.trim()
-      }));
-
-    const ingredientsText = cleanRows.map(row =>
-      (row.amount !== null ? row.amount + row.unit + " " : "") + row.name
-    ).join("\\n");
-
+    const cleanRows = state.ingredientRows.filter(row => row.name && row.name.trim()).map(row => ({
+      amount: row.amount !== "" ? parseFloat(row.amount) : null,
+      unit: row.unit, name: row.name.trim()
+    }));
+    const ingredientsText = cleanRows.map(row => (row.amount !== null ? row.amount + row.unit + " " : "") + row.name).join("\n");
     const payload = {
       user_id: state.user.id,
       title: document.getElementById("r-title").value.trim(),
@@ -1364,7 +1118,6 @@ function bindModalEvents(){
       fat: document.getElementById("r-fat").value !== "" ? parseFloat(document.getElementById("r-fat").value) : null,
       photo_url: state.photoDataUrl || (state.editingRecipe ? state.editingRecipe.photo_url : null)
     };
-
     try{
       if(state.editingRecipe){
         const { error } = await sb.from("recipes").update(payload).eq("id", state.editingRecipe.id);
@@ -1373,12 +1126,8 @@ function bindModalEvents(){
         const { error } = await sb.from("recipes").insert(payload);
         if(error) throw error;
       }
-      await loadRecipes();
-      closeModal();
-    }catch(err){
-      alert("Fehler beim Speichern: " + err.message);
-      submitBtn.disabled = false; submitBtn.textContent = "Speichern";
-    }
+      await loadRecipes(); closeModal();
+    }catch(err){ alert("Fehler beim Speichern: " + err.message); submitBtn.disabled=false; submitBtn.textContent="Speichern"; }
   });
 
   const delBtn = document.getElementById("delete-recipe");
@@ -1387,66 +1136,43 @@ function bindModalEvents(){
       if(!confirm("Dieses Rezept wirklich l\u00f6schen?")) return;
       const { error } = await sb.from("recipes").delete().eq("id", state.editingRecipe.id);
       if(error){ alert("Fehler: " + error.message); return; }
-      await loadRecipes();
-      closeModal();
+      await loadRecipes(); closeModal();
     });
   }
 }
 
 function bindDetailEvents(){
-  document.getElementById("detail-overlay").addEventListener("click", (e)=>{
-    if(e.target.id === "detail-overlay") { state.detailRecipe = null; render(); }
-  });
-  document.getElementById("detail-close").addEventListener("click", ()=>{
-    state.detailRecipe = null; render();
-  });
+  document.getElementById("detail-overlay").addEventListener("click", (e)=>{ if(e.target.id==="detail-overlay"){ state.detailRecipe=null; render(); } });
+  document.getElementById("detail-close").addEventListener("click", ()=>{ state.detailRecipe=null; render(); });
   const minusBtn = document.getElementById("servings-minus");
   const plusBtn = document.getElementById("servings-plus");
-  if(minusBtn){
-    minusBtn.addEventListener("click", ()=>{
-      if(state.detailServings > 1){
-        state.detailServings -= 1;
-        render();
-      }
-    });
-  }
-  if(plusBtn){
-    plusBtn.addEventListener("click", ()=>{
-      state.detailServings += 1;
-      render();
-    });
-  }
-  const editFromDetailBtn = document.getElementById("edit-from-detail");
-  if(editFromDetailBtn){
-    editFromDetailBtn.addEventListener("click", ()=>{
+  if(minusBtn) minusBtn.addEventListener("click", ()=>{ if(state.detailServings > 1){ state.detailServings -= 1; render(); } });
+  if(plusBtn) plusBtn.addEventListener("click", ()=>{ state.detailServings += 1; render(); });
+  const editBtn = document.getElementById("edit-from-detail");
+  if(editBtn){
+    editBtn.addEventListener("click", ()=>{
       state.editingRecipe = state.detailRecipe;
       state.selectedTags = [...(state.detailRecipe.tags||[])];
       state.photoDataUrl = state.detailRecipe.photo_url || null;
       state.ingredientRows = (state.detailRecipe.ingredients_structured && state.detailRecipe.ingredients_structured.length)
-        ? state.detailRecipe.ingredients_structured.map(row => ({
-            amount: row.amount !== null && row.amount !== undefined ? row.amount : "",
-            unit: row.unit || "g",
-            name: row.name || ""
-          }))
+        ? state.detailRecipe.ingredients_structured.map(row => ({ amount: row.amount !== null && row.amount !== undefined ? row.amount : "", unit: row.unit || "g", name: row.name || "" }))
         : [{amount:"", unit:"g", name:""}];
-      state.detailRecipe = null;
-      state.modalOpen = true;
-      render();
+      state.detailRecipe = null; state.modalOpen = true; render();
     });
   }
 }
 
 function closeModal(){
-  state.modalOpen = false; state.editingRecipe = null; state.photoDataUrl = null; state.selectedTags = [];
-  state.ingredientRows = [{amount:"", unit:"g", name:""}];
-  render();
+  state.modalOpen = false; state.editingRecipe = null; state.photoDataUrl = null;
+  state.selectedTags = []; state.ingredientRows = [{amount:"", unit:"g", name:""}]; render();
 }
 
 /* ---------- DATA ---------- */
 async function loadRecipes(){
+  // ── Nur Listenfelder laden, KEIN ingredients/steps/ingredients_structured ──
   const { data, error } = await sb.from("recipes")
-    .select("*")
-    .order("created_at", { ascending:false });
+    .select(LIST_COLUMNS)
+    .order("created_at", { ascending: false });
   if(error){ console.error(error); return; }
   state.recipes = data || [];
   render();
@@ -1458,17 +1184,16 @@ async function loadWeekLog(){
     .select("*")
     .gte("log_date", weekDates[0])
     .lte("log_date", weekDates[6])
-    .order("created_at", { ascending:true });
+    .order("created_at", { ascending: true });
   if(error){ console.error(error); return; }
   state.weekLog = data || [];
   render();
 }
 
 async function loadDayPlans(){
-  const { data: plans, error: plansError } = await sb.from("day_plans").select("*").order("created_at", { ascending:true });
+  const { data: plans, error: plansError } = await sb.from("day_plans").select("*").order("created_at", { ascending: true });
   if(plansError){ console.error(plansError); return; }
   state.dayPlans = plans || [];
-
   const { data: items, error: itemsError } = await sb.from("day_plan_items").select("*");
   if(itemsError){ console.error(itemsError); return; }
   state.dayPlanItems = items || [];
@@ -1477,9 +1202,7 @@ async function loadDayPlans(){
 
 async function loadShoppingChecks(){
   const weekStart = getCurrentWeekDates()[0];
-  const { data, error } = await sb.from("shopping_checked")
-    .select("*")
-    .eq("week_start", weekStart);
+  const { data, error } = await sb.from("shopping_checked").select("*").eq("week_start", weekStart);
   if(error){ console.error(error); return; }
   const map = {};
   (data || []).forEach(row => { map[row.item_key] = row.checked; });
@@ -1494,36 +1217,26 @@ async function checkSession(){
     state.view = "app";
     await loadRecipes();
   } else {
-    state.view = "login";
-    render();
+    state.view = "login"; render();
   }
 }
 
 /* ---------- HELPERS ---------- */
 function escapeHtml(str){
   if(!str) return "";
-  var map = {};
-  map["&"] = "&amp;";
-  map["<"] = "&lt;";
-  map[">"] = "&gt;";
-  map['"'] = "&quot;";
-  map["'"] = "&#39;";
-  return str.replace(/[&<>"']/g, function(m){ return map[m]; });
+  return str.replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 }
 function escapeAttr(str){ return escapeHtml(str); }
 
 /* ---------- INIT ---------- */
 sb.auth.onAuthStateChange((_event, session)=>{
   if(session && state.view !== "app"){
-    state.user = session.user;
-    state.view = "app";
-    loadRecipes();
+    state.user = session.user; state.view = "app"; loadRecipes();
   }
 });
 
 checkSession();
 render();
 </script>
-
 </body>
 </html>
