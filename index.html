@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -391,13 +392,13 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL = "https://syudsmgimysxhmjicuuw.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5dWRzbWdpbXlzeGhtamljdXV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNDgyNzksImV4cCI6MjA5NzkyNDI3OX0.4uxZr-37Gjs9bUfYxf51JHn69Zv4I3V02rkunq7q6TE";
+const SUPABASE_URL = "https://enossxziqzvntcagndum.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_OI14FTqHNE0q4UvAY5w5Cg_WZmImIOT";
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const LOGO_BASE64 = "https://primary.jwwb.nl/public/k/f/d/temp-mmnnzteyzhbsctkmkimw/image-high-d8ai6i.png";
-const ADMIN_USER_ID = "dba54348-3f58-4028-a746-ae7e4b0964c7";
+const ADMIN_USER_ID = "c07f561c-7cc8-4279-94f5-4f5c1400794a";
 const ALL_TAGS = ["Vegan","Vegetarisch","Fr\u00fchst\u00fcck","Hauptgericht","Snack","Dessert","Low Carb","High Protein","Meal Prep","Schnell"];
 const KCAL_BANDS = ["100 kcal","200 kcal","300 kcal","400 kcal"];
 const DAYPLAN_TARGETS = [1200, 1400, 1600, 1800];
@@ -441,6 +442,8 @@ let state = {
   editingRecipe: null,
   detailRecipe: null,
   photoDataUrl: null,
+  photoFile: null,
+  uploadedPhotoUrl: null,
   selectedTags: [],
   ingredientRows: [{amount:"", unit:"g", name:""}],
   detailServings: null,
@@ -893,7 +896,7 @@ function bindAppEvents(){
   const addFab = document.getElementById("add-fab");
   if(addFab){
     addFab.addEventListener("click", ()=>{
-      state.modalOpen = true; state.editingRecipe = null; state.photoDataUrl = null;
+      state.modalOpen = true; state.editingRecipe = null; state.photoDataUrl = null; state.photoFile = null; state.uploadedPhotoUrl = null;
       state.selectedTags = []; state.ingredientRows = [{amount:"", unit:"g", name:""}]; render();
     });
   }
@@ -1056,11 +1059,13 @@ function bindModalEvents(){
   document.getElementById("modal-overlay").addEventListener("click", (e)=>{ if(e.target.id==="modal-overlay") closeModal(); });
   document.getElementById("modal-close").addEventListener("click", closeModal);
   document.getElementById("photo-drop").addEventListener("click", ()=>{ document.getElementById("photo-input").click(); });
-  document.getElementById("photo-input").addEventListener("change", (e)=>{
+  document.getElementById("photo-input").addEventListener("change", async (e)=>{
     const file = e.target.files[0]; if(!file) return;
-    const reader = new FileReader();
-    reader.onload = ()=>{ state.photoDataUrl = reader.result; render(); };
-    reader.readAsDataURL(file);
+    // Vorschau sofort anzeigen (lokal, ohne DB)
+    const previewUrl = URL.createObjectURL(file);
+    state.photoDataUrl = previewUrl;
+    state.photoFile = file;
+    render();
   });
   document.querySelectorAll("#tag-select-row .tag-pick").forEach(chip=>{
     chip.addEventListener("click", ()=>{
@@ -1101,6 +1106,25 @@ function bindModalEvents(){
     const submitBtn = e.target.querySelector("button[type=submit]");
     submitBtn.disabled = true; submitBtn.textContent = "Speichert \u2026";
     syncIngredientRowsFromDOM();
+
+    // ── Foto zu Supabase Storage hochladen (statt Base64 in DB) ──
+    state.uploadedPhotoUrl = null;
+    if(state.photoFile){
+      try{
+        const fileExt = state.photoFile.name.split(".").pop().toLowerCase();
+        const fileName = `recipe-${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+        const { data: uploadData, error: uploadError } = await sb.storage
+          .from("recipe-photos")
+          .upload(fileName, state.photoFile, { contentType: state.photoFile.type, upsert: false });
+        if(uploadError) throw uploadError;
+        const { data: urlData } = sb.storage.from("recipe-photos").getPublicUrl(fileName);
+        state.uploadedPhotoUrl = urlData.publicUrl;
+      }catch(uploadErr){
+        alert("Foto-Upload fehlgeschlagen: " + uploadErr.message);
+        submitBtn.disabled = false; submitBtn.textContent = "Speichern"; return;
+      }
+    }
+
     const cleanRows = state.ingredientRows.filter(row => row.name && row.name.trim()).map(row => ({
       amount: row.amount !== "" ? parseFloat(row.amount) : null,
       unit: row.unit, name: row.name.trim()
@@ -1118,7 +1142,7 @@ function bindModalEvents(){
       protein: document.getElementById("r-protein").value !== "" ? parseFloat(document.getElementById("r-protein").value) : null,
       carbs: document.getElementById("r-carbs").value !== "" ? parseFloat(document.getElementById("r-carbs").value) : null,
       fat: document.getElementById("r-fat").value !== "" ? parseFloat(document.getElementById("r-fat").value) : null,
-      photo_url: state.photoDataUrl || (state.editingRecipe ? state.editingRecipe.photo_url : null)
+      photo_url: state.uploadedPhotoUrl || (state.editingRecipe ? state.editingRecipe.photo_url : null)
     };
     try{
       if(state.editingRecipe){
@@ -1165,7 +1189,7 @@ function bindDetailEvents(){
 }
 
 function closeModal(){
-  state.modalOpen = false; state.editingRecipe = null; state.photoDataUrl = null;
+  state.modalOpen = false; state.editingRecipe = null; state.photoDataUrl = null; state.photoFile = null; state.uploadedPhotoUrl = null;
   state.selectedTags = []; state.ingredientRows = [{amount:"", unit:"g", name:""}]; render();
 }
 
