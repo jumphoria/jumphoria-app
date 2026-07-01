@@ -454,7 +454,8 @@ let state = {
   shoppingChecks: {},
   planRecipeId: null,
   planSelectedDays: [],
-  error: ""
+  error: "",
+  serviceDown: false
 };
 
 function render(){
@@ -481,7 +482,8 @@ function renderAuth(){
         <img class="auth-logo" src="${LOGO_BASE64}" alt="Jumphoria">
         <h2>${isLogin ? "Willkommen zur\u00fcck" : "Konto erstellen"}</h2>
         <p class="auth-sub">${isLogin ? "Melde dich an, um deine Rezepte zu sehen." : "Lege dein kostenloses Jumphoria-Konto an."}</p>
-        ${state.error && state.error.length > 0 ? `<div class="auth-error">${state.error}</div>` : ""}
+        ${state.error && typeof state.error === "string" && state.error.length > 0 ? `<div class="auth-error">${state.error}</div>` : ""}
+        ${state.serviceDown ? `<div class="auth-error">&#9888;&#65039; Dienst momentan nicht erreichbar. Bitte in ein paar Minuten erneut versuchen.</div>` : ""}
         <form id="auth-form">
           <div class="field"><label>E-Mail</label><input type="email" id="auth-email" required placeholder="du@beispiel.de"></div>
           <div class="field"><label>Passwort</label><input type="password" id="auth-password" required placeholder="Mindestens 6 Zeichen" minlength="6"></div>
@@ -1217,13 +1219,20 @@ async function checkSession(){
       state.user = data.session.user;
       state.view = "app";
       await loadRecipes();
+    } else if(error){
+      state.view = "login";
+      state.serviceDown = true;
+      state.error = "";
+      render();
     } else {
       state.view = "login";
+      state.serviceDown = false;
       state.error = "";
       render();
     }
   }catch(err){
     state.view = "login";
+    state.serviceDown = true;
     state.error = "";
     render();
   }
