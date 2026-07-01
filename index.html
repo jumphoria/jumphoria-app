@@ -481,7 +481,7 @@ function renderAuth(){
         <img class="auth-logo" src="${LOGO_BASE64}" alt="Jumphoria">
         <h2>${isLogin ? "Willkommen zur\u00fcck" : "Konto erstellen"}</h2>
         <p class="auth-sub">${isLogin ? "Melde dich an, um deine Rezepte zu sehen." : "Lege dein kostenloses Jumphoria-Konto an."}</p>
-        ${state.error && typeof state.error === 'string' && state.error.length > 0 ? `<div class="auth-error">${state.error}</div>` : ""}
+        ${state.error && state.error.length > 0 ? `<div class="auth-error">${state.error}</div>` : ""}
         <form id="auth-form">
           <div class="field"><label>E-Mail</label><input type="email" id="auth-email" required placeholder="du@beispiel.de"></div>
           <div class="field"><label>Passwort</label><input type="password" id="auth-password" required placeholder="Mindestens 6 Zeichen" minlength="6"></div>
@@ -1211,13 +1211,21 @@ async function loadShoppingChecks(){
 }
 
 async function checkSession(){
-  const { data } = await sb.auth.getSession();
-  if(data.session){
-    state.user = data.session.user;
-    state.view = "app";
-    await loadRecipes();
-  } else {
-    state.view = "login"; render();
+  try{
+    const { data, error } = await sb.auth.getSession();
+    if(data && data.session){
+      state.user = data.session.user;
+      state.view = "app";
+      await loadRecipes();
+    } else {
+      state.view = "login";
+      state.error = "";
+      render();
+    }
+  }catch(err){
+    state.view = "login";
+    state.error = "";
+    render();
   }
 }
 
