@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -104,13 +103,19 @@
   }
 
   /* ====== MAIN TABS ====== */
-  .main-tabs{ display:flex; gap:8px; margin-bottom:22px; border-bottom:2px solid var(--line); }
-  .main-tab{
-    background:none; border:none; padding:10px 4px; margin-right:18px;
-    font-size:15px; font-weight:700; color:var(--ink); opacity:0.6; cursor:pointer;
-    border-bottom:3px solid transparent; font-family:inherit;
+  .main-tabs{
+    display:flex; gap:0; margin-bottom:22px;
+    background:rgba(0,0,0,0.12); border-radius:14px; padding:4px;
   }
-  .main-tab.active{ opacity:1; color:var(--ink); border-bottom-color:var(--pine); }
+  .main-tab{
+    flex:1; background:none; border:none; padding:10px 4px;
+    font-size:13px; font-weight:700; color:var(--ink); opacity:0.6; cursor:pointer;
+    border-radius:11px; font-family:inherit; text-align:center; transition:all .15s;
+  }
+  .main-tab.active{
+    opacity:1; color:var(--ink-on-paper);
+    background:var(--paper); box-shadow:0 2px 8px rgba(0,0,0,0.15);
+  }
 
   /* ====== TODAY VIEW ====== */
   .today-summary{
@@ -243,12 +248,12 @@
   .search-input:focus{ outline:none; border-color:var(--pine); }
   .tag-filters{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
   .tag-chip{
-    padding:6px 13px; border-radius:20px; font-size:12.5px; cursor:pointer;
-    border:1.5px solid var(--line); background:var(--paper); color:var(--ink-on-paper);
-    font-weight:600; white-space:nowrap;
+    padding:7px 14px; border-radius:20px; font-size:12px; cursor:pointer;
+    border:1.5px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.15);
+    color:var(--ink); font-weight:600; white-space:nowrap; transition:all .15s;
   }
   .tag-chip.active{ background:var(--terracotta); border-color:var(--terracotta); color:#fff; }
-  .kcal-chip{ border-style:dashed; }
+  .kcal-chip{ border-style:dashed; border-color:rgba(255,255,255,0.4); }
   .kcal-chip.active{ background:var(--pine); border-color:var(--pine); border-style:solid; color:#fff; }
 
   /* ====== RECIPE GRID ====== */
@@ -1286,4 +1291,3 @@ render();
 </script>
 </body>
 </html>
-
