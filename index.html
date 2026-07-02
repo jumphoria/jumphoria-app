@@ -466,6 +466,7 @@ let state = {
   shoppingChecks: {},
   planRecipeId: null,
   planSelectedDays: [],
+  autoWeekOpen: false,
   error: "",
   serviceDown: false
 };
@@ -563,6 +564,7 @@ function renderAppShell(){
     ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="fab" id="add-fab" title="Neues Rezept">+</button>` : ""}
     ${state.modalOpen ? renderModal() : ""}
     ${state.planRecipeId ? renderPlanPopup() : ""}
+    ${state.autoWeekOpen ? renderAutoWeekPopup() : ""}
     ${state.pickerOpen ? renderRecipePickerPopup() : ""}
     ${state.detailRecipe ? renderDetail() : ""}
   `;
@@ -588,10 +590,15 @@ function renderRecipesTab(){
 function renderWeek(){
   const entries = state.weekLog || [];
   const weekDates = getCurrentWeekDates();
+  const header = `
+    <div style="margin-bottom:16px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+      <button type="button" class="btn" id="auto-week-btn" style="flex:1; min-width:180px;">&#x2728; Woche automatisch planen</button>
+      ${entries.length > 0 ? `<button type="button" class="btn-danger" id="clear-week-btn">Woche leeren</button>` : ''}
+    </div>`;
   if(entries.length === 0){
-    return `<div class="empty-state"><h3>Noch nichts f\u00fcr diese Woche geplant</h3><p>Geh zu "Rezepte" und tippe bei einem Rezept auf "+ Geplant".</p></div>`;
+    return header + `<div class="empty-state"><h3>Noch nichts für diese Woche geplant</h3><p>Tippe auf "Woche automatisch planen" oder geh zu "Rezepte" und tippe bei einem Rezept auf "+ Geplant".</p></div>`;
   }
-  return `<div class="week-list">${weekDates.map((date, idx) => {
+  return header + `<div class="week-list">${weekDates.map((date, idx) => {
     const dayEntries = entries.filter(e => e.log_date === date);
     let kcalSum=0, proteinSum=0, carbsSum=0, fatSum=0;
     dayEntries.forEach(e => {
@@ -722,6 +729,21 @@ function renderRecipePickerPopup(){
       ${filtered.map(r => `<button type="button" class="picker-item" data-recipe-id="${r.id}"><span>${escapeHtml(r.title)}</span>${r.kcal != null ? `<span class="picker-kcal">${Math.round(r.kcal/(r.servings||1))} kcal</span>` : ""}</button>`).join("")}
       ${filtered.length === 0 ? `<p style="color:var(--ink-on-paper); opacity:0.6;">Keine Rezepte gefunden.</p>` : ""}
     </div>
+  </div></div>`;
+}
+
+function renderAutoWeekPopup(){
+  const targets = [1200, 1400, 1600, 1800, 2000];
+  return `<div class="overlay" id="autoweek-overlay"><div class="modal plan-modal">
+    <button class="modal-close" id="autoweek-close">✕</button>
+    <h2>✨ Woche automatisch planen</h2>
+    <p style="color:var(--ink-on-paper); opacity:0.75; font-size:14px; margin:0 0 16px;">Wähle dein Kalorienziel pro Tag:</p>
+    <div class="dayplan-target-grid" style="margin-bottom:16px;">
+      ${targets.map(t => `<button type="button" class="dayplan-target-card" data-kcal="${t}">
+        <strong>${t}</strong><span>kcal / Tag</span>
+      </button>`).join("")}
+    </div>
+    <p style="color:var(--ink-on-paper); opacity:0.55; font-size:12px; margin:0;">Die App wählt automatisch passende Rezepte für jeden Tag der Woche aus.</p>
   </div></div>`;
 }
 
@@ -1008,10 +1030,68 @@ function bindAppEvents(){
     });
   });
 
+  const autoWeekBtn = document.getElementById("auto-week-btn");
+  if(autoWeekBtn) autoWeekBtn.addEventListener("click", ()=>{ state.autoWeekOpen = true; render(); });
+
+  const clearWeekBtn = document.getElementById("clear-week-btn");
+  if(clearWeekBtn) clearWeekBtn.addEventListener("click", async ()=>{
+    if(!confirm("Alle Einträge dieser Woche löschen?")) return;
+    const weekDates = getCurrentWeekDates();
+    await sb.from("daily_log").delete()
+      .eq("user_id", state.user.id)
+      .gte("log_date", weekDates[0])
+      .lte("log_date", weekDates[6]);
+    await loadWeekLog();
+  });
+
+  if(state.autoWeekOpen) bindAutoWeekEvents();
   if(state.modalOpen) bindModalEvents();
   if(state.detailRecipe) bindDetailEvents();
   if(state.planRecipeId) bindPlanPopupEvents();
   if(state.pickerOpen) bindRecipePickerEvents();
+}
+
+function bindAutoWeekEvents(){
+  const overlay = document.getElementById("autoweek-overlay");
+  if(!overlay) return;
+  overlay.addEventListener("click", (e)=>{ if(e.target.id==="autoweek-overlay"){ state.autoWeekOpen=false; render(); } });
+  document.getElementById("autoweek-close").addEventListener("click", ()=>{ state.autoWeekOpen=false; render(); });
+
+  document.querySelectorAll("[data-kcal]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const targetKcal = parseInt(btn.dataset.kcal);
+      state.autoWeekOpen = false;
+      btn.disabled = true;
+
+      const weekDates = getCurrentWeekDates();
+      const recipes = state.recipes.filter(r => r.kcal != null && r.servings != null);
+      if(recipes.length === 0){ alert("Keine Rezepte mit Kalorienangaben gefunden."); return; }
+
+      // Für jeden Tag 3-4 Rezepte wählen die zusammen ~targetKcal ergeben
+      const rows = [];
+      for(const date of weekDates){
+        let dayKcal = 0;
+        const shuffled = [...recipes].sort(()=>Math.random()-0.5);
+        const dayRecipes = [];
+        for(const r of shuffled){
+          const kcalPerServing = r.kcal / (r.servings || 1);
+          if(dayKcal + kcalPerServing <= targetKcal * 1.15 && dayRecipes.length < 4){
+            dayRecipes.push(r);
+            dayKcal += kcalPerServing;
+          }
+          if(dayKcal >= targetKcal * 0.85 && dayRecipes.length >= 2) break;
+        }
+        for(const r of dayRecipes){
+          rows.push({ user_id: state.user.id, recipe_id: r.id, log_date: date, servings_logged: r.servings || 1 });
+        }
+      }
+
+      if(rows.length === 0){ alert("Keine passenden Rezepte gefunden."); return; }
+      const { error } = await sb.from("daily_log").insert(rows);
+      if(error){ alert("Fehler: " + error.message); return; }
+      await loadWeekLog();
+    });
+  });
 }
 
 function bindRecipePickerEvents(){
