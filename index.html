@@ -1064,27 +1064,46 @@ function bindAutoWeekEvents(){
       btn.disabled = true;
 
       const weekDates = getCurrentWeekDates();
-      const recipes = state.recipes.filter(r => r.kcal != null && r.servings != null);
-      if(recipes.length === 0){ alert("Keine Rezepte mit Kalorienangaben gefunden."); return; }
+      const allRecipes = state.recipes.filter(r => r.kcal != null && r.servings != null);
+      if(allRecipes.length === 0){ alert("Keine Rezepte mit Kalorienangaben gefunden."); return; }
 
-      // Für jeden Tag 3-4 Rezepte wählen die zusammen ~targetKcal ergeben
-      const rows = [];
-      for(const date of weekDates){
-        let dayKcal = 0;
-        const shuffled = [...recipes].sort(()=>Math.random()-0.5);
-        const dayRecipes = [];
-        for(const r of shuffled){
-          const kcalPerServing = r.kcal / (r.servings || 1);
-          if(dayKcal + kcalPerServing <= targetKcal * 1.15 && dayRecipes.length < 4){
-            dayRecipes.push(r);
-            dayKcal += kcalPerServing;
-          }
-          if(dayKcal >= targetKcal * 0.85 && dayRecipes.length >= 2) break;
-        }
-        for(const r of dayRecipes){
-          rows.push({ user_id: state.user.id, recipe_id: r.id, log_date: date, servings_logged: r.servings || 1 });
-        }
+      // Meal Prep Prinzip: 2 Rezepte pro Mahlzeit, die sich abwechseln
+      function pickTwo(pool){
+        const shuffled = [...pool].sort(()=>Math.random()-0.5);
+        return shuffled.slice(0, Math.min(2, shuffled.length));
       }
+
+      const fruehstueckPool = allRecipes.filter(r => (r.tags||[]).includes('Frühstück'));
+      const snackPool = allRecipes.filter(r => (r.tags||[]).includes('Snack'));
+      const hauptPool = allRecipes.filter(r => (r.tags||[]).includes('Hauptgericht'));
+      const fallback = allRecipes; // Falls Pool leer
+
+      // Kalorienziel aufteilen: 25% Frühstück, 35% Mittag, 30% Abend, 10% Snack
+      const kcalFrueh = Math.round(targetKcal * 0.25);
+      const kcalMittag = Math.round(targetKcal * 0.35);
+      const kcalAbend = Math.round(targetKcal * 0.30);
+
+      // Je 2 Rezepte pro Slot wählen
+      const fruehstuecke = pickTwo(fruehstueckPool.length >= 2 ? fruehstueckPool : fallback);
+      const mittagessen = pickTwo(hauptPool.length >= 2 ? hauptPool : fallback);
+      const abendessen = pickTwo(hauptPool.filter(r => !mittagessen.includes(r)).length >= 2
+        ? hauptPool.filter(r => !mittagessen.includes(r))
+        : hauptPool);
+
+      const rows = [];
+      weekDates.forEach((date, idx) => {
+        // Frühstück: abwechselnd Rezept 0 und 1
+        const frueh = fruehstuecke[idx % fruehstuecke.length];
+        if(frueh) rows.push({ user_id: state.user.id, recipe_id: frueh.id, log_date: date, servings_logged: frueh.servings || 1 });
+
+        // Mittag: abwechselnd
+        const mittag = mittagessen[idx % mittagessen.length];
+        if(mittag) rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: mittag.servings || 1 });
+
+        // Abend: abwechselnd (versetzt zum Mittag)
+        const abend = abendessen[(idx + 1) % abendessen.length];
+        if(abend) rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: abend.servings || 1 });
+      });
 
       if(rows.length === 0){ alert("Keine passenden Rezepte gefunden."); return; }
       const { error } = await sb.from("daily_log").insert(rows);
