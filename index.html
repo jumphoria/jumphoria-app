@@ -408,7 +408,7 @@ const LOGO_BASE64 = "https://primary.jwwb.nl/public/k/f/d/temp-mmnnzteyzhbsctkmk
 const ADMIN_USER_ID = "55eaffe1-6a42-42ec-8888-708f31210c4c";
 // Debug: zeigt die eingeloggte User-ID in der Konsole
 function debugUserId(){ if(state.user) console.log("Eingeloggt als:", state.user.id, "| Admin?", state.user.id === ADMIN_USER_ID); }
-const ALL_TAGS = ["Vegan","Vegetarisch","Frühstück","Hauptgericht","Snack","Dessert","Low Carb","High Protein","Meal Prep","Schnell","Airfryer"];
+const ALL_TAGS = ["Vegan","Vegetarisch","Frühstück","Hauptgericht","Snack","Dessert","Low Carb","High Protein","Meal Prep","Schnell","Airfryer","Pre Workout","Post Workout"];
 const KCAL_BANDS = ["100 kcal","200 kcal","300 kcal","400 kcal"];
 const DAYPLAN_TARGETS = [1200, 1400, 1600, 1800];
 const WEEKDAY_NAMES = ["Mo","Di","Mi","Do","Fr","Sa","So"];
@@ -467,6 +467,9 @@ let state = {
   planRecipeId: null,
   planSelectedDays: [],
   autoWeekOpen: false,
+  profil: JSON.parse(localStorage.getItem("jumphoria_profil") || "null") || { geschlecht:"w", alter:30, groesse:165, gewicht:65, aktivitaet:"mittel", ziel:"abnehmen" },
+  profilKcal: null,
+  profilMakros: null,
   error: "",
   serviceDown: false
 };
@@ -560,7 +563,7 @@ function renderAppShell(){
       <button class="main-tab ${state.mainTab==='shopping'?'active':''}" data-tab="shopping">Einkauf</button>
       <button class="main-tab ${state.mainTab==='dayplans'?'active':''}" data-tab="dayplans">Tagespl\u00e4ne</button>
     </div>
-    ${state.mainTab==='today' ? renderWeek() : state.mainTab==='shopping' ? renderShoppingList() : state.mainTab==='dayplans' ? renderDayPlans() : renderRecipesTab()}
+    ${state.mainTab==='today' ? renderWeek() : state.mainTab==='shopping' ? renderShoppingList() : state.mainTab==='dayplans' ? renderDayPlans() : state.mainTab==='profil' ? renderProfil() : renderRecipesTab()}
     ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="fab" id="add-fab" title="Neues Rezept">+</button>` : ""}
     ${state.modalOpen ? renderModal() : ""}
     ${state.planRecipeId ? renderPlanPopup() : ""}
@@ -733,14 +736,18 @@ function renderRecipePickerPopup(){
 }
 
 function renderAutoWeekPopup(){
-  const targets = [1200, 1400, 1600, 1800, 2000];
+  const profilKcal = state.profilKcal;
+  const targets = profilKcal
+    ? [profilKcal, 1200, 1400, 1600, 1800, 2000]
+    : [1200, 1400, 1600, 1800, 2000];
   return `<div class="overlay" id="autoweek-overlay"><div class="modal plan-modal">
     <button class="modal-close" id="autoweek-close">✕</button>
     <h2>✨ Woche automatisch planen</h2>
     <p style="color:var(--ink-on-paper); opacity:0.75; font-size:14px; margin:0 0 16px;">Wähle dein Kalorienziel pro Tag:</p>
+    ${profilKcal ? `<div style="background:var(--pine); color:#fff; border-radius:12px; padding:10px 14px; margin-bottom:14px; font-size:13px; font-weight:600;">💡 Dein Profil empfiehlt: ${profilKcal} kcal/Tag</div>` : ""}
     <div class="dayplan-target-grid" style="margin-bottom:16px;">
-      ${targets.map(t => `<button type="button" class="dayplan-target-card" data-kcal="${t}">
-        <strong>${t}</strong><span>kcal / Tag</span>
+      ${targets.map((t,i) => `<button type="button" class="dayplan-target-card" data-kcal="${t}" style="${i===0 && profilKcal ? 'border:2px solid var(--pine);' : ''}">
+        ${i===0 && profilKcal ? '<small style="color:var(--pine-dark); font-size:10px; margin-bottom:4px;">Empfohlen</small>' : ""}<strong>${t}</strong><span>kcal / Tag</span>
       </button>`).join("")}
     </div>
     <p style="color:var(--ink-on-paper); opacity:0.55; font-size:12px; margin:0;">Die App wählt automatisch passende Rezepte für jeden Tag der Woche aus.</p>
@@ -760,6 +767,130 @@ function renderPlanPopup(){
     </div>
     <div class="modal-actions"><button type="button" class="btn" id="plan-confirm">Hinzuf\u00fcgen</button></div>
   </div></div>`;
+}
+
+
+function calcProfil(){
+  const p = state.profil;
+  if(!p.alter || !p.groesse || !p.gewicht) return;
+
+  // Grundumsatz (Mifflin-St Jeor)
+  let bmr;
+  if(p.geschlecht === "w"){
+    bmr = 10 * p.gewicht + 6.25 * p.groesse - 5 * p.alter - 161;
+  } else {
+    bmr = 10 * p.gewicht + 6.25 * p.groesse - 5 * p.alter + 5;
+  }
+
+  // Aktivitätsfaktor
+  const faktoren = { "wenig": 1.2, "mittel": 1.55, "viel": 1.725 };
+  const tdee = Math.round(bmr * (faktoren[p.aktivitaet] || 1.55));
+
+  // Ziel-Anpassung
+  let kcal = tdee;
+  if(p.ziel === "abnehmen") kcal = Math.round(tdee * 0.8);
+  else if(p.ziel === "halten") kcal = tdee;
+
+  // Makros: 30% Eiweiß, 40% KH, 30% Fett
+  const protein = Math.round((kcal * 0.30) / 4);
+  const carbs = Math.round((kcal * 0.40) / 4);
+  const fat = Math.round((kcal * 0.30) / 9);
+
+  state.profilKcal = kcal;
+  state.profilMakros = { protein, carbs, fat };
+  localStorage.setItem("jumphoria_profil", JSON.stringify(p));
+}
+
+function renderProfil(){
+  const p = state.profil;
+  calcProfil();
+  const kcal = state.profilKcal;
+  const m = state.profilMakros;
+
+  return `
+    <div style="max-width:480px; margin:0 auto;">
+      <h2 style="font-family:Georgia,serif; color:var(--pine-dark); margin:0 0 6px;">Mein Profil</h2>
+      <p style="color:var(--ink); opacity:0.7; font-size:14px; margin:0 0 24px;">Berechne deinen persönlichen Kalorienbedarf für dein Jump & Lift Programm.</p>
+
+      <div style="background:var(--paper); border-radius:16px; padding:20px; border:1px solid var(--line); margin-bottom:16px;">
+        <h4 style="color:var(--terracotta); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 14px;">Deine Daten</h4>
+
+        <div class="field">
+          <label>Geschlecht</label>
+          <div style="display:flex; gap:10px;">
+            <button type="button" class="profil-pick ${p.geschlecht==='w'?'active':''}" data-field="geschlecht" data-val="w" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.geschlecht==='w'?'var(--pine)':'#fff'}; color:${p.geschlecht==='w'?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">♀ Weiblich</button>
+            <button type="button" class="profil-pick ${p.geschlecht==='m'?'active':''}" data-field="geschlecht" data-val="m" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.geschlecht==='m'?'var(--pine)':'#fff'}; color:${p.geschlecht==='m'?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">♂ Männlich</button>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="field">
+            <label>Alter (Jahre)</label>
+            <input type="number" class="profil-input" data-field="alter" value="${p.alter}" min="15" max="80" style="width:100%; padding:10px; border-radius:9px; border:1.5px solid var(--line); background:#fff; font-size:14px; color:var(--ink-on-paper);">
+          </div>
+          <div class="field">
+            <label>Größe (cm)</label>
+            <input type="number" class="profil-input" data-field="groesse" value="${p.groesse}" min="140" max="210" style="width:100%; padding:10px; border-radius:9px; border:1.5px solid var(--line); background:#fff; font-size:14px; color:var(--ink-on-paper);">
+          </div>
+          <div class="field" style="grid-column:1/-1;">
+            <label>Gewicht (kg)</label>
+            <input type="number" class="profil-input" data-field="gewicht" value="${p.gewicht}" min="40" max="200" style="width:100%; padding:10px; border-radius:9px; border:1.5px solid var(--line); background:#fff; font-size:14px; color:var(--ink-on-paper);">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Aktivitätslevel</label>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            ${[["wenig","🛋️ Wenig Sport"],["mittel","🏃 3× / Woche"],["viel","💪 5× / Woche"]].map(([val,label]) =>
+              `<button type="button" class="profil-pick" data-field="aktivitaet" data-val="${val}" style="flex:1; min-width:90px; padding:9px 6px; border-radius:10px; border:1.5px solid var(--line); background:${p.aktivitaet===val?'var(--pine)':'#fff'}; color:${p.aktivitaet===val?'#fff':'var(--ink-on-paper)'}; font-size:12.5px; font-weight:600; cursor:pointer;">${label}</button>`
+            ).join("")}
+          </div>
+        </div>
+
+        <div class="field" style="margin-bottom:0;">
+          <label>Ziel</label>
+          <div style="display:flex; gap:10px;">
+            ${[["abnehmen","⬇️ Abnehmen"],["halten","➡️ Gewicht halten"]].map(([val,label]) =>
+              `<button type="button" class="profil-pick" data-field="ziel" data-val="${val}" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.ziel===val?'var(--terracotta)':'#fff'}; color:${p.ziel===val?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">${label}</button>`
+            ).join("")}
+          </div>
+        </div>
+      </div>
+
+      ${kcal ? `
+      <div style="background:var(--ink-on-paper); border-radius:16px; padding:22px; margin-bottom:16px;">
+        <h4 style="color:var(--pine); font-size:13px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 16px;">Dein tägliches Ziel</h4>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+          <div style="flex:1; min-width:80px; background:rgba(255,255,255,0.1); border-radius:12px; padding:14px; text-align:center;">
+            <div style="font-size:28px; font-weight:700; color:var(--pine); font-family:Georgia,serif;">${kcal}</div>
+            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">kcal</div>
+          </div>
+          <div style="flex:1; min-width:70px; background:rgba(255,255,255,0.1); border-radius:12px; padding:14px; text-align:center;">
+            <div style="font-size:22px; font-weight:700; color:var(--ink);">${m.protein}g</div>
+            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">Eiweiß</div>
+          </div>
+          <div style="flex:1; min-width:70px; background:rgba(255,255,255,0.1); border-radius:12px; padding:14px; text-align:center;">
+            <div style="font-size:22px; font-weight:700; color:var(--ink);">${m.carbs}g</div>
+            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">KH</div>
+          </div>
+          <div style="flex:1; min-width:70px; background:rgba(255,255,255,0.1); border-radius:12px; padding:14px; text-align:center;">
+            <div style="font-size:22px; font-weight:700; color:var(--ink);">${m.fat}g</div>
+            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">Fett</div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-block" id="use-profil-kcal" style="background:var(--pine);">✨ Diese Kalorien für Wochenplanung verwenden</button>
+      </div>
+
+      <div style="background:var(--paper); border-radius:16px; padding:18px; border:1px solid var(--line);">
+        <h4 style="color:var(--terracotta); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 10px;">Jump & Lift Empfehlungen</h4>
+        <div style="font-size:14px; color:var(--ink-on-paper); line-height:1.7;">
+          <div style="margin-bottom:8px;">⚡ <strong>Pre Workout</strong> (30-60 Min vorher): ${Math.round(kcal * 0.15)} kcal · leichte KH + etwas Eiweiß</div>
+          <div>💪 <strong>Post Workout</strong> (direkt danach): ${Math.round(kcal * 0.25)} kcal · viel Eiweiß + KH zur Regeneration</div>
+        </div>
+      </div>
+      ` : ''}
+    </div>
+  `;
 }
 
 function renderGrid(){
@@ -899,6 +1030,7 @@ function bindAppEvents(){
       if(state.mainTab === "today") loadWeekLog();
       if(state.mainTab === "shopping"){ loadWeekLog(); loadShoppingChecks(); }
       if(state.mainTab === "dayplans") loadDayPlans();
+      if(state.mainTab === "profil") calcProfil();
       render();
     });
   });
@@ -1046,6 +1178,30 @@ function bindAppEvents(){
 
   if(state.autoWeekOpen) bindAutoWeekEvents();
   if(state.modalOpen) bindModalEvents();
+
+  // Profil events
+  document.querySelectorAll(".profil-pick").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      state.profil[btn.dataset.field] = btn.dataset.val;
+      calcProfil();
+      render();
+    });
+  });
+  document.querySelectorAll(".profil-input").forEach(input=>{
+    input.addEventListener("change", ()=>{
+      state.profil[input.dataset.field] = parseFloat(input.value);
+      calcProfil();
+      render();
+    });
+  });
+  const useProfilBtn = document.getElementById("use-profil-kcal");
+  if(useProfilBtn){
+    useProfilBtn.addEventListener("click", ()=>{
+      state.mainTab = "today";
+      state.autoWeekOpen = true;
+      render();
+    });
+  }
   if(state.detailRecipe) bindDetailEvents();
   if(state.planRecipeId) bindPlanPopupEvents();
   if(state.pickerOpen) bindRecipePickerEvents();
