@@ -566,6 +566,7 @@ function renderAppShell(){
       <button class="main-tab ${state.mainTab==='today'?'active':''}" data-tab="today">Woche</button>
       <button class="main-tab ${state.mainTab==='shopping'?'active':''}" data-tab="shopping">Einkauf</button>
       <button class="main-tab ${state.mainTab==='dayplans'?'active':''}" data-tab="dayplans">Tagespl\u00e4ne</button>
+      <button class="main-tab ${state.mainTab==='profil'?'active':''}" data-tab="profil">Profil</button>
     </div>
     ${state.mainTab==='today' ? renderWeek() : state.mainTab==='shopping' ? renderShoppingList() : state.mainTab==='dayplans' ? renderDayPlans() : state.mainTab==='profil' ? renderProfil() : renderRecipesTab()}
     ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="fab" id="add-fab" title="Neues Rezept">+</button>` : ""}
