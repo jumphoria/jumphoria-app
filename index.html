@@ -796,10 +796,13 @@ function calcProfil(){
   if(p.ziel === "abnehmen") kcal = Math.round(tdee * 0.85);
   else if(p.ziel === "halten") kcal = tdee;
 
-  // Makros: 30% Eiweiß, 40% KH, 30% Fett
-  const protein = Math.round((kcal * 0.30) / 4);
-  const carbs = Math.round((kcal * 0.40) / 4);
+  // Makros (sportgerecht): 35% Eiweiß, 35% KH, 30% Fett
+  // Eiweiß: mind. 1.6g pro kg Körpergewicht (wissenschaftliche Empfehlung für Kraftsport)
+  const proteinByWeight = Math.round(p.gewicht * 1.6);
+  const proteinByPercent = Math.round((kcal * 0.35) / 4);
+  const protein = Math.max(proteinByWeight, proteinByPercent);
   const fat = Math.round((kcal * 0.30) / 9);
+  const carbs = Math.round((kcal - protein * 4 - fat * 9) / 4);
 
   state.profilKcal = kcal;
   state.profilMakros = { protein, carbs, fat };
@@ -817,11 +820,11 @@ function renderProfil(){
       <h2 style="font-family:Georgia,serif; color:var(--pine-dark); margin:0 0 6px;">Mein Profil</h2>
       <p style="color:var(--ink); opacity:0.7; font-size:14px; margin:0 0 24px;">Berechne deinen persönlichen Kalorienbedarf für dein Jump & Lift Programm.</p>
 
-      <div style="background:var(--paper); border-radius:16px; padding:20px; border:1px solid var(--line); margin-bottom:16px;">
-        <h4 style="color:var(--terracotta); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 14px;">Deine Daten</h4>
+      <div style="background:var(--ink-on-paper); border-radius:16px; padding:20px; border:1px solid var(--line); margin-bottom:16px;">
+        <h4 style="color:var(--pine); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 14px;">Deine Daten</h4>
 
         <div class="field">
-          <label>Geschlecht</label>
+          <label style="color:var(--ink); opacity:1;">Geschlecht</label>
           <div style="display:flex; gap:10px;">
             <button type="button" class="profil-pick ${p.geschlecht==='w'?'active':''}" data-field="geschlecht" data-val="w" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.geschlecht==='w'?'var(--pine)':'#fff'}; color:${p.geschlecht==='w'?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">♀ Weiblich</button>
             <button type="button" class="profil-pick ${p.geschlecht==='m'?'active':''}" data-field="geschlecht" data-val="m" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.geschlecht==='m'?'var(--pine)':'#fff'}; color:${p.geschlecht==='m'?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">♂ Männlich</button>
@@ -830,21 +833,21 @@ function renderProfil(){
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
           <div class="field">
-            <label>Alter (Jahre)</label>
+            <label style="color:var(--ink); opacity:1;">Alter (Jahre)</label>
             <input type="number" class="profil-input" data-field="alter" value="${p.alter}" min="15" max="80" style="width:100%; padding:10px; border-radius:9px; border:1.5px solid var(--line); background:#fff; font-size:14px; color:var(--ink-on-paper);">
           </div>
           <div class="field">
-            <label>Größe (cm)</label>
+            <label style="color:var(--ink); opacity:1;">Größe (cm)</label>
             <input type="number" class="profil-input" data-field="groesse" value="${p.groesse}" min="140" max="210" style="width:100%; padding:10px; border-radius:9px; border:1.5px solid var(--line); background:#fff; font-size:14px; color:var(--ink-on-paper);">
           </div>
           <div class="field" style="grid-column:1/-1;">
-            <label>Gewicht (kg)</label>
+            <label style="color:var(--ink); opacity:1;">Gewicht (kg)</label>
             <input type="number" class="profil-input" data-field="gewicht" value="${p.gewicht}" min="40" max="200" style="width:100%; padding:10px; border-radius:9px; border:1.5px solid var(--line); background:#fff; font-size:14px; color:var(--ink-on-paper);">
           </div>
         </div>
 
         <div class="field">
-          <label>Aktivitätslevel</label>
+          <label style="color:var(--ink); opacity:1;">Aktivitätslevel</label>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
             ${[["wenig","🛋️ Wenig Sport"],["mittel","🏃 3× / Woche"],["viel","💪 5× / Woche"]].map(([val,label]) =>
               `<button type="button" class="profil-pick" data-field="aktivitaet" data-val="${val}" style="flex:1; min-width:90px; padding:9px 6px; border-radius:10px; border:1.5px solid var(--line); background:${p.aktivitaet===val?'var(--pine)':'#fff'}; color:${p.aktivitaet===val?'#fff':'var(--ink-on-paper)'}; font-size:12.5px; font-weight:600; cursor:pointer;">${label}</button>`
@@ -853,7 +856,7 @@ function renderProfil(){
         </div>
 
         <div class="field" style="margin-bottom:0;">
-          <label>Ziel</label>
+          <label style="color:var(--ink); opacity:1;">Ziel</label>
           <div style="display:flex; gap:10px;">
             ${[["abnehmen","⬇️ Abnehmen"],["halten","➡️ Gewicht halten"]].map(([val,label]) =>
               `<button type="button" class="profil-pick" data-field="ziel" data-val="${val}" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.ziel===val?'var(--terracotta)':'#fff'}; color:${p.ziel===val?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">${label}</button>`
