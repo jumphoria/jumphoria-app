@@ -85,7 +85,7 @@
     border:1px solid var(--line);
   }
   .auth-card h2{ font-size:24px; margin:0 0 4px; color:var(--paper); }
-  .auth-sub{ color:var(--ink); opacity:0.75; font-size:14px; margin:0 0 24px; }
+  .auth-sub{ color:var(--paper); opacity:0.9; font-size:14px; margin:0 0 24px; }
   .field{ margin-bottom:14px; }
   .field label{ display:block; font-size:12.5px; color:var(--ink); opacity:0.85; margin-bottom:6px; font-weight:600; }
   .field input, .field select, .field textarea{
@@ -793,7 +793,7 @@ function calcProfil(){
 
   // Ziel-Anpassung
   let kcal = tdee;
-  if(p.ziel === "abnehmen") kcal = Math.round(tdee * 0.8);
+  if(p.ziel === "abnehmen") kcal = Math.round(tdee * 0.85);
   else if(p.ziel === "halten") kcal = tdee;
 
   // Makros: 30% Eiweiß, 40% KH, 30% Fett
@@ -888,7 +888,7 @@ function renderProfil(){
 
       <div style="background:var(--paper); border-radius:16px; padding:18px; border:1px solid var(--line);">
         <h4 style="color:var(--terracotta); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 10px;">Jump & Lift Empfehlungen</h4>
-        <div style="font-size:14px; color:var(--ink-on-paper); line-height:1.7;">
+        <div style="font-size:14px; color:var(--ink-on-paper); line-height:1.7; font-size:14px;">
           <div style="margin-bottom:8px;">⚡ <strong>Pre Workout</strong> (30-60 Min vorher): ${Math.round(kcal * 0.15)} kcal · leichte KH + etwas Eiweiß</div>
           <div>💪 <strong>Post Workout</strong> (direkt danach): ${Math.round(kcal * 0.25)} kcal · viel Eiweiß + KH zur Regeneration</div>
         </div>
