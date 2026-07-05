@@ -977,6 +977,76 @@ function renderModal(){
   </div></div>`;
 }
 
+
+// ── Automatische Gewichtsschätzung für gekochte Portionen ──
+const STUECK_GEWICHTE = {
+  "zwiebel": 80, "zehe": 5, "knoblauchzehe": 5, "ei": 60, "eiklar": 30,
+  "tomate": 120, "paprika": 150, "zucchini": 200, "karotte": 80, "karotten": 80,
+  "avocado": 150, "gurke": 300, "scheibe": 30, "dose": 150
+};
+
+function estimateCookedWeight(recipe, servings){
+  if(!recipe.ingredients_structured || recipe.ingredients_structured.length === 0) return null;
+  const scale = servings / (recipe.servings || 1);
+  const steps = (recipe.steps || '').toLowerCase();
+
+  // Kochverlust ermitteln
+  const isFried = steps.includes('braten') || steps.includes('anbraten');
+  const isBoiled = steps.includes('kochen') || steps.includes('köcheln');
+  const isSoup = steps.includes('suppe') || steps.includes('wasser') || steps.includes('brühe');
+  const hasRice = steps.includes('reis') || steps.includes('nudeln') || steps.includes('linsen');
+
+  let totalRawGrams = 0;
+  let liquidGrams = 0;
+
+  recipe.ingredients_structured.forEach(ing => {
+    if(!ing.name) return;
+    const nameLower = ing.name.toLowerCase();
+
+    // Gramm direkt
+    if(ing.unit === 'g' && ing.amount){
+      const g = ing.amount * scale;
+      // Flüssigkeiten separat
+      if(nameLower.includes('wasser') || nameLower.includes('milch') ||
+         nameLower.includes('brühe') || nameLower.includes('tomaten') ||
+         nameLower.includes('kokosmilch') || nameLower.includes('sauce')){
+        liquidGrams += g;
+      } else {
+        totalRawGrams += g;
+      }
+    }
+    // ml → g (ca. 1:1)
+    else if(ing.unit === 'ml' && ing.amount){
+      liquidGrams += ing.amount * scale;
+    }
+    // Stück-Angaben schätzen
+    else if(!ing.unit && ing.amount){
+      for(const [key, weight] of Object.entries(STUECK_GEWICHTE)){
+        if(nameLower.includes(key)){
+          totalRawGrams += ing.amount * weight * scale;
+          break;
+        }
+      }
+    }
+    // TL/EL
+    else if(ing.unit === 'TL' && ing.amount){ totalRawGrams += ing.amount * 5 * scale; }
+    else if(ing.unit === 'EL' && ing.amount){ totalRawGrams += ing.amount * 15 * scale; }
+  });
+
+  // Kochverlust berechnen
+  let cookedSolids = totalRawGrams;
+  if(isFried) cookedSolids *= 0.80; // -20%
+  else if(isBoiled) cookedSolids *= 0.90; // -10%
+  if(hasRice) cookedSolids *= 2.5; // Reis/Linsen saugen Wasser auf
+
+  // Flüssigkeit: -10% Reduktion
+  const cookedLiquid = liquidGrams * (isSoup ? 0.92 : 0.50);
+
+  const total = Math.round(cookedSolids + cookedLiquid);
+  if(total < 50) return null;
+  return total;
+}
+
 function renderDetail(){
   const r = state.detailRecipe;
   const baseServings = r.servings || 1;
@@ -999,7 +1069,9 @@ function renderDetail(){
       if(ing.amount === null || ing.amount === undefined) return `<li>${escapeHtml(ing.name)}</li>`;
       const scaledAmount = ing.amount * scale;
       const displayAmount = scaledAmount % 1 === 0 ? scaledAmount.toFixed(0) : scaledAmount.toFixed(1);
-      return `<li>${displayAmount}${ing.unit} ${escapeHtml(ing.name)}</li>`;
+      const unitStr = ing.unit ? ing.unit : '';
+      const separator = ing.unit ? '' : ' ';
+      return `<li>${displayAmount}${unitStr}${separator}${escapeHtml(ing.name)}</li>`;
     }).join("");
   } else {
     ingredientsHtml = (r.ingredients||"").split("\n").filter(Boolean).map(i=>`<li>${escapeHtml(i)}</li>`).join("");
