@@ -1102,16 +1102,27 @@ function renderDetail(){
   const cookedWeight = hasStructured ? estimateCookedWeight(r, currentServings) : null;
   let ingredientsHtml;
   if(hasStructured){
-    ingredientsHtml = r.ingredients_structured.map(ing => {
-      if(ing.amount === null || ing.amount === undefined) return `<li>${escapeHtml(ing.name)}</li>`;
-      const scaledAmount = ing.amount * scale;
-      const displayAmount = scaledAmount % 1 === 0 ? scaledAmount.toFixed(0) : scaledAmount.toFixed(1);
-      const unitStr = ing.unit ? ing.unit : '';
-      const separator = ing.unit ? '' : ' ';
-      return `<li>${displayAmount}${unitStr}${separator}${escapeHtml(ing.name)}</li>`;
-    }).join("");
-  } else {
-    ingredientsHtml = (r.ingredients||"").split("\n").filter(Boolean).map(i=>`<li>${escapeHtml(i)}</li>`).join("");
+   ingredientsHtml = r.ingredients_structured.map(ing => {
+  if(ing.amount === null || ing.amount === undefined) return `<li>${escapeHtml(ing.name)}</li>`;
+  const scaledAmount = ing.amount * scale;
+  const displayAmount = scaledAmount % 1 === 0 ? scaledAmount.toFixed(0) : scaledAmount.toFixed(1);
+  const unitStr = ing.unit ? ing.unit : '';
+  const separator = ing.unit ? '' : ' ';
+
+  let gramHint = '';
+  if(!ing.unit && ing.name){
+    const nameLower = ing.name.toLowerCase();
+    for(const [key, weight] of Object.entries(STUECK_GEWICHTE)){
+      if(nameLower.includes(key)){
+        const estGrams = Math.round(scaledAmount * weight);
+        gramHint = ` <span class="ing-estimate">(~${estGrams}g)</span>`;
+        break;
+      }
+    }
+  }
+
+  return `<li>${displayAmount}${unitStr}${separator}${escapeHtml(ing.name)}${gramHint}</li>`;
+}).join("");
   }
 
   return `<div class="overlay" id="detail-overlay"><div class="modal">
