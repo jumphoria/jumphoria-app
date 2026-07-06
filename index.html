@@ -463,6 +463,7 @@ let state = {
   detailServings: null,
   mainTab: "recipes",
   weekLog: [],
+  weekRecipeDetails: {},
   dayPlans: [],
   dayPlanItems: [],
   activeDayPlanTarget: null,
@@ -650,12 +651,16 @@ function renderWeek(){
 
 function buildShoppingItems(){
   const entries = state.weekLog || [];
+  const details = state.weekRecipeDetails || {};
   const itemMap = {};
   entries.forEach(e => {
     const recipe = state.recipes.find(r => r.id === e.recipe_id);
-    if(!recipe || !recipe.ingredients_structured) return;
-    const factor = e.servings_logged / (recipe.servings || 1);
-    recipe.ingredients_structured.forEach(ing => {
+    const detail = details[e.recipe_id];
+    const ingredientsStructured = detail && detail.ingredients_structured;
+    if(!recipe || !ingredientsStructured) return;
+    const servings = (detail && detail.servings) || recipe.servings || 1;
+    const factor = e.servings_logged / servings;
+    ingredientsStructured.forEach(ing => {
       if(!ing.name) return;
       const unit = ing.amount !== null && ing.amount !== undefined ? (ing.unit || "") : "";
       const key = (unit + "_" + ing.name).toLowerCase().replace(/[^a-z0-9_]/g, "");
@@ -1592,6 +1597,20 @@ async function loadWeekLog(){
     .order("created_at", { ascending: true });
   if(error){ console.error(error); return; }
   state.weekLog = data || [];
+
+  // Vollständige Zutaten (ingredients_structured) für alle Rezepte in der Woche nachladen,
+  // da state.recipes (Listenansicht) diese aus Performance-Gründen nicht enthält.
+  const recipeIds = [...new Set(state.weekLog.map(e => e.recipe_id))];
+  if(recipeIds.length > 0){
+    const { data: detailData, error: detailError } = await sb.from("recipes")
+      .select("id,servings,ingredients_structured")
+      .in("id", recipeIds);
+    if(!detailError && detailData){
+      const map = {};
+      detailData.forEach(r => { map[r.id] = r; });
+      state.weekRecipeDetails = map;
+    }
+  }
   render();
 }
 
