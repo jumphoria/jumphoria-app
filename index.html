@@ -143,6 +143,11 @@
     cursor:pointer; font-size:15px; padding:6px;
   }
   .today-remove:hover{ color:var(--terracotta); opacity:1; }
+  .today-swap{
+    background:none; border:none; color:var(--ink-on-paper); opacity:0.5;
+    cursor:pointer; font-size:15px; padding:6px;
+  }
+  .today-swap:hover{ color:var(--pine); opacity:1; }
   .today-add-btn{
     width:100%; margin-top:10px; background:var(--terracotta-soft); color:var(--pine-dark);
     border:none; border-radius:10px; padding:9px; font-size:13px; font-weight:600;
@@ -464,6 +469,7 @@ let state = {
   mainTab: "recipes",
   weekLog: [],
   weekRecipeDetails: {},
+  swapTarget: null,
   dayPlans: [],
   dayPlanItems: [],
   activeDayPlanTarget: null,
@@ -576,6 +582,7 @@ function renderAppShell(){
     ${state.planRecipeId ? renderPlanPopup() : ""}
     ${state.autoWeekOpen ? renderAutoWeekPopup() : ""}
     ${state.pickerOpen ? renderRecipePickerPopup() : ""}
+    ${state.swapTarget ? renderSwapPopup() : ""}
     ${state.detailRecipe ? renderDetail() : ""}
   `;
 }
@@ -641,6 +648,7 @@ function renderWeek(){
                   <strong>${escapeHtml(recipe.title)}</strong>
                   <span>${e.servings_logged} Portion${e.servings_logged==1?'':'en'}${kcalForEntry!==null?` \u00b7 ${kcalForEntry} kcal`:''}</span>
                 </div>
+                <button type="button" class="today-swap" data-log-id="${e.id}" data-recipe-id="${recipe.id}" title="Rezept tauschen">\u{1F504}</button>
                 <button type="button" class="today-remove" data-log-id="${e.id}">\u2715</button>
               </div>`;
             }).join("")}
@@ -742,6 +750,41 @@ function renderRecipePickerPopup(){
     <div class="picker-list">
       ${filtered.map(r => `<button type="button" class="picker-item" data-recipe-id="${r.id}"><span>${escapeHtml(r.title)}</span>${r.kcal != null ? `<span class="picker-kcal">${Math.round(r.kcal/(r.servings||1))} kcal</span>` : ""}</button>`).join("")}
       ${filtered.length === 0 ? `<p style="color:var(--ink-on-paper); opacity:0.6;">Keine Rezepte gefunden.</p>` : ""}
+    </div>
+  </div></div>`;
+}
+
+function renderSwapPopup(){
+  const { logId, recipeId } = state.swapTarget;
+  const current = state.recipes.find(r => r.id === recipeId);
+  if(!current) return "";
+  // Kategorie bestimmen: gleiche Haupt-Tags (Frühstück/Hauptgericht/Snack/Dessert) wie das aktuelle Rezept
+  const relevantTags = ['Frühstück','Hauptgericht','Snack','Dessert'];
+  const currentCategory = relevantTags.find(t => (current.tags||[]).includes(t));
+  const pool = state.recipes.filter(r =>
+    r.id !== recipeId &&
+    r.kcal != null &&
+    (!currentCategory || (r.tags||[]).includes(currentCategory))
+  );
+  // Nach Kalorien-Nähe zum aktuellen Rezept sortieren, Top 6 als Alternativen anzeigen
+  const currentKcalPerServing = current.kcal / (current.servings || 1);
+  const alternatives = [...pool]
+    .sort((a,b)=>{
+      const aKcal = a.kcal/(a.servings||1), bKcal = b.kcal/(b.servings||1);
+      return Math.abs(aKcal-currentKcalPerServing) - Math.abs(bKcal-currentKcalPerServing);
+    })
+    .slice(0, 6);
+  return `<div class="overlay" id="swap-overlay"><div class="modal plan-modal">
+    <button class="modal-close" id="swap-close">\u2715</button>
+    <h2>\u{1F504} Rezept tauschen</h2>
+    <p style="color:var(--ink-on-paper); opacity:0.75; font-size:14px; margin:0 0 4px;">Aktuell: <strong>${escapeHtml(current.title)}</strong> (${Math.round(currentKcalPerServing)} kcal)</p>
+    <p style="color:var(--ink-on-paper); opacity:0.6; font-size:13px; margin:0 0 14px;">Ähnliche Alternativen${currentCategory ? ` (${currentCategory})` : ''}:</p>
+    <div class="picker-list">
+      ${alternatives.map(r => {
+        const kcalPerServing = Math.round(r.kcal/(r.servings||1));
+        return `<button type="button" class="picker-item" data-swap-recipe-id="${r.id}"><span>${escapeHtml(r.title)}</span><span class="picker-kcal">${kcalPerServing} kcal</span></button>`;
+      }).join("")}
+      ${alternatives.length === 0 ? `<p style="color:var(--ink-on-paper); opacity:0.6;">Keine passenden Alternativen gefunden.</p>` : ""}
     </div>
   </div></div>`;
 }
@@ -1204,6 +1247,14 @@ function bindAppEvents(){
     });
   });
 
+  document.querySelectorAll(".today-swap").forEach(btn=>{
+    btn.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      state.swapTarget = { logId: btn.dataset.logId, recipeId: btn.dataset.recipeId };
+      render();
+    });
+  });
+
   document.querySelectorAll(".today-entry-clickable").forEach(el=>{
     el.addEventListener("click", async ()=>{
       const baseRecipe = state.recipes.find(r => r.id === el.dataset.recipeId);
@@ -1305,6 +1356,7 @@ function bindAppEvents(){
   if(state.detailRecipe) bindDetailEvents();
   if(state.planRecipeId) bindPlanPopupEvents();
   if(state.pickerOpen) bindRecipePickerEvents();
+  if(state.swapTarget) bindSwapEvents();
 }
 
 function bindAutoWeekEvents(){
@@ -1411,6 +1463,26 @@ function bindRecipePickerEvents(){
           if(error) throw error;
         }
         state.pickerOpen = null; await loadDayPlans();
+      }catch(err){ alert("Fehler: " + err.message); }
+    });
+  });
+}
+
+function bindSwapEvents(){
+  const overlay = document.getElementById("swap-overlay");
+  if(!overlay) return;
+  overlay.addEventListener("click", (e)=>{ if(e.target.id==="swap-overlay"){ state.swapTarget=null; render(); } });
+  document.getElementById("swap-close").addEventListener("click", ()=>{ state.swapTarget=null; render(); });
+  document.querySelectorAll("[data-swap-recipe-id]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const newRecipeId = btn.dataset.swapRecipeId;
+      const { logId } = state.swapTarget;
+      const newRecipe = state.recipes.find(r => r.id === newRecipeId);
+      try{
+        const { error } = await sb.from("daily_log").update({ recipe_id: newRecipeId, servings_logged: newRecipe.servings || 1 }).eq("id", logId);
+        if(error) throw error;
+        state.swapTarget = null;
+        await loadWeekLog();
       }catch(err){ alert("Fehler: " + err.message); }
     });
   });
