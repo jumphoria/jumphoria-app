@@ -395,7 +395,8 @@
   @media (max-width:480px){
     .row2{ grid-template-columns:1fr; }
   }
-.ing-estimate{ color:#999; font-size:0.9em; font-style:italic; }</style>
+.ing-estimate{ color:#999; font-size:0.9em; font-style:italic; }
+</style>
 </head>
 <body>
 
@@ -647,56 +648,22 @@ function renderWeek(){
   }).join("")}</div>`;
 }
 
-// ── Zwiebel & Knoblauch: in der Einkaufsliste immer als Stück, egal ob im Rezept in Gramm oder Zehe/Stück angegeben ──
-const SPECIAL_STUECK_ITEMS = [
-  { match: n => n.includes("zwiebel"), label: "Zwiebel", gramsPerStueck: 80 },
-  { match: n => n.includes("knoblauch"), label: "Knoblauch", gramsPerStueck: 5 }
-];
-
 function buildShoppingItems(){
   const entries = state.weekLog || [];
   const itemMap = {};
-  const specialGrams = {};
   entries.forEach(e => {
     const recipe = state.recipes.find(r => r.id === e.recipe_id);
     if(!recipe || !recipe.ingredients_structured) return;
     const factor = e.servings_logged / (recipe.servings || 1);
     recipe.ingredients_structured.forEach(ing => {
       if(!ing.name) return;
-      const nameLower = ing.name.toLowerCase();
-      const special = SPECIAL_STUECK_ITEMS.find(s => s.match(nameLower));
-      if(special){
-        if(ing.amount !== null && ing.amount !== undefined){
-          // Gramm direkt übernehmen, Zehe/Stück-Angaben (kein unit oder "Zehe") über Gewichtstabelle umrechnen
-          const grams = (ing.unit === "g")
-            ? ing.amount * factor
-            : ing.amount * special.gramsPerStueck * factor;
-          specialGrams[special.label] = (specialGrams[special.label] || 0) + grams;
-        }
-        return; // nicht als normale Zeile einfügen
-      }
       const unit = ing.amount !== null && ing.amount !== undefined ? (ing.unit || "") : "";
       const key = (unit + "_" + ing.name).toLowerCase().replace(/[^a-z0-9_]/g, "");
       if(!itemMap[key]){ itemMap[key] = { key, name: ing.name, unit, amount: 0, hasAmount: ing.amount !== null && ing.amount !== undefined }; }
       if(ing.amount !== null && ing.amount !== undefined){ itemMap[key].amount += ing.amount * factor; }
     });
   });
-
-  const items = Object.values(itemMap);
-  Object.entries(specialGrams).forEach(([label, grams]) => {
-    const config = SPECIAL_STUECK_ITEMS.find(s => s.label === label);
-    const stueck = Math.max(1, Math.ceil(grams / config.gramsPerStueck));
-    items.push({
-      key: ("stueck_" + label).toLowerCase(),
-      name: label,
-      unit: "Stück",
-      amount: stueck,
-      hasAmount: true,
-      isStueck: true
-    });
-  });
-
-  return items.sort((a,b) => a.name.localeCompare(b.name));
+  return Object.values(itemMap).sort((a,b) => a.name.localeCompare(b.name));
 }
 
 function renderShoppingList(){
@@ -706,9 +673,7 @@ function renderShoppingList(){
   }
   return `<div class="shopping-list">${items.map(item => {
     const checked = state.shoppingChecks && state.shoppingChecks[item.key];
-    const displayAmount = !item.hasAmount ? "" :
-      item.isStueck ? `${item.amount} ${item.unit} ` :
-      (item.amount % 1 === 0 ? item.amount.toFixed(0) : item.amount.toFixed(1)) + item.unit + " ";
+    const displayAmount = item.hasAmount ? (item.amount % 1 === 0 ? item.amount.toFixed(0) : item.amount.toFixed(1)) + item.unit + " " : "";
     return `<label class="shopping-item ${checked?'is-checked':''}">
       <input type="checkbox" class="shopping-checkbox" data-key="${escapeAttr(item.key)}" ${checked?'checked':''}>
       <span class="shopping-check-icon">${checked?'\u2713':''}</span>
@@ -996,7 +961,7 @@ function renderModal(){
           ${rows.map((row, i) => `<div class="ingredient-row" data-idx="${i}">
             <input type="number" class="ing-amount" placeholder="Menge" value="${row.amount!==undefined?escapeAttr(String(row.amount)):''}" step="any" style="width:70px;">
             <select class="ing-unit" style="width:80px;">
-              ${["g","kg","ml","l","stk","zehe","tl","el","prise"].map(u => `<option value="${u}" ${row.unit===u?'selected':''}>${u}</option>`).join("")}
+              ${["g","kg","ml","l","stk","tl","el","prise"].map(u => `<option value="${u}" ${row.unit===u?'selected':''}>${u}</option>`).join("")}
             </select>
             <input type="text" class="ing-name" placeholder="Zutat, z.B. Rinderhack" value="${escapeAttr(row.name||'')}" style="flex:1;">
             <button type="button" class="ing-remove" data-idx="${i}" title="Entfernen">\u2715</button>
@@ -1055,8 +1020,8 @@ function estimateCookedWeight(recipe, servings){
     else if(ing.unit === 'ml' && ing.amount){
       liquidGrams += ing.amount * scale;
     }
-    // Stück-Angaben schätzen (kein unit, "stk" oder "zehe")
-    else if((!ing.unit || ing.unit === 'stk' || ing.unit === 'zehe') && ing.amount){
+    // Stück-Angaben schätzen
+    else if(!ing.unit && ing.amount){
       for(const [key, weight] of Object.entries(STUECK_GEWICHTE)){
         if(nameLower.includes(key)){
           totalRawGrams += ing.amount * weight * scale;
@@ -1064,9 +1029,9 @@ function estimateCookedWeight(recipe, servings){
         }
       }
     }
-    // TL/EL (Formular liefert Kleinschreibung "tl"/"el")
-    else if((ing.unit === 'TL' || ing.unit === 'tl') && ing.amount){ totalRawGrams += ing.amount * 5 * scale; }
-    else if((ing.unit === 'EL' || ing.unit === 'el') && ing.amount){ totalRawGrams += ing.amount * 15 * scale; }
+    // TL/EL
+    else if(ing.unit === 'TL' && ing.amount){ totalRawGrams += ing.amount * 5 * scale; }
+    else if(ing.unit === 'EL' && ing.amount){ totalRawGrams += ing.amount * 15 * scale; }
   });
 
   // Kochverlust berechnen
@@ -1099,30 +1064,32 @@ function renderDetail(){
   }
 
   const hasStructured = r.ingredients_structured && r.ingredients_structured.length > 0;
-  const cookedWeight = hasStructured ? estimateCookedWeight(r, currentServings) : null;
   let ingredientsHtml;
   if(hasStructured){
-   ingredientsHtml = r.ingredients_structured.map(ing => {
-  if(ing.amount === null || ing.amount === undefined) return `<li>${escapeHtml(ing.name)}</li>`;
-  const scaledAmount = ing.amount * scale;
-  const displayAmount = scaledAmount % 1 === 0 ? scaledAmount.toFixed(0) : scaledAmount.toFixed(1);
-  const unitStr = ing.unit ? ing.unit : '';
-  const separator = ing.unit ? '' : ' ';
+    ingredientsHtml = r.ingredients_structured.map(ing => {
+      if(ing.amount === null || ing.amount === undefined) return `<li>${escapeHtml(ing.name)}</li>`;
+      const scaledAmount = ing.amount * scale;
+      const displayAmount = scaledAmount % 1 === 0 ? scaledAmount.toFixed(0) : scaledAmount.toFixed(1);
+      const unitStr = ing.unit ? ing.unit : '';
+      const separator = ing.unit ? '' : ' ';
 
-  let gramHint = '';
-  if(!ing.unit && ing.name){
-    const nameLower = ing.name.toLowerCase();
-    for(const [key, weight] of Object.entries(STUECK_GEWICHTE)){
-      if(nameLower.includes(key)){
-        const estGrams = Math.round(scaledAmount * weight);
-        gramHint = ` <span class="ing-estimate">(~${estGrams}g)</span>`;
-        break;
+      // Bei Stück-Angaben (kein unit) Gramm-Schätzung aus STUECK_GEWICHTE ergänzen
+      let gramHint = '';
+      if(!ing.unit && ing.name){
+        const nameLower = ing.name.toLowerCase();
+        for(const [key, weight] of Object.entries(STUECK_GEWICHTE)){
+          if(nameLower.includes(key)){
+            const estGrams = Math.round(scaledAmount * weight);
+            gramHint = ` <span class="ing-estimate">(~${estGrams}g)</span>`;
+            break;
+          }
+        }
       }
-    }
-  }
 
-  return `<li>${displayAmount}${unitStr}${separator}${escapeHtml(ing.name)}${gramHint}</li>`;
-}).join("");
+      return `<li>${displayAmount}${unitStr}${separator}${escapeHtml(ing.name)}${gramHint}</li>`;
+    }).join("");
+  } else {
+    ingredientsHtml = (r.ingredients||"").split("\n").filter(Boolean).map(i=>`<li>${escapeHtml(i)}</li>`).join("");
   }
 
   return `<div class="overlay" id="detail-overlay"><div class="modal">
@@ -1131,12 +1098,11 @@ function renderDetail(){
     <h2>${escapeHtml(r.title)}</h2>
     <div class="card-tags" style="margin-bottom:10px;">${(r.tags||[]).map(t=>`<span class="tag-badge">${t}</span>`).join("")}</div>
     ${r.servings ? `<div class="servings-stepper"><span>Portionen:</span><button type="button" id="servings-minus" class="stepper-btn">\u2212</button><span class="servings-value">${currentServings}</span><button type="button" id="servings-plus" class="stepper-btn">+</button></div>` : ""}
-    ${(r.kcal != null || cookedWeight) ? `<div class="macro-summary">
-      ${r.kcal != null ? `<div class="macro-pill"><strong>${Math.round(r.kcal*scale)}</strong><span>kcal</span></div>` : ""}
+    ${r.kcal != null ? `<div class="macro-summary">
+      <div class="macro-pill"><strong>${Math.round(r.kcal*scale)}</strong><span>kcal</span></div>
       ${r.protein != null ? `<div class="macro-pill"><strong>${Math.round(r.protein*scale)}g</strong><span>Eiwei\u00df</span></div>` : ""}
       ${r.carbs != null ? `<div class="macro-pill"><strong>${Math.round(r.carbs*scale)}g</strong><span>KH</span></div>` : ""}
       ${r.fat != null ? `<div class="macro-pill"><strong>${Math.round(r.fat*scale)}g</strong><span>Fett</span></div>` : ""}
-      ${cookedWeight ? `<div class="macro-pill"><strong>~${cookedWeight}g</strong><span>\ud83e\udd61 gekocht</span></div>` : ""}
     </div>` : ""}
     <div class="detail-section"><h4>Zutaten</h4><ul>${ingredientsHtml}</ul></div>
     <div class="detail-section"><h4>Zubereitung</h4><p class="ztext">${escapeHtml(r.steps||"")}</p></div>
@@ -1352,42 +1318,62 @@ function bindAutoWeekEvents(){
       const allRecipes = state.recipes.filter(r => r.kcal != null && r.servings != null);
       if(allRecipes.length === 0){ alert("Keine Rezepte mit Kalorienangaben gefunden."); return; }
 
-      // Meal Prep Prinzip: 2 Rezepte pro Mahlzeit, die sich abwechseln
-      function pickTwo(pool){
-        const shuffled = [...pool].sort(()=>Math.random()-0.5);
-        return shuffled.slice(0, Math.min(2, shuffled.length));
+      // Kalorienbasierte Auswahl: pro Slot das Rezept wählen, dessen kcal
+      // am nächsten am Slot-Ziel liegt (statt komplett zufällig).
+      // Damit sich Rezepte über die Woche abwechseln, werden bereits
+      // verwendete Rezepte erst nach Ausschöpfen des Pools wiederholt.
+      function pickClosest(pool, target, usedCounts){
+        if(pool.length === 0) return null;
+        // Sortiere nach: zuerst wie oft schon verwendet (weniger zuerst), dann Kalorien-Distanz
+        const sorted = [...pool].sort((a,b)=>{
+          const usedA = usedCounts.get(a.id) || 0;
+          const usedB = usedCounts.get(b.id) || 0;
+          if(usedA !== usedB) return usedA - usedB;
+          return Math.abs(a.kcal - target) - Math.abs(b.kcal - target);
+        });
+        // Unter den am wenigsten benutzten Rezepten: die 3 kalorien-nächsten nehmen und leicht zufällig wählen (Abwechslung)
+        const leastUsed = usedCounts.get(sorted[0].id) || 0;
+        const candidates = sorted.filter(r => (usedCounts.get(r.id)||0) === leastUsed)
+          .sort((a,b)=>Math.abs(a.kcal-target)-Math.abs(b.kcal-target))
+          .slice(0, 3);
+        const chosen = candidates[Math.floor(Math.random()*candidates.length)];
+        usedCounts.set(chosen.id, (usedCounts.get(chosen.id)||0) + 1);
+        return chosen;
       }
 
       const fruehstueckPool = allRecipes.filter(r => (r.tags||[]).includes('Frühstück'));
       const snackPool = allRecipes.filter(r => (r.tags||[]).includes('Snack'));
       const hauptPool = allRecipes.filter(r => (r.tags||[]).includes('Hauptgericht'));
-      const fallback = allRecipes; // Falls Pool leer
+      const fallback = allRecipes;
 
       // Kalorienziel aufteilen: 25% Frühstück, 35% Mittag, 30% Abend, 10% Snack
       const kcalFrueh = Math.round(targetKcal * 0.25);
       const kcalMittag = Math.round(targetKcal * 0.35);
       const kcalAbend = Math.round(targetKcal * 0.30);
 
-      // Je 2 Rezepte pro Slot wählen
-      const fruehstuecke = pickTwo(fruehstueckPool.length >= 2 ? fruehstueckPool : fallback);
-      const mittagessen = pickTwo(hauptPool.length >= 2 ? hauptPool : fallback);
-      const abendessen = pickTwo(hauptPool.filter(r => !mittagessen.includes(r)).length >= 2
-        ? hauptPool.filter(r => !mittagessen.includes(r))
-        : hauptPool);
+      const usedFrueh = new Map();
+      const usedHaupt = new Map();
+      const usedSnack = new Map();
 
       const rows = [];
-      weekDates.forEach((date, idx) => {
-        // Frühstück: abwechselnd Rezept 0 und 1
-        const frueh = fruehstuecke[idx % fruehstuecke.length];
-        if(frueh) rows.push({ user_id: state.user.id, recipe_id: frueh.id, log_date: date, servings_logged: frueh.servings || 1 });
+      weekDates.forEach((date) => {
+        let tagesKcal = 0;
 
-        // Mittag: abwechselnd
-        const mittag = mittagessen[idx % mittagessen.length];
-        if(mittag) rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: mittag.servings || 1 });
+        const frueh = pickClosest(fruehstueckPool.length ? fruehstueckPool : fallback, kcalFrueh, usedFrueh);
+        if(frueh){ rows.push({ user_id: state.user.id, recipe_id: frueh.id, log_date: date, servings_logged: frueh.servings || 1 }); tagesKcal += frueh.kcal; }
 
-        // Abend: abwechselnd (versetzt zum Mittag)
-        const abend = abendessen[(idx + 1) % abendessen.length];
-        if(abend) rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: abend.servings || 1 });
+        const mittag = pickClosest(hauptPool.length ? hauptPool : fallback, kcalMittag, usedHaupt);
+        if(mittag){ rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: mittag.servings || 1 }); tagesKcal += mittag.kcal; }
+
+        const abend = pickClosest(hauptPool.length ? hauptPool : fallback, kcalAbend, usedHaupt);
+        if(abend){ rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: abend.servings || 1 }); tagesKcal += abend.kcal; }
+
+        // Snack ergänzen, um die Lücke zum Tagesziel zu schließen
+        const restKcal = targetKcal - tagesKcal;
+        if(restKcal >= 50 && snackPool.length > 0){
+          const snack = pickClosest(snackPool, restKcal, usedSnack);
+          if(snack) rows.push({ user_id: state.user.id, recipe_id: snack.id, log_date: date, servings_logged: snack.servings || 1 });
+        }
       });
 
       if(rows.length === 0){ alert("Keine passenden Rezepte gefunden."); return; }
