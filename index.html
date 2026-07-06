@@ -1151,6 +1151,7 @@ function renderDetail(){
       ${r.protein != null ? `<div class="macro-pill"><strong>${Math.round(r.protein*scale)}g</strong><span>Eiwei\u00df</span></div>` : ""}
       ${r.carbs != null ? `<div class="macro-pill"><strong>${Math.round(r.carbs*scale)}g</strong><span>KH</span></div>` : ""}
       ${r.fat != null ? `<div class="macro-pill"><strong>${Math.round(r.fat*scale)}g</strong><span>Fett</span></div>` : ""}
+      ${(() => { const w = estimateCookedWeight(r, currentServings); return w ? `<div class="macro-pill"><strong>~${w}g</strong><span>\u{1F963} GEKOCHT</span></div>` : ""; })()}
     </div>` : ""}
     <div class="detail-section"><h4>Zutaten</h4><ul>${ingredientsHtml}</ul></div>
     <div class="detail-section"><h4>Zubereitung</h4><p class="ztext">${escapeHtml(r.steps||"")}</p></div>
@@ -1408,8 +1409,17 @@ function bindAutoWeekEvents(){
       const kcalMittag = Math.round(targetKcal * 0.35);
       const kcalAbend = Math.round(targetKcal * 0.30);
 
+      // Meal-Prep-Prinzip: nur 3 Hauptgerichte für die GANZE Woche fix wählen,
+      // die sich bei Mittag/Abend abwechseln. Kein tägliches Neukochen mehr.
+      const MAIN_DISH_COUNT = 3;
+      const avgHauptTarget = Math.round((kcalMittag + kcalAbend) / 2);
+      const hauptSourcePool = hauptPool.length ? hauptPool : fallback;
+      const mainDishes = [...hauptSourcePool]
+        .sort((a,b)=>Math.abs(a.kcal-avgHauptTarget) - Math.abs(b.kcal-avgHauptTarget))
+        .slice(0, Math.min(MAIN_DISH_COUNT, hauptSourcePool.length));
+      let mainSlotCounter = 0;
+
       const usedFrueh = new Map();
-      const usedHaupt = new Map();
       const usedSnack = new Map();
 
       const rows = [];
@@ -1419,11 +1429,13 @@ function bindAutoWeekEvents(){
         const frueh = pickClosest(fruehstueckPool.length ? fruehstueckPool : fallback, kcalFrueh, usedFrueh);
         if(frueh){ rows.push({ user_id: state.user.id, recipe_id: frueh.id, log_date: date, servings_logged: frueh.servings || 1 }); tagesKcal += frueh.kcal; }
 
-        const mittag = pickClosest(hauptPool.length ? hauptPool : fallback, kcalMittag, usedHaupt);
-        if(mittag){ rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: mittag.servings || 1 }); tagesKcal += mittag.kcal; }
+        if(mainDishes.length > 0){
+          const mittag = mainDishes[mainSlotCounter % mainDishes.length]; mainSlotCounter++;
+          rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: mittag.servings || 1 }); tagesKcal += mittag.kcal;
 
-        const abend = pickClosest(hauptPool.length ? hauptPool : fallback, kcalAbend, usedHaupt);
-        if(abend){ rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: abend.servings || 1 }); tagesKcal += abend.kcal; }
+          const abend = mainDishes[mainSlotCounter % mainDishes.length]; mainSlotCounter++;
+          rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: abend.servings || 1 }); tagesKcal += abend.kcal;
+        }
 
         // Snack ergänzen, um die Lücke zum Tagesziel zu schließen
         const restKcal = targetKcal - tagesKcal;
