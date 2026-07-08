@@ -664,10 +664,11 @@ function renderWeek(){
               if(!recipe) return "";
               const factor = e.servings_logged / (recipe.servings || 1);
               const kcalForEntry = recipe.kcal != null ? Math.round(recipe.kcal * factor) : null;
+              const isBatchEntry = (recipe.servings || 1) > 1;
               return `<div class="today-entry">
                 <div class="today-entry-info today-entry-clickable" data-recipe-id="${recipe.id}">
                   <strong>${escapeHtml(recipe.title)}</strong>
-                  <span>${e.servings_logged} Portion${e.servings_logged==1?'':'en'}${kcalForEntry!==null?` \u00b7 ${kcalForEntry} kcal`:''}</span>
+                  <span>${e.servings_logged} Portion${e.servings_logged==1?'':'en'}${kcalForEntry!==null?` \u00b7 ${kcalForEntry} kcal${isBatchEntry?'/Portion':''}`:''}</span>
                 </div>
                 <button type="button" class="today-shopping-add" data-log-id="${e.id}" data-recipe-id="${recipe.id}" title="Zutaten zur Einkaufsliste">\u{1F6D2}</button>
                 <button type="button" class="today-swap" data-log-id="${e.id}" data-recipe-id="${recipe.id}" title="Rezept tauschen">\u{1F504}</button>
@@ -786,7 +787,8 @@ function renderDayPlanCard(plan){
         const proteinP = recipe.protein != null ? Math.round(recipe.protein * factor) : null;
         const carbsP = recipe.carbs != null ? Math.round(recipe.carbs * factor) : null;
         const fatP = recipe.fat != null ? Math.round(recipe.fat * factor) : null;
-        macroLine = `<span class="dayplan-slot-macros">${kcalP} kcal${proteinP!=null?` \u00b7 E ${proteinP}g`:''}${carbsP!=null?` \u00b7 KH ${carbsP}g`:''}${fatP!=null?` \u00b7 F ${fatP}g`:''}</span>`;
+        const isBatch = (recipe.servings || 1) > 1;
+        macroLine = `<span class="dayplan-slot-macros">${kcalP} kcal${isBatch ? '/Portion' : ''}${proteinP!=null?` \u00b7 E ${proteinP}g`:''}${carbsP!=null?` \u00b7 KH ${carbsP}g`:''}${fatP!=null?` \u00b7 F ${fatP}g`:''}</span>`;
       }
       return `<div class="dayplan-slot">
         <span class="dayplan-slot-label">${slot.label}</span>
