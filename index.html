@@ -1487,17 +1487,18 @@ function bindAutoWeekEvents(){
       // verwendete Rezepte erst nach Ausschöpfen des Pools wiederholt.
       function pickClosest(pool, target, usedCounts){
         if(pool.length === 0) return null;
-        // Sortiere nach: zuerst wie oft schon verwendet (weniger zuerst), dann Kalorien-Distanz
+        const perServingKcal = (r) => r.kcal / (r.servings || 1);
+        // Sortiere nach: zuerst wie oft schon verwendet (weniger zuerst), dann Kalorien-Distanz (pro Portion)
         const sorted = [...pool].sort((a,b)=>{
           const usedA = usedCounts.get(a.id) || 0;
           const usedB = usedCounts.get(b.id) || 0;
           if(usedA !== usedB) return usedA - usedB;
-          return Math.abs(a.kcal - target) - Math.abs(b.kcal - target);
+          return Math.abs(perServingKcal(a) - target) - Math.abs(perServingKcal(b) - target);
         });
         // Unter den am wenigsten benutzten Rezepten: die 3 kalorien-nächsten nehmen und leicht zufällig wählen (Abwechslung)
         const leastUsed = usedCounts.get(sorted[0].id) || 0;
         const candidates = sorted.filter(r => (usedCounts.get(r.id)||0) === leastUsed)
-          .sort((a,b)=>Math.abs(a.kcal-target)-Math.abs(b.kcal-target))
+          .sort((a,b)=>Math.abs(perServingKcal(a)-target)-Math.abs(perServingKcal(b)-target))
           .slice(0, 3);
         const chosen = candidates[Math.floor(Math.random()*candidates.length)];
         usedCounts.set(chosen.id, (usedCounts.get(chosen.id)||0) + 1);
@@ -1520,7 +1521,7 @@ function bindAutoWeekEvents(){
       const avgHauptTarget = Math.round((kcalMittag + kcalAbend) / 2);
       const hauptSourcePool = hauptPool.length ? hauptPool : fallback;
       const mainDishes = [...hauptSourcePool]
-        .sort((a,b)=>Math.abs(a.kcal-avgHauptTarget) - Math.abs(b.kcal-avgHauptTarget))
+        .sort((a,b)=>Math.abs((a.kcal/(a.servings||1))-avgHauptTarget) - Math.abs((b.kcal/(b.servings||1))-avgHauptTarget))
         .slice(0, Math.min(MAIN_DISH_COUNT, hauptSourcePool.length));
       let mainSlotCounter = 0;
 
@@ -1532,21 +1533,21 @@ function bindAutoWeekEvents(){
         let tagesKcal = 0;
 
         const frueh = pickClosest(fruehstueckPool.length ? fruehstueckPool : fallback, kcalFrueh, usedFrueh);
-        if(frueh){ rows.push({ user_id: state.user.id, recipe_id: frueh.id, log_date: date, servings_logged: frueh.servings || 1 }); tagesKcal += frueh.kcal; }
+        if(frueh){ rows.push({ user_id: state.user.id, recipe_id: frueh.id, log_date: date, servings_logged: 1 }); tagesKcal += frueh.kcal / (frueh.servings || 1); }
 
         if(mainDishes.length > 0){
           const mittag = mainDishes[mainSlotCounter % mainDishes.length]; mainSlotCounter++;
-          rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: mittag.servings || 1 }); tagesKcal += mittag.kcal;
+          rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: 1 }); tagesKcal += mittag.kcal / (mittag.servings || 1);
 
           const abend = mainDishes[mainSlotCounter % mainDishes.length]; mainSlotCounter++;
-          rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: abend.servings || 1 }); tagesKcal += abend.kcal;
+          rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: 1 }); tagesKcal += abend.kcal / (abend.servings || 1);
         }
 
         // Snack ergänzen, um die Lücke zum Tagesziel zu schließen
         const restKcal = targetKcal - tagesKcal;
         if(restKcal >= 50 && snackPool.length > 0){
           const snack = pickClosest(snackPool, restKcal, usedSnack);
-          if(snack) rows.push({ user_id: state.user.id, recipe_id: snack.id, log_date: date, servings_logged: snack.servings || 1 });
+          if(snack) rows.push({ user_id: state.user.id, recipe_id: snack.id, log_date: date, servings_logged: 1 });
         }
       });
 
@@ -1573,10 +1574,10 @@ function bindRecipePickerEvents(){
       const existing = state.dayPlanItems.find(i => i.day_plan_id === dayPlanId && i.slot === slot);
       try{
         if(existing){
-          const { error } = await sb.from("day_plan_items").update({ recipe_id: recipeId, servings: recipe.servings || 1 }).eq("id", existing.id);
+          const { error } = await sb.from("day_plan_items").update({ recipe_id: recipeId, servings: 1 }).eq("id", existing.id);
           if(error) throw error;
         } else {
-          const { error } = await sb.from("day_plan_items").insert({ day_plan_id: dayPlanId, recipe_id: recipeId, slot, servings: recipe.servings || 1 });
+          const { error } = await sb.from("day_plan_items").insert({ day_plan_id: dayPlanId, recipe_id: recipeId, slot, servings: 1 });
           if(error) throw error;
         }
         state.pickerOpen = null; await loadDayPlans();
@@ -1596,7 +1597,7 @@ function bindSwapEvents(){
       const { logId } = state.swapTarget;
       const newRecipe = state.recipes.find(r => r.id === newRecipeId);
       try{
-        const { error } = await sb.from("daily_log").update({ recipe_id: newRecipeId, servings_logged: newRecipe.servings || 1 }).eq("id", logId);
+        const { error } = await sb.from("daily_log").update({ recipe_id: newRecipeId, servings_logged: 1 }).eq("id", logId);
         if(error) throw error;
         state.swapTarget = null;
         await loadWeekLog();
@@ -1621,7 +1622,7 @@ function bindPlanPopupEvents(){
     const recipe = state.recipes.find(r => r.id === state.planRecipeId);
     const confirmBtn = document.getElementById("plan-confirm");
     confirmBtn.disabled = true; confirmBtn.textContent = "Wird hinzugef\u00fcgt \u2026";
-    const rows = state.planSelectedDays.map(date => ({ user_id: state.user.id, recipe_id: state.planRecipeId, log_date: date, servings_logged: recipe.servings || 1 }));
+    const rows = state.planSelectedDays.map(date => ({ user_id: state.user.id, recipe_id: state.planRecipeId, log_date: date, servings_logged: 1 }));
     const { error } = await sb.from("daily_log").insert(rows);
     if(error){ alert("Fehler: " + error.message); confirmBtn.disabled=false; confirmBtn.textContent="Hinzuf\u00fcgen"; return; }
     state.planRecipeId = null; await loadWeekLog();
