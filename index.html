@@ -845,16 +845,24 @@ function calcProfil(){
   if(p.ziel === "abnehmen") kcal = Math.round(tdee * 0.85);
   else if(p.ziel === "halten") kcal = tdee;
 
-  // Makros (sportgerecht): 35% Eiweiß, 35% KH, 30% Fett
-  // Eiweiß: mind. 1.6g pro kg Körpergewicht (wissenschaftliche Empfehlung für Kraftsport)
-  const proteinByWeight = Math.round(p.gewicht * 1.6);
-  const proteinByPercent = Math.round((kcal * 0.35) / 4);
-  const protein = Math.max(proteinByWeight, proteinByPercent);
-  const fat = Math.round((kcal * 0.30) / 9);
-  const carbs = Math.round((kcal - protein * 4 - fat * 9) / 4);
+  // Sicherheitsuntergrenze: nie unter den Grundumsatz (BMR) gehen,
+  // da das langfristig ungesund ist (zu wenig Energie für Organfunktionen)
+  const bmrRounded = Math.round(bmr);
+  let kcalWasCapped = false;
+  if(kcal < bmrRounded){ kcal = bmrRounded; kcalWasCapped = true; }
+
+  // Makros nach Körpergewicht (statt fixer Prozente):
+  // Eiweiß: 2,2 g/kg (oberer, sicherer Wert für Muskelerhalt im Kaloriendefizit)
+  // Fett: 0,8 g/kg (Mittelwert aus 0,7-0,9 g/kg)
+  // Kohlenhydrate: füllen die restlichen Kalorien auf
+  const protein = Math.round(p.gewicht * 2.2);
+  const fat = Math.round(p.gewicht * 0.8);
+  const carbs = Math.max(40, Math.round((kcal - protein * 4 - fat * 9) / 4));
 
   state.profilKcal = kcal;
   state.profilMakros = { protein, carbs, fat };
+  state.profilKcalCapped = kcalWasCapped;
+  state.profilBmr = bmrRounded;
   localStorage.setItem("jumphoria_profil", JSON.stringify(p));
 }
 
@@ -917,6 +925,7 @@ function renderProfil(){
       ${kcal ? `
       <div style="background:var(--ink-on-paper); border-radius:16px; padding:22px; margin-bottom:16px;">
         <h4 style="color:var(--pine); font-size:13px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 16px;">Dein tägliches Ziel</h4>
+        ${state.profilKcalCapped ? `<div style="background:rgba(201,151,58,0.15); border:1px solid var(--pine); border-radius:10px; padding:10px 12px; margin-bottom:14px; font-size:12.5px; color:var(--ink-on-paper); line-height:1.4;">⚠️ Dein Kalorienziel wurde auf deinen Grundumsatz (${state.profilBmr} kcal) angehoben. Weniger zu essen wäre auf Dauer ungesund, da dein Körper auch in Ruhe diese Energie für lebenswichtige Funktionen braucht.</div>` : ""}
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
           <div style="flex:1; min-width:80px; background:rgba(255,255,255,0.1); border-radius:12px; padding:14px; text-align:center;">
             <div style="font-size:28px; font-weight:700; color:var(--pine); font-family:Georgia,serif;">${kcal}</div>
