@@ -39,7 +39,7 @@
 
   .app{
     max-width:1000px !important; width:100% !important; margin:0 auto !important;
-    padding:24px 18px 100px !important; box-sizing:border-box !important;
+    padding:24px 18px 80px !important; box-sizing:border-box !important;
     position:relative !important; left:0 !important; right:0 !important;
   }
 
@@ -107,20 +107,20 @@
     font-size:13.5px; line-height:1.5; margin-bottom:16px; text-align:left;
   }
 
-  /* ====== MAIN TABS (Bottom Navigation) ====== */
+  /* ====== MAIN TABS ====== */
   .main-tabs{
-    position:fixed; left:0; right:0; bottom:0; z-index:50;
-    display:flex; gap:2px;
-    background:var(--ink-on-paper); padding:6px 6px calc(6px + env(safe-area-inset-bottom));
-    box-shadow:0 -4px 16px rgba(0,0,0,0.18);
+    display:grid; grid-template-columns:repeat(5, 1fr); gap:3px;
+    margin-bottom:22px;
+    background:var(--ink-on-paper); border-radius:14px; padding:5px;
   }
   .main-tab{
-    flex:1 1 0; background:none; border:none; padding:9px 4px;
-    font-size:11px; font-weight:700; color:var(--ink); opacity:0.55; cursor:pointer;
-    border-radius:11px; font-family:inherit; text-align:center; transition:all .15s;
+    background:none; border:none; padding:9px 3px;
+    font-size:10.5px; font-weight:700; color:var(--ink); opacity:0.55; cursor:pointer;
+    border-radius:10px; font-family:inherit; text-align:center; transition:all .15s;
     white-space:nowrap; display:flex; flex-direction:column; align-items:center; gap:2px;
+    min-width:0;
   }
-  .main-tab-icon{ font-size:18px; line-height:1; }
+  .main-tab-icon{ font-size:17px; line-height:1; }
   .main-tab.active{
     opacity:1; color:var(--pine);
     background:rgba(201,153,59,0.14);
@@ -362,7 +362,7 @@
 
   /* ====== FAB ====== */
   .fab{
-    position:fixed; bottom:92px; right:22px; width:58px; height:58px;
+    position:fixed; bottom:26px; right:26px; width:58px; height:58px;
     border-radius:50%; background:var(--terracotta); color:#fff;
     font-size:28px; border:none; box-shadow:var(--shadow); cursor:pointer;
     display:flex; align-items:center; justify-content:center; line-height:0;
@@ -459,7 +459,6 @@
 <body>
 
 <div id="app" class="app"></div>
-<div id="bottom-nav"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -551,32 +550,17 @@ let state = {
 
 function render(){
   const el = document.getElementById("app");
-  const navEl = document.getElementById("bottom-nav");
   if(state.view === "loading"){
     el.innerHTML = `<div class="loading">L\u00e4dt \u2026</div>`;
-    navEl.innerHTML = "";
     return;
   }
   if(state.view === "login" || state.view === "register"){
     el.innerHTML = renderAuth();
-    navEl.innerHTML = "";
     bindAuthEvents();
     return;
   }
   el.innerHTML = renderAppShell();
-  navEl.innerHTML = renderBottomNav();
   bindAppEvents();
-}
-
-function renderBottomNav(){
-  return `
-    <div class="main-tabs">
-      <button class="main-tab ${state.mainTab==='recipes'?'active':''}" data-tab="recipes"><span class="main-tab-icon">\u{1F373}</span>Rezepte</button>
-      <button class="main-tab ${state.mainTab==='today'?'active':''}" data-tab="today"><span class="main-tab-icon">\u{1F4C5}</span>Woche</button>
-      <button class="main-tab ${state.mainTab==='shopping'?'active':''}" data-tab="shopping"><span class="main-tab-icon">\u{1F6D2}</span>Einkauf</button>
-      <button class="main-tab ${state.mainTab==='dayplans'?'active':''}" data-tab="dayplans"><span class="main-tab-icon">\u{1F4CB}</span>Pl\u00e4ne</button>
-      <button class="main-tab ${state.mainTab==='profil'?'active':''}" data-tab="profil"><span class="main-tab-icon">\u{1F464}</span>Profil</button>
-    </div>`;
 }
 
 /* ---------- AUTH ---------- */
@@ -657,6 +641,13 @@ function renderAppShell(){
         <span>${state.user?.email || ""}</span>
         <button class="btn-ghost" id="logout-btn">Abmelden</button>
       </div>
+    </div>
+    <div class="main-tabs">
+      <button class="main-tab ${state.mainTab==='recipes'?'active':''}" data-tab="recipes"><span class="main-tab-icon">\u{1F373}</span>Rezepte</button>
+      <button class="main-tab ${state.mainTab==='today'?'active':''}" data-tab="today"><span class="main-tab-icon">\u{1F4C5}</span>Woche</button>
+      <button class="main-tab ${state.mainTab==='shopping'?'active':''}" data-tab="shopping"><span class="main-tab-icon">\u{1F6D2}</span>Einkauf</button>
+      <button class="main-tab ${state.mainTab==='dayplans'?'active':''}" data-tab="dayplans"><span class="main-tab-icon">\u{1F4CB}</span>Pl\u00e4ne</button>
+      <button class="main-tab ${state.mainTab==='profil'?'active':''}" data-tab="profil"><span class="main-tab-icon">\u{1F464}</span>Profil</button>
     </div>
     ${state.mainTab==='today' ? renderWeek() : state.mainTab==='shopping' ? renderShoppingList() : state.mainTab==='dayplans' ? renderDayPlans() : state.mainTab==='profil' ? renderProfil() : renderRecipesTab()}
     ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="fab" id="add-fab" title="Neues Rezept">+</button>` : ""}
