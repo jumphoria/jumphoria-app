@@ -230,6 +230,14 @@
     text-transform:uppercase;
   }
   .dayplan-slot-recipe{ flex:1; color:var(--ink-on-paper); font-size:14px; }
+  .dayplan-slot-info{ flex:1; display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .dayplan-slot-recipe-btn{
+    background:none; border:none; padding:0; text-align:left; cursor:pointer;
+    color:var(--ink-on-paper); font-size:14px; font-weight:600; text-decoration:underline;
+    text-decoration-color:transparent; transition:text-decoration-color .15s;
+  }
+  .dayplan-slot-recipe-btn:hover{ text-decoration-color:var(--pine); }
+  .dayplan-slot-macros{ font-size:11.5px; color:var(--ink-on-paper); opacity:0.6; }
   .dayplan-swap-btn{ font-size:12px; padding:6px 12px; flex-shrink:0; }
 
   /* ====== RECIPE PICKER ====== */
@@ -771,9 +779,22 @@ function renderDayPlanCard(plan){
     ${slots.map(slot => {
       const item = items.find(i => i.slot === slot.key);
       const recipe = item ? state.recipes.find(r => r.id === item.recipe_id) : null;
+      let macroLine = "";
+      if(recipe && recipe.kcal != null){
+        const factor = item.servings / (recipe.servings || 1);
+        const kcalP = Math.round(recipe.kcal * factor);
+        const proteinP = recipe.protein != null ? Math.round(recipe.protein * factor) : null;
+        const carbsP = recipe.carbs != null ? Math.round(recipe.carbs * factor) : null;
+        const fatP = recipe.fat != null ? Math.round(recipe.fat * factor) : null;
+        macroLine = `<span class="dayplan-slot-macros">${kcalP} kcal${proteinP!=null?` \u00b7 E ${proteinP}g`:''}${carbsP!=null?` \u00b7 KH ${carbsP}g`:''}${fatP!=null?` \u00b7 F ${fatP}g`:''}</span>`;
+      }
       return `<div class="dayplan-slot">
         <span class="dayplan-slot-label">${slot.label}</span>
-        ${recipe ? `<span class="dayplan-slot-recipe">${escapeHtml(recipe.title)}</span><button type="button" class="btn-outline dayplan-swap-btn" data-dayplan-id="${plan.id}" data-slot="${slot.key}">Tauschen</button>`
+        ${recipe ? `<div class="dayplan-slot-info">
+              <button type="button" class="dayplan-slot-recipe-btn" data-recipe-id="${recipe.id}">${escapeHtml(recipe.title)}</button>
+              ${macroLine}
+            </div>
+            <button type="button" class="btn-outline dayplan-swap-btn" data-dayplan-id="${plan.id}" data-slot="${slot.key}">Tauschen</button>`
                  : `<button type="button" class="btn-outline dayplan-swap-btn" data-dayplan-id="${plan.id}" data-slot="${slot.key}">+ Rezept w\u00e4hlen</button>`}
       </div>`;
     }).join("")}
@@ -1314,7 +1335,7 @@ function bindAppEvents(){
     });
   });
 
-  document.querySelectorAll(".today-entry-clickable").forEach(el=>{
+  document.querySelectorAll(".today-entry-clickable, .dayplan-slot-recipe-btn").forEach(el=>{
     el.addEventListener("click", async ()=>{
       const baseRecipe = state.recipes.find(r => r.id === el.dataset.recipeId);
       if(!baseRecipe) return;
