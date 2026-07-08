@@ -459,6 +459,7 @@
 <body>
 
 <div id="app" class="app"></div>
+<div id="bottom-nav"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -550,17 +551,32 @@ let state = {
 
 function render(){
   const el = document.getElementById("app");
+  const navEl = document.getElementById("bottom-nav");
   if(state.view === "loading"){
     el.innerHTML = `<div class="loading">L\u00e4dt \u2026</div>`;
+    navEl.innerHTML = "";
     return;
   }
   if(state.view === "login" || state.view === "register"){
     el.innerHTML = renderAuth();
+    navEl.innerHTML = "";
     bindAuthEvents();
     return;
   }
   el.innerHTML = renderAppShell();
+  navEl.innerHTML = renderBottomNav();
   bindAppEvents();
+}
+
+function renderBottomNav(){
+  return `
+    <div class="main-tabs">
+      <button class="main-tab ${state.mainTab==='recipes'?'active':''}" data-tab="recipes"><span class="main-tab-icon">\u{1F373}</span>Rezepte</button>
+      <button class="main-tab ${state.mainTab==='today'?'active':''}" data-tab="today"><span class="main-tab-icon">\u{1F4C5}</span>Woche</button>
+      <button class="main-tab ${state.mainTab==='shopping'?'active':''}" data-tab="shopping"><span class="main-tab-icon">\u{1F6D2}</span>Einkauf</button>
+      <button class="main-tab ${state.mainTab==='dayplans'?'active':''}" data-tab="dayplans"><span class="main-tab-icon">\u{1F4CB}</span>Pl\u00e4ne</button>
+      <button class="main-tab ${state.mainTab==='profil'?'active':''}" data-tab="profil"><span class="main-tab-icon">\u{1F464}</span>Profil</button>
+    </div>`;
 }
 
 /* ---------- AUTH ---------- */
@@ -641,13 +657,6 @@ function renderAppShell(){
         <span>${state.user?.email || ""}</span>
         <button class="btn-ghost" id="logout-btn">Abmelden</button>
       </div>
-    </div>
-    <div class="main-tabs">
-      <button class="main-tab ${state.mainTab==='recipes'?'active':''}" data-tab="recipes"><span class="main-tab-icon">\u{1F373}</span>Rezepte</button>
-      <button class="main-tab ${state.mainTab==='today'?'active':''}" data-tab="today"><span class="main-tab-icon">\u{1F4C5}</span>Woche</button>
-      <button class="main-tab ${state.mainTab==='shopping'?'active':''}" data-tab="shopping"><span class="main-tab-icon">\u{1F6D2}</span>Einkauf</button>
-      <button class="main-tab ${state.mainTab==='dayplans'?'active':''}" data-tab="dayplans"><span class="main-tab-icon">\u{1F4CB}</span>Pl\u00e4ne</button>
-      <button class="main-tab ${state.mainTab==='profil'?'active':''}" data-tab="profil"><span class="main-tab-icon">\u{1F464}</span>Profil</button>
     </div>
     ${state.mainTab==='today' ? renderWeek() : state.mainTab==='shopping' ? renderShoppingList() : state.mainTab==='dayplans' ? renderDayPlans() : state.mainTab==='profil' ? renderProfil() : renderRecipesTab()}
     ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="fab" id="add-fab" title="Neues Rezept">+</button>` : ""}
