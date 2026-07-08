@@ -157,6 +157,10 @@
     display:inline-flex; align-items:center; gap:6px; margin:8px 0 12px;
     font-size:13px; padding:8px 14px;
   }
+  .ing-row{
+    display:flex; align-items:flex-start; gap:9px; cursor:pointer; padding:2px 0;
+  }
+  .ing-row input[type="checkbox"]{ margin-top:3px; flex-shrink:0; cursor:pointer; }
   .today-add-btn{
     width:100%; margin-top:10px; background:var(--terracotta-soft); color:var(--pine-dark);
     border:none; border-radius:10px; padding:9px; font-size:13px; font-weight:600;
@@ -778,14 +782,19 @@ function renderDayPlanCard(plan){
 
 function renderRecipePickerPopup(){
   const search = state.pickerSearch || "";
-  const filtered = state.recipes.filter(r => !search || r.title.toLowerCase().includes(search.toLowerCase()));
+  const slot = state.pickerOpen && state.pickerOpen.slot;
+  const slotTagMap = { fruehstueck: 'Frühstück', mittag: 'Hauptgericht', abend: 'Hauptgericht', snack: 'Snack' };
+  const requiredTag = slotTagMap[slot];
+  const slotLabelMap = { fruehstueck: 'Frühstück', mittag: 'Mittag', abend: 'Abend', snack: 'Snack' };
+  const pool = requiredTag ? state.recipes.filter(r => (r.tags||[]).includes(requiredTag)) : state.recipes;
+  const filtered = pool.filter(r => !search || r.title.toLowerCase().includes(search.toLowerCase()));
   return `<div class="overlay" id="picker-overlay"><div class="modal plan-modal">
     <button class="modal-close" id="picker-close">\u2715</button>
-    <h2>Rezept w\u00e4hlen</h2>
+    <h2>Rezept w\u00e4hlen${slotLabelMap[slot] ? ` \u2013 ${slotLabelMap[slot]}` : ''}</h2>
     <input class="search-input" id="picker-search" placeholder="Rezept suchen \u2026" value="${escapeAttr(search)}" style="margin-bottom:14px;">
     <div class="picker-list">
       ${filtered.map(r => `<button type="button" class="picker-item" data-recipe-id="${r.id}"><span>${escapeHtml(r.title)}</span>${r.kcal != null ? `<span class="picker-kcal">${Math.round(r.kcal/(r.servings||1))} kcal</span>` : ""}</button>`).join("")}
-      ${filtered.length === 0 ? `<p style="color:var(--ink-on-paper); opacity:0.6;">Keine Rezepte gefunden.</p>` : ""}
+      ${filtered.length === 0 ? `<p style="color:var(--ink-on-paper); opacity:0.6;">Keine passenden Rezepte gefunden.</p>` : ""}
     </div>
   </div></div>`;
 }
@@ -1159,8 +1168,8 @@ function renderDetail(){
   const hasStructured = r.ingredients_structured && r.ingredients_structured.length > 0;
   let ingredientsHtml;
   if(hasStructured){
-    ingredientsHtml = r.ingredients_structured.map(ing => {
-      if(ing.amount === null || ing.amount === undefined) return `<li>${escapeHtml(ing.name)}</li>`;
+    ingredientsHtml = r.ingredients_structured.map((ing, idx) => {
+      if(ing.amount === null || ing.amount === undefined) return `<li><label class="ing-row"><input type="checkbox" class="ing-select" data-ing-index="${idx}" checked><span>${escapeHtml(ing.name)}</span></label></li>`;
       const scaledAmount = ing.amount * scale;
       const displayAmount = scaledAmount % 1 === 0 ? scaledAmount.toFixed(0) : scaledAmount.toFixed(1);
       const unitStr = ing.unit ? ing.unit : '';
@@ -1179,7 +1188,7 @@ function renderDetail(){
         }
       }
 
-      return `<li>${displayAmount}${unitStr}${separator}${escapeHtml(ing.name)}${gramHint}</li>`;
+      return `<li><label class="ing-row"><input type="checkbox" class="ing-select" data-ing-index="${idx}" checked><span>${displayAmount}${unitStr}${separator}${escapeHtml(ing.name)}${gramHint}</span></label></li>`;
     }).join("");
   } else {
     ingredientsHtml = (r.ingredients||"").split("\n").filter(Boolean).map(i=>`<li>${escapeHtml(i)}</li>`).join("");
@@ -1200,7 +1209,7 @@ function renderDetail(){
     </div>` : ""}
     <div class="detail-section">
       <h4>Zutaten</h4>
-      ${hasStructured ? `<button type="button" class="btn-outline shopping-add-btn" id="detail-add-shopping">\u{1F6D2} Diese Zutaten zur Einkaufsliste</button>` : ""}
+      ${hasStructured ? `<button type="button" class="btn-outline shopping-add-btn" id="detail-add-shopping">\u{1F6D2} Ausgewählte zur Einkaufsliste</button>` : ""}
       <ul>${ingredientsHtml}</ul>
     </div>
     <div class="detail-section"><h4>Zubereitung</h4><p class="ztext">${escapeHtml(r.steps||"")}</p></div>
@@ -1370,10 +1379,14 @@ function bindAppEvents(){
       const baseServings = r.servings || 1;
       const currentServings = state.detailServings || baseServings;
       const scale = currentServings / baseServings;
+      const selectedIndexes = new Set();
+      document.querySelectorAll(".ing-select").forEach(cb => { if(cb.checked) selectedIndexes.add(parseInt(cb.dataset.ingIndex, 10)); });
+      const selectedIngredients = r.ingredients_structured.filter((ing, idx) => selectedIndexes.has(idx));
+      if(selectedIngredients.length === 0){ alert("Bitte mindestens eine Zutat auswählen."); return; }
       detailAddShoppingBtn.textContent = "\u23f3 Wird hinzugef\u00fcgt \u2026";
-      await addIngredientsToShoppingList(r.ingredients_structured, scale);
+      await addIngredientsToShoppingList(selectedIngredients, scale);
       detailAddShoppingBtn.textContent = "\u2705 Hinzugef\u00fcgt!";
-      setTimeout(()=>{ detailAddShoppingBtn.textContent = "\u{1F6D2} Diese Zutaten zur Einkaufsliste"; }, 1800);
+      setTimeout(()=>{ detailAddShoppingBtn.textContent = "\u{1F6D2} Ausgewählte zur Einkaufsliste"; }, 1800);
     });
   }
 
