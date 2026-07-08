@@ -148,6 +148,15 @@
     cursor:pointer; font-size:15px; padding:6px;
   }
   .today-swap:hover{ color:var(--pine); opacity:1; }
+  .today-shopping-add{
+    background:none; border:none; color:var(--ink-on-paper); opacity:0.5;
+    cursor:pointer; font-size:15px; padding:6px;
+  }
+  .today-shopping-add:hover{ color:var(--terracotta); opacity:1; }
+  .shopping-add-btn{
+    display:inline-flex; align-items:center; gap:6px; margin:8px 0 12px;
+    font-size:13px; padding:8px 14px;
+  }
   .today-add-btn{
     width:100%; margin-top:10px; background:var(--terracotta-soft); color:var(--pine-dark);
     border:none; border-radius:10px; padding:9px; font-size:13px; font-weight:600;
@@ -475,7 +484,7 @@ let state = {
   activeDayPlanTarget: null,
   pickerOpen: null,
   pickerSearch: "",
-  shoppingChecks: {},
+  shoppingItems: [],
   planRecipeId: null,
   planSelectedDays: [],
   autoWeekOpen: false,
@@ -648,6 +657,7 @@ function renderWeek(){
                   <strong>${escapeHtml(recipe.title)}</strong>
                   <span>${e.servings_logged} Portion${e.servings_logged==1?'':'en'}${kcalForEntry!==null?` \u00b7 ${kcalForEntry} kcal`:''}</span>
                 </div>
+                <button type="button" class="today-shopping-add" data-log-id="${e.id}" data-recipe-id="${recipe.id}" title="Zutaten zur Einkaufsliste">\u{1F6D2}</button>
                 <button type="button" class="today-swap" data-log-id="${e.id}" data-recipe-id="${recipe.id}" title="Rezept tauschen">\u{1F504}</button>
                 <button type="button" class="today-remove" data-log-id="${e.id}">\u2715</button>
               </div>`;
@@ -657,42 +667,68 @@ function renderWeek(){
   }).join("")}</div>`;
 }
 
-function buildShoppingItems(){
-  const entries = state.weekLog || [];
-  const details = state.weekRecipeDetails || {};
-  const itemMap = {};
-  entries.forEach(e => {
-    const recipe = state.recipes.find(r => r.id === e.recipe_id);
-    const detail = details[e.recipe_id];
-    const ingredientsStructured = detail && detail.ingredients_structured;
-    if(!recipe || !ingredientsStructured) return;
-    const servings = (detail && detail.servings) || recipe.servings || 1;
-    const factor = e.servings_logged / servings;
-    ingredientsStructured.forEach(ing => {
-      if(!ing.name) return;
-      const unit = ing.amount !== null && ing.amount !== undefined ? (ing.unit || "") : "";
-      const key = (unit + "_" + ing.name).toLowerCase().replace(/[^a-z0-9_]/g, "");
-      if(!itemMap[key]){ itemMap[key] = { key, name: ing.name, unit, amount: 0, hasAmount: ing.amount !== null && ing.amount !== undefined }; }
-      if(ing.amount !== null && ing.amount !== undefined){ itemMap[key].amount += ing.amount * factor; }
-    });
-  });
-  return Object.values(itemMap).sort((a,b) => a.name.localeCompare(b.name));
+async function loadShoppingItems(){
+  const { data, error } = await sb.from("shopping_list_items").select("*").order("created_at", { ascending: true });
+  if(error){ console.error(error); return; }
+  state.shoppingItems = data || [];
+  render();
+}
+
+async function addIngredientsToShoppingList(ingredientsStructured, factor){
+  if(!ingredientsStructured || ingredientsStructured.length === 0) return;
+  // Bestehende, noch nicht abgehakte Items laden, um Mengen zusammenzuführen statt Duplikate zu erzeugen
+  const { data: existingItems, error: fetchError } = await sb.from("shopping_list_items").select("*").eq("checked", false);
+  if(fetchError){ alert("Fehler: " + fetchError.message); return; }
+  const existingMap = {};
+  (existingItems||[]).forEach(it => { existingMap[(it.unit||"").toLowerCase()+"_"+it.name.toLowerCase()] = it; });
+
+  for(const ing of ingredientsStructured){
+    if(!ing.name) continue;
+    const hasAmount = ing.amount !== null && ing.amount !== undefined;
+    const amount = hasAmount ? ing.amount * factor : null;
+    const unit = ing.unit || "";
+    const key = unit.toLowerCase()+"_"+ing.name.toLowerCase();
+    const match = existingMap[key];
+    if(match){
+      const newAmount = (match.amount || 0) + (amount || 0);
+      const { error } = await sb.from("shopping_list_items").update({ amount: hasAmount ? newAmount : match.amount }).eq("id", match.id);
+      if(error){ console.error(error); }
+    } else {
+      const { data: inserted, error } = await sb.from("shopping_list_items")
+        .insert({ user_id: state.user.id, name: ing.name, unit, amount, checked: false })
+        .select().single();
+      if(error){ console.error(error); continue; }
+      if(inserted) existingMap[key] = inserted;
+    }
+  }
+  await loadShoppingItems();
 }
 
 function renderShoppingList(){
-  const items = buildShoppingItems();
+  const items = state.shoppingItems || [];
   if(items.length === 0){
-    return `<div class="empty-state"><h3>Einkaufsliste ist leer</h3><p>Plane Rezepte im "Woche"-Tab ein, dann erscheinen hier automatisch die Zutaten.</p></div>`;
+    return `<div class="empty-state"><h3>Einkaufsliste ist leer</h3><p>Öffne ein Rezept oder einen geplanten Eintrag in der Woche und tippe auf \u{1F6D2}, um seine Zutaten hier hinzuzuf\u00fcgen.</p></div>`;
   }
-  return `<div class="shopping-list">${items.map(item => {
-    const checked = state.shoppingChecks && state.shoppingChecks[item.key];
-    const displayAmount = item.hasAmount ? (item.amount % 1 === 0 ? item.amount.toFixed(0) : item.amount.toFixed(1)) + item.unit + " " : "";
-    return `<label class="shopping-item ${checked?'is-checked':''}">
-      <input type="checkbox" class="shopping-checkbox" data-key="${escapeAttr(item.key)}" ${checked?'checked':''}>
-      <span class="shopping-check-icon">${checked?'\u2713':''}</span>
-      <span class="shopping-text">${displayAmount}${escapeHtml(item.name)}</span>
-    </label>`;
-  }).join("")}</div>`;
+  const sorted = [...items].sort((a,b) => a.name.localeCompare(b.name));
+  return `<div class="shopping-list">
+    <div style="text-align:right; margin-bottom:10px;">
+      <button type="button" class="btn-outline" id="shopping-clear-all" style="font-size:12.5px; padding:6px 12px;">\u{1F5D1} Liste leeren</button>
+    </div>
+    ${sorted.map(item => {
+      const checked = !!item.checked;
+      const displayAmount = (item.amount !== null && item.amount !== undefined)
+        ? (item.amount % 1 === 0 ? item.amount.toFixed(0) : item.amount.toFixed(1)) + (item.unit || "") + " "
+        : "";
+      return `<div class="shopping-item ${checked?'is-checked':''}">
+        <label style="display:flex; align-items:center; gap:10px; flex:1; cursor:pointer;">
+          <input type="checkbox" class="shopping-checkbox" data-id="${item.id}" ${checked?'checked':''}>
+          <span class="shopping-check-icon">${checked?'\u2713':''}</span>
+          <span class="shopping-text">${displayAmount}${escapeHtml(item.name)}</span>
+        </label>
+        <button type="button" class="today-remove" data-shopping-id="${item.id}" title="Entfernen">\u2715</button>
+      </div>`;
+    }).join("")}
+  </div>`;
 }
 
 function renderDayPlans(){
@@ -1162,7 +1198,11 @@ function renderDetail(){
       ${r.fat != null ? `<div class="macro-pill"><strong>${Math.round(r.fat*scale)}g</strong><span>Fett</span></div>` : ""}
       ${(() => { const w = estimateCookedWeight(r, currentServings); return w ? `<div class="macro-pill"><strong>~${w}g</strong><span>\u{1F963} GEKOCHT</span></div>` : ""; })()}
     </div>` : ""}
-    <div class="detail-section"><h4>Zutaten</h4><ul>${ingredientsHtml}</ul></div>
+    <div class="detail-section">
+      <h4>Zutaten</h4>
+      ${hasStructured ? `<button type="button" class="btn-outline shopping-add-btn" id="detail-add-shopping">\u{1F6D2} Diese Zutaten zur Einkaufsliste</button>` : ""}
+      <ul>${ingredientsHtml}</ul>
+    </div>
     <div class="detail-section"><h4>Zubereitung</h4><p class="ztext">${escapeHtml(r.steps||"")}</p></div>
     <div class="modal-actions">
       ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="btn-outline" id="edit-from-detail">Bearbeiten</button>` : ""}
@@ -1181,7 +1221,7 @@ function bindAppEvents(){
     tab.addEventListener("click", ()=>{
       state.mainTab = tab.dataset.tab;
       if(state.mainTab === "today") loadWeekLog();
-      if(state.mainTab === "shopping"){ loadWeekLog(); loadShoppingChecks(); }
+      if(state.mainTab === "shopping"){ loadShoppingItems(); }
       if(state.mainTab === "dayplans") loadDayPlans();
       if(state.mainTab === "profil") calcProfil();
       render();
@@ -1281,18 +1321,61 @@ function bindAppEvents(){
 
   document.querySelectorAll(".shopping-checkbox").forEach(cb=>{
     cb.addEventListener("change", async ()=>{
-      const key = cb.dataset.key;
-      state.shoppingChecks[key] = cb.checked; render();
-      try{
-        const weekStart = getCurrentWeekDates()[0];
-        if(cb.checked){
-          await sb.from("shopping_checked").upsert({ user_id: state.user.id, item_key: key, week_start: weekStart, checked: true }, { onConflict: "user_id,item_key,week_start" });
-        } else {
-          await sb.from("shopping_checked").delete().eq("user_id", state.user.id).eq("item_key", key).eq("week_start", weekStart);
-        }
-      }catch(err){ console.error(err); }
+      const id = cb.dataset.id;
+      const item = state.shoppingItems.find(i => i.id === id);
+      if(item) item.checked = cb.checked;
+      render();
+      const { error } = await sb.from("shopping_list_items").update({ checked: cb.checked }).eq("id", id);
+      if(error) console.error(error);
     });
   });
+
+  document.querySelectorAll("[data-shopping-id]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const id = btn.dataset.shoppingId;
+      const { error } = await sb.from("shopping_list_items").delete().eq("id", id);
+      if(error){ alert("Fehler: " + error.message); return; }
+      await loadShoppingItems();
+    });
+  });
+
+  const clearAllBtn = document.getElementById("shopping-clear-all");
+  if(clearAllBtn) clearAllBtn.addEventListener("click", async ()=>{
+    if(!confirm("Wirklich die gesamte Einkaufsliste leeren?")) return;
+    const { error } = await sb.from("shopping_list_items").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+    if(error){ alert("Fehler: " + error.message); return; }
+    await loadShoppingItems();
+  });
+
+  document.querySelectorAll(".today-shopping-add").forEach(btn=>{
+    btn.addEventListener("click", async (e)=>{
+      e.stopPropagation();
+      const logId = btn.dataset.logId;
+      const entry = (state.weekLog||[]).find(x => x.id === logId);
+      const detail = state.weekRecipeDetails && state.weekRecipeDetails[btn.dataset.recipeId];
+      const recipe = state.recipes.find(r => r.id === btn.dataset.recipeId);
+      if(!entry || !detail || !detail.ingredients_structured){ alert("Zutaten werden noch geladen, bitte kurz warten."); return; }
+      const baseServings = detail.servings || (recipe && recipe.servings) || 1;
+      const factor = entry.servings_logged / baseServings;
+      btn.textContent = "\u23f3";
+      await addIngredientsToShoppingList(detail.ingredients_structured, factor);
+      btn.textContent = "\u{1F6D2}";
+    });
+  });
+
+  const detailAddShoppingBtn = document.getElementById("detail-add-shopping");
+  if(detailAddShoppingBtn){
+    detailAddShoppingBtn.addEventListener("click", async ()=>{
+      const r = state.detailRecipe;
+      const baseServings = r.servings || 1;
+      const currentServings = state.detailServings || baseServings;
+      const scale = currentServings / baseServings;
+      detailAddShoppingBtn.textContent = "\u23f3 Wird hinzugef\u00fcgt \u2026";
+      await addIngredientsToShoppingList(r.ingredients_structured, scale);
+      detailAddShoppingBtn.textContent = "\u2705 Hinzugef\u00fcgt!";
+      setTimeout(()=>{ detailAddShoppingBtn.textContent = "\u{1F6D2} Diese Zutaten zur Einkaufsliste"; }, 1800);
+    });
+  }
 
   document.querySelectorAll(".dayplan-target-card").forEach(card=>{
     card.addEventListener("click", ()=>{ state.activeDayPlanTarget = parseInt(card.dataset.target, 10); render(); });
@@ -1718,13 +1801,7 @@ async function loadDayPlans(){
 }
 
 async function loadShoppingChecks(){
-  const weekStart = getCurrentWeekDates()[0];
-  const { data, error } = await sb.from("shopping_checked").select("*").eq("week_start", weekStart);
-  if(error){ console.error(error); return; }
-  const map = {};
-  (data || []).forEach(row => { map[row.item_key] = row.checked; });
-  state.shoppingChecks = map;
-  render();
+  // veraltet, ersetzt durch loadShoppingItems() (manuelle Einkaufsliste)
 }
 
 async function checkSession(){
