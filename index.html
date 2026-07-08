@@ -39,7 +39,7 @@
 
   .app{
     max-width:1000px !important; width:100% !important; margin:0 auto !important;
-    padding:24px 18px 80px !important; box-sizing:border-box !important;
+    padding:24px 18px 100px !important; box-sizing:border-box !important;
     position:relative !important; left:0 !important; right:0 !important;
   }
 
@@ -101,24 +101,29 @@
     background:#6B3530; color:#F5D5C8; border-radius:8px;
     padding:9px 12px; font-size:13px; margin-bottom:14px;
   }
+  .auth-closed-notice{
+    background:rgba(201,151,58,0.15); border:1px solid var(--pine);
+    color:var(--ink); border-radius:10px; padding:14px 16px;
+    font-size:13.5px; line-height:1.5; margin-bottom:16px; text-align:left;
+  }
 
-  /* ====== MAIN TABS ====== */
+  /* ====== MAIN TABS (Bottom Navigation) ====== */
   .main-tabs{
-    display:flex; gap:0; margin-bottom:22px;
-    background:rgba(0,0,0,0.12); border-radius:14px; padding:4px;
-    overflow-x:auto; -webkit-overflow-scrolling:touch;
-    scrollbar-width:none;
+    position:fixed; left:0; right:0; bottom:0; z-index:50;
+    display:flex; gap:2px;
+    background:var(--ink-on-paper); padding:6px 6px calc(6px + env(safe-area-inset-bottom));
+    box-shadow:0 -4px 16px rgba(0,0,0,0.18);
   }
-  .main-tabs::-webkit-scrollbar{ display:none; }
   .main-tab{
-    flex:0 0 auto; background:none; border:none; padding:10px 12px;
-    font-size:12px; font-weight:700; color:var(--ink); opacity:0.6; cursor:pointer;
+    flex:1 1 0; background:none; border:none; padding:9px 4px;
+    font-size:11px; font-weight:700; color:var(--ink); opacity:0.55; cursor:pointer;
     border-radius:11px; font-family:inherit; text-align:center; transition:all .15s;
-    white-space:nowrap;
+    white-space:nowrap; display:flex; flex-direction:column; align-items:center; gap:2px;
   }
+  .main-tab-icon{ font-size:18px; line-height:1; }
   .main-tab.active{
-    opacity:1; color:var(--ink-on-paper);
-    background:var(--paper); box-shadow:0 2px 8px rgba(0,0,0,0.15);
+    opacity:1; color:var(--pine);
+    background:rgba(201,153,59,0.14);
   }
 
   /* ====== TODAY VIEW ====== */
@@ -211,6 +216,10 @@
     gap:10px; margin-bottom:18px;
   }
   .dayplan-detail-header h3{ color:var(--ink); font-family:Georgia,serif; font-size:19px; margin:0; flex:1 1 100%; order:-1; }
+  .low-kcal-warning{
+    background:rgba(201,151,58,0.15); border:1px solid var(--pine); border-radius:10px;
+    padding:12px 14px; margin-bottom:16px; font-size:13px; color:var(--ink); line-height:1.45;
+  }
   .dayplan-card{
     background:var(--paper); border-radius:16px; padding:16px 18px; margin-bottom:14px;
     border:1px solid var(--line); box-shadow:var(--shadow);
@@ -283,8 +292,30 @@
     color:var(--ink); font-weight:600; white-space:nowrap; transition:all .15s;
   }
   .tag-chip.active{ background:var(--terracotta); border-color:var(--terracotta); color:#fff; }
-  .kcal-chip{ border-style:dashed; border-color:rgba(255,255,255,0.4); }
-  .kcal-chip.active{ background:var(--pine); border-color:var(--pine); border-style:solid; color:#fff; }
+  .kcal-chip.active{ background:var(--pine); border-color:var(--pine); color:#fff; }
+
+  .filter-toggle-btn{
+    display:flex; align-items:center; gap:6px; flex-shrink:0;
+    background:var(--paper); border:1.5px solid var(--line); color:var(--ink-on-paper);
+    padding:11px 16px; border-radius:10px; font-size:13.5px; font-weight:600; cursor:pointer;
+  }
+  .filter-toggle-btn:hover{ border-color:var(--pine); }
+  .filter-count-badge{
+    background:var(--terracotta); color:#fff; font-size:11px; font-weight:700;
+    border-radius:50%; min-width:18px; height:18px; display:inline-flex;
+    align-items:center; justify-content:center; padding:0 2px;
+  }
+  .filter-sheet{ max-width:480px; }
+  .filter-group{ margin-bottom:18px; }
+  .filter-group-label{
+    font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--ink-on-paper); opacity:0.55; margin:0 0 8px;
+  }
+  .filter-sheet .tag-chip{
+    background:#fff; border-color:var(--line); color:var(--ink-on-paper);
+  }
+  .filter-sheet .tag-chip.active{ background:var(--terracotta); border-color:var(--terracotta); color:#fff; }
+  .filter-sheet .kcal-chip.active{ background:var(--pine); border-color:var(--pine); color:#fff; }
 
   /* ====== RECIPE GRID ====== */
   .grid{
@@ -331,10 +362,11 @@
 
   /* ====== FAB ====== */
   .fab{
-    position:fixed; bottom:26px; right:26px; width:58px; height:58px;
+    position:fixed; bottom:92px; right:22px; width:58px; height:58px;
     border-radius:50%; background:var(--terracotta); color:#fff;
     font-size:28px; border:none; box-shadow:var(--shadow); cursor:pointer;
     display:flex; align-items:center; justify-content:center; line-height:0;
+    z-index:40;
   }
   .fab:hover{ background:var(--pine-dark); }
 
@@ -437,10 +469,18 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const LOGO_BASE64 = "https://primary.jwwb.nl/public/k/f/d/temp-mmnnzteyzhbsctkmkimw/image-high-d8ai6i.png";
 const ADMIN_USER_ID = "55eaffe1-6a42-42ec-8888-708f31210c4c";
+// Registrierung vorübergehend geschlossen: auf false setzen, sobald die App öffentlich starten soll
+const REGISTRATION_CLOSED = true;
 // Debug: zeigt die eingeloggte User-ID in der Konsole
 function debugUserId(){ if(state.user) console.log("Eingeloggt als:", state.user.id, "| Admin?", state.user.id === ADMIN_USER_ID); }
 const ALL_TAGS = ["Vegan","Vegetarisch","Frühstück","Hauptgericht","Snack","Dessert","Low Carb","High Protein","Meal Prep","Schnell","Airfryer","Pre Workout","Post Workout"];
 const KCAL_BANDS = ["100 kcal","200 kcal","300 kcal","400 kcal"];
+const FILTER_GROUPS = [
+  { label: "Ern\u00e4hrung", tags: ["Vegan","Vegetarisch","Low Carb","High Protein"] },
+  { label: "Mahlzeit", tags: ["Fr\u00fchst\u00fcck","Hauptgericht","Snack","Dessert"] },
+  { label: "Zubereitung", tags: ["Meal Prep","Schnell","Airfryer"] },
+  { label: "Timing", tags: ["Pre Workout","Post Workout"] }
+];
 const DAYPLAN_TARGETS = [1200, 1400, 1600, 1800];
 const WEEKDAY_NAMES = ["Mo","Di","Mi","Do","Fr","Sa","So"];
 
@@ -478,6 +518,7 @@ let state = {
   search: "",
   activeTag: null,
   activeKcalBand: null,
+  filterSheetOpen: false,
   modalOpen: false,
   editingRecipe: null,
   detailRecipe: null,
@@ -525,6 +566,7 @@ function render(){
 /* ---------- AUTH ---------- */
 function renderAuth(){
   const isLogin = state.view === "login";
+  const showClosedMessage = !isLogin && REGISTRATION_CLOSED;
   return `
     <div class="auth-wrap">
       <div class="auth-card">
@@ -533,6 +575,14 @@ function renderAuth(){
         <p class="auth-sub">${isLogin ? "Melde dich an, um deine Rezepte zu sehen." : "Lege dein kostenloses Jumphoria-Konto an."}</p>
         ${state.error && typeof state.error === "string" && state.error.length > 0 ? `<div class="auth-error">${state.error}</div>` : ""}
         ${state.serviceDown ? `<div class="auth-error">&#9888;&#65039; Dienst momentan nicht erreichbar. Bitte in ein paar Minuten erneut versuchen.</div>` : ""}
+        ${showClosedMessage ? `
+          <div class="auth-closed-notice">
+            \u{1F512} Die Registrierung ist aktuell geschlossen. Jumphoria befindet sich noch in der Testphase und ist noch nicht öffentlich zugänglich. Schau bald wieder vorbei!
+          </div>
+          <div class="auth-toggle">
+            Schon registriert? <a id="to-login">Zum Login</a>
+          </div>
+        ` : `
         <form id="auth-form">
           <div class="field"><label>E-Mail</label><input type="email" id="auth-email" required placeholder="du@beispiel.de"></div>
           <div class="field"><label>Passwort</label><input type="password" id="auth-password" required placeholder="Mindestens 6 Zeichen" minlength="6"></div>
@@ -541,12 +591,14 @@ function renderAuth(){
         <div class="auth-toggle">
           ${isLogin ? `Noch kein Konto? <a id="to-register">Jetzt registrieren</a>` : `Schon registriert? <a id="to-login">Zum Login</a>`}
         </div>
+        `}
       </div>
     </div>`;
 }
 
 function bindAuthEvents(){
-  document.getElementById("auth-form").addEventListener("submit", async (e)=>{
+  const authForm = document.getElementById("auth-form");
+  if(authForm) authForm.addEventListener("submit", async (e)=>{
     e.preventDefault();
     state.error = "";
     const email = document.getElementById("auth-email").value.trim();
@@ -591,11 +643,11 @@ function renderAppShell(){
       </div>
     </div>
     <div class="main-tabs">
-      <button class="main-tab ${state.mainTab==='recipes'?'active':''}" data-tab="recipes">Rezepte</button>
-      <button class="main-tab ${state.mainTab==='today'?'active':''}" data-tab="today">Woche</button>
-      <button class="main-tab ${state.mainTab==='shopping'?'active':''}" data-tab="shopping">Einkauf</button>
-      <button class="main-tab ${state.mainTab==='dayplans'?'active':''}" data-tab="dayplans">Tagespl\u00e4ne</button>
-      <button class="main-tab ${state.mainTab==='profil'?'active':''}" data-tab="profil">Profil</button>
+      <button class="main-tab ${state.mainTab==='recipes'?'active':''}" data-tab="recipes"><span class="main-tab-icon">\u{1F373}</span>Rezepte</button>
+      <button class="main-tab ${state.mainTab==='today'?'active':''}" data-tab="today"><span class="main-tab-icon">\u{1F4C5}</span>Woche</button>
+      <button class="main-tab ${state.mainTab==='shopping'?'active':''}" data-tab="shopping"><span class="main-tab-icon">\u{1F6D2}</span>Einkauf</button>
+      <button class="main-tab ${state.mainTab==='dayplans'?'active':''}" data-tab="dayplans"><span class="main-tab-icon">\u{1F4CB}</span>Pl\u00e4ne</button>
+      <button class="main-tab ${state.mainTab==='profil'?'active':''}" data-tab="profil"><span class="main-tab-icon">\u{1F464}</span>Profil</button>
     </div>
     ${state.mainTab==='today' ? renderWeek() : state.mainTab==='shopping' ? renderShoppingList() : state.mainTab==='dayplans' ? renderDayPlans() : state.mainTab==='profil' ? renderProfil() : renderRecipesTab()}
     ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="fab" id="add-fab" title="Neues Rezept">+</button>` : ""}
@@ -609,20 +661,44 @@ function renderAppShell(){
 }
 
 function renderRecipesTab(){
+  const activeFilterCount = (state.activeTag ? 1 : 0) + (state.activeKcalBand ? 1 : 0);
   return `
     <div class="toolbar">
       <input class="search-input" id="search-input" placeholder="Rezept suchen \u2026" value="${escapeAttr(state.search)}">
+      <button type="button" class="filter-toggle-btn" id="open-filter-sheet">
+        \u2699\ufe0f Filter${activeFilterCount > 0 ? `<span class="filter-count-badge">${activeFilterCount}</span>` : ""}
+      </button>
     </div>
-    <div class="tag-filters" id="tag-filters">
-      ${ALL_TAGS.map(t => `<span class="tag-chip ${state.activeTag===t?'active':''}" data-tag="${t}">${t}</span>`).join("")}
-      ${state.activeTag ? `<span class="tag-chip" id="clear-tag-filter">\u2715 Filter</span>` : ""}
-    </div>
-    <div class="tag-filters" id="kcal-filters">
-      ${KCAL_BANDS.map(b => `<span class="tag-chip kcal-chip ${state.activeKcalBand===b?'active':''}" data-band="${b}">${b}</span>`).join("")}
-      ${state.activeKcalBand ? `<span class="tag-chip" id="clear-kcal-filter">\u2715 Filter</span>` : ""}
-    </div>
+    ${state.filterSheetOpen ? renderFilterSheet() : ""}
     ${renderGrid()}
   `;
+}
+
+function renderFilterSheet(){
+  return `<div class="overlay" id="filter-sheet-overlay">
+    <div class="modal filter-sheet">
+      <button class="modal-close" id="filter-sheet-close">\u2715</button>
+      <h2>Filter</h2>
+      ${FILTER_GROUPS.map(group => `
+        <div class="filter-group">
+          <h4 class="filter-group-label">${group.label}</h4>
+          <div class="tag-filters" id="tag-filters">
+            ${group.tags.map(t => `<span class="tag-chip ${state.activeTag===t?'active':''}" data-tag="${t}">${t}</span>`).join("")}
+          </div>
+        </div>
+      `).join("")}
+      <div class="filter-group">
+        <h4 class="filter-group-label">Kalorien</h4>
+        <div class="tag-filters" id="kcal-filters">
+          ${KCAL_BANDS.map(b => `<span class="tag-chip kcal-chip ${state.activeKcalBand===b?'active':''}" data-band="${b}">${b}</span>`).join("")}
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" id="filter-sheet-reset">Zur\u00fccksetzen</button>
+        <button type="button" class="btn" id="filter-sheet-apply">Fertig</button>
+      </div>
+    </div>
+  </div>`;
 }
 
 function renderWeek(){
@@ -760,6 +836,7 @@ function renderDayPlanDetail(target){
       <h3>${target} kcal Tagespl\u00e4ne</h3>
       <button type="button" class="btn" id="new-dayplan-btn">+ Neuer Tagesplan</button>
     </div>
+    ${target <= 1200 ? `<div class="low-kcal-warning">\u26a0\ufe0f 1200 kcal liegt bei vielen Frauen nahe am oder sogar unter dem Grundumsatz. Auf Dauer weniger zu essen, als der K\u00f6rper in Ruhe verbraucht, ist ungesund. Dieser Wert eignet sich h\u00f6chstens f\u00fcr kurze Zeitr\u00e4ume \u2013 schau in deinem Profil nach, was f\u00fcr dich pers\u00f6nlich empfohlen wird.</div>` : ""}
     ${plans.length === 0 ? `<div class="empty-state"><h3>Noch kein Tagesplan f\u00fcr ${target} kcal</h3></div>` : plans.map(plan => renderDayPlanCard(plan)).join("")}`;
 }
 
@@ -1280,6 +1357,17 @@ function bindAppEvents(){
   });
   const clearKcalBtn = document.getElementById("clear-kcal-filter");
   if(clearKcalBtn) clearKcalBtn.addEventListener("click", ()=>{ state.activeKcalBand=null; render(); });
+
+  const openFilterBtn = document.getElementById("open-filter-sheet");
+  if(openFilterBtn) openFilterBtn.addEventListener("click", ()=>{ state.filterSheetOpen = true; render(); });
+  const filterSheetClose = document.getElementById("filter-sheet-close");
+  if(filterSheetClose) filterSheetClose.addEventListener("click", ()=>{ state.filterSheetOpen = false; render(); });
+  const filterSheetApply = document.getElementById("filter-sheet-apply");
+  if(filterSheetApply) filterSheetApply.addEventListener("click", ()=>{ state.filterSheetOpen = false; render(); });
+  const filterSheetReset = document.getElementById("filter-sheet-reset");
+  if(filterSheetReset) filterSheetReset.addEventListener("click", ()=>{ state.activeTag = null; state.activeKcalBand = null; render(); });
+  const filterSheetOverlay = document.getElementById("filter-sheet-overlay");
+  if(filterSheetOverlay) filterSheetOverlay.addEventListener("click", (e)=>{ if(e.target.id==="filter-sheet-overlay"){ state.filterSheetOpen=false; render(); } });
 
   const addFab = document.getElementById("add-fab");
   if(addFab){
