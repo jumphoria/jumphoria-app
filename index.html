@@ -476,12 +476,11 @@ function debugUserId(){ if(state.user) console.log("Eingeloggt als:", state.user
 const ALL_TAGS = ["Vegan","Vegetarisch","Frühstück","Hauptgericht","Snack","Dessert","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein","Meal Prep","Schnell","Airfryer","Pre Workout","Post Workout"];
 const KCAL_BANDS = ["100 kcal","200 kcal","300 kcal","400 kcal"];
 const FILTER_GROUPS = [
- { label: "Ern\u00e4hrung", tags: ["Vegan","Vegetarisch","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein"] },
+  { label: "Ern\u00e4hrung", tags: ["Vegan","Vegetarisch","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein"] },
   { label: "Mahlzeit", tags: ["Fr\u00fchst\u00fcck","Hauptgericht","Snack","Dessert"] },
   { label: "Zubereitung", tags: ["Meal Prep","Schnell","Airfryer"] },
   { label: "Timing", tags: ["Pre Workout","Post Workout"] }
 ];
-const DAYPLAN_TARGETS = [1200, 1400, 1600, 1800];
 const WEEKDAY_NAMES = ["Mo","Di","Mi","Do","Fr","Sa","So"];
 
 // ── NUR diese Felder für die Listenansicht laden (spart ~70% Egress) ──
@@ -532,11 +531,6 @@ let state = {
   weekLog: [],
   weekRecipeDetails: {},
   swapTarget: null,
-  dayPlans: [],
-  dayPlanItems: [],
-  activeDayPlanTarget: null,
-  pickerOpen: null,
-  pickerSearch: "",
   shoppingItems: [],
   planRecipeId: null,
   planSelectedDays: [],
@@ -646,15 +640,13 @@ function renderAppShell(){
       <button class="main-tab ${state.mainTab==='recipes'?'active':''}" data-tab="recipes"><span class="main-tab-icon">\u{1F373}</span>Rezepte</button>
       <button class="main-tab ${state.mainTab==='today'?'active':''}" data-tab="today"><span class="main-tab-icon">\u{1F4C5}</span>Woche</button>
       <button class="main-tab ${state.mainTab==='shopping'?'active':''}" data-tab="shopping"><span class="main-tab-icon">\u{1F6D2}</span>Einkauf</button>
-      <button class="main-tab ${state.mainTab==='dayplans'?'active':''}" data-tab="dayplans"><span class="main-tab-icon">\u{1F4CB}</span>Pl\u00e4ne</button>
       <button class="main-tab ${state.mainTab==='profil'?'active':''}" data-tab="profil"><span class="main-tab-icon">\u{1F464}</span>Profil</button>
     </div>
-    ${state.mainTab==='today' ? renderWeek() : state.mainTab==='shopping' ? renderShoppingList() : state.mainTab==='dayplans' ? renderDayPlans() : state.mainTab==='profil' ? renderProfil() : renderRecipesTab()}
+    ${state.mainTab==='today' ? renderWeek() : state.mainTab==='shopping' ? renderShoppingList() : state.mainTab==='profil' ? renderProfil() : renderRecipesTab()}
     ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="fab" id="add-fab" title="Neues Rezept">+</button>` : ""}
     ${state.modalOpen ? renderModal() : ""}
     ${state.planRecipeId ? renderPlanPopup() : ""}
     ${state.autoWeekOpen ? renderAutoWeekPopup() : ""}
-    ${state.pickerOpen ? renderRecipePickerPopup() : ""}
     ${state.swapTarget ? renderSwapPopup() : ""}
     ${state.detailRecipe ? renderDetail() : ""}
   `;
@@ -818,85 +810,6 @@ function renderShoppingList(){
       </div>`;
     }).join("")}
   </div>`;
-}
-
-function renderDayPlans(){
-  if(state.activeDayPlanTarget){ return renderDayPlanDetail(state.activeDayPlanTarget); }
-  return `<div class="dayplan-target-grid">${DAYPLAN_TARGETS.map(target => {
-    const count = (state.dayPlans||[]).filter(p => p.target_kcal === target).length;
-    return `<button type="button" class="dayplan-target-card" data-target="${target}"><strong>${target}</strong><span>kcal / Tag</span><small>${count} Tagesplan${count===1?'':'e'}</small></button>`;
-  }).join("")}</div>`;
-}
-
-function renderDayPlanDetail(target){
-  const plans = (state.dayPlans||[]).filter(p => p.target_kcal === target);
-  return `
-    <div class="dayplan-detail-header">
-      <button type="button" class="btn-outline" id="back-to-targets">\u2190 Zur\u00fcck</button>
-      <h3>${target} kcal Tagespl\u00e4ne</h3>
-      <button type="button" class="btn" id="new-dayplan-btn">+ Neuer Tagesplan</button>
-    </div>
-    ${target <= 1200 ? `<div class="low-kcal-warning">\u26a0\ufe0f 1200 kcal liegt bei vielen Frauen nahe am oder sogar unter dem Grundumsatz. Auf Dauer weniger zu essen, als der K\u00f6rper in Ruhe verbraucht, ist ungesund. Dieser Wert eignet sich h\u00f6chstens f\u00fcr kurze Zeitr\u00e4ume \u2013 schau in deinem Profil nach, was f\u00fcr dich pers\u00f6nlich empfohlen wird.</div>` : ""}
-    ${plans.length === 0 ? `<div class="empty-state"><h3>Noch kein Tagesplan f\u00fcr ${target} kcal</h3></div>` : plans.map(plan => renderDayPlanCard(plan)).join("")}`;
-}
-
-function renderDayPlanCard(plan){
-  const items = (state.dayPlanItems||[]).filter(i => i.day_plan_id === plan.id);
-  const slots = [{key:"fruehstueck",label:"Fr\u00fchst\u00fcck"},{key:"mittag",label:"Mittag"},{key:"abend",label:"Abend"},{key:"snack",label:"Snack"}];
-  let totalKcal = 0;
-  items.forEach(it => {
-    const recipe = state.recipes.find(r => r.id === it.recipe_id);
-    if(recipe && recipe.kcal != null){ totalKcal += recipe.kcal * (it.servings / (recipe.servings || 1)); }
-  });
-  return `<div class="dayplan-card">
-    <div class="dayplan-card-header">
-      <strong>${escapeHtml(plan.title)}</strong>
-      <span>${Math.round(totalKcal)} kcal gesamt</span>
-      <button type="button" class="today-remove" data-dayplan-id="${plan.id}" title="L\u00f6schen">\u2715</button>
-    </div>
-    ${slots.map(slot => {
-      const item = items.find(i => i.slot === slot.key);
-      const recipe = item ? state.recipes.find(r => r.id === item.recipe_id) : null;
-      let macroLine = "";
-      if(recipe && recipe.kcal != null){
-        const factor = item.servings / (recipe.servings || 1);
-        const kcalP = Math.round(recipe.kcal * factor);
-        const proteinP = recipe.protein != null ? Math.round(recipe.protein * factor) : null;
-        const carbsP = recipe.carbs != null ? Math.round(recipe.carbs * factor) : null;
-        const fatP = recipe.fat != null ? Math.round(recipe.fat * factor) : null;
-        const isBatch = (recipe.servings || 1) > 1;
-        macroLine = `<span class="dayplan-slot-macros">${kcalP} kcal${isBatch ? '/Portion' : ''}${proteinP!=null?` \u00b7 E ${proteinP}g`:''}${carbsP!=null?` \u00b7 KH ${carbsP}g`:''}${fatP!=null?` \u00b7 F ${fatP}g`:''}</span>`;
-      }
-      return `<div class="dayplan-slot">
-        <span class="dayplan-slot-label">${slot.label}</span>
-        ${recipe ? `<div class="dayplan-slot-info">
-              <button type="button" class="dayplan-slot-recipe-btn" data-recipe-id="${recipe.id}">${escapeHtml(recipe.title)}</button>
-              ${macroLine}
-            </div>
-            <button type="button" class="btn-outline dayplan-swap-btn" data-dayplan-id="${plan.id}" data-slot="${slot.key}">Tauschen</button>`
-                 : `<button type="button" class="btn-outline dayplan-swap-btn" data-dayplan-id="${plan.id}" data-slot="${slot.key}">+ Rezept w\u00e4hlen</button>`}
-      </div>`;
-    }).join("")}
-  </div>`;
-}
-
-function renderRecipePickerPopup(){
-  const search = state.pickerSearch || "";
-  const slot = state.pickerOpen && state.pickerOpen.slot;
-  const slotTagMap = { fruehstueck: 'Frühstück', mittag: 'Hauptgericht', abend: 'Hauptgericht', snack: 'Snack' };
-  const requiredTag = slotTagMap[slot];
-  const slotLabelMap = { fruehstueck: 'Frühstück', mittag: 'Mittag', abend: 'Abend', snack: 'Snack' };
-  const pool = requiredTag ? state.recipes.filter(r => (r.tags||[]).includes(requiredTag)) : state.recipes;
-  const filtered = pool.filter(r => !search || r.title.toLowerCase().includes(search.toLowerCase()));
-  return `<div class="overlay" id="picker-overlay"><div class="modal plan-modal">
-    <button class="modal-close" id="picker-close">\u2715</button>
-    <h2>Rezept w\u00e4hlen${slotLabelMap[slot] ? ` \u2013 ${slotLabelMap[slot]}` : ''}</h2>
-    <input class="search-input" id="picker-search" placeholder="Rezept suchen \u2026" value="${escapeAttr(search)}" style="margin-bottom:14px;">
-    <div class="picker-list">
-      ${filtered.map(r => `<button type="button" class="picker-item" data-recipe-id="${r.id}"><span>${escapeHtml(r.title)}</span>${r.kcal != null ? `<span class="picker-kcal">${Math.round(r.kcal/(r.servings||1))} kcal</span>` : ""}</button>`).join("")}
-      ${filtered.length === 0 ? `<p style="color:var(--ink-on-paper); opacity:0.6;">Keine passenden Rezepte gefunden.</p>` : ""}
-    </div>
-  </div></div>`;
 }
 
 function renderSwapPopup(){
@@ -1331,7 +1244,6 @@ function bindAppEvents(){
       state.mainTab = tab.dataset.tab;
       if(state.mainTab === "today") loadWeekLog();
       if(state.mainTab === "shopping"){ loadShoppingItems(); }
-      if(state.mainTab === "dayplans") loadDayPlans();
       if(state.mainTab === "profil") calcProfil();
       render();
     });
@@ -1425,7 +1337,7 @@ function bindAppEvents(){
     });
   });
 
-  document.querySelectorAll(".today-entry-clickable, .dayplan-slot-recipe-btn").forEach(el=>{
+  document.querySelectorAll(".today-entry-clickable").forEach(el=>{
     el.addEventListener("click", async ()=>{
       const baseRecipe = state.recipes.find(r => r.id === el.dataset.recipeId);
       if(!baseRecipe) return;
@@ -1501,35 +1413,6 @@ function bindAppEvents(){
     });
   }
 
-  document.querySelectorAll(".dayplan-target-card").forEach(card=>{
-    card.addEventListener("click", ()=>{ state.activeDayPlanTarget = parseInt(card.dataset.target, 10); render(); });
-  });
-
-  const backBtn = document.getElementById("back-to-targets");
-  if(backBtn) backBtn.addEventListener("click", ()=>{ state.activeDayPlanTarget = null; render(); });
-
-  const newPlanBtn = document.getElementById("new-dayplan-btn");
-  if(newPlanBtn) newPlanBtn.addEventListener("click", async ()=>{
-    const title = prompt("Name f\u00fcr diesen Tagesplan:", `${state.activeDayPlanTarget} kcal Tag`);
-    if(!title) return;
-    const { error } = await sb.from("day_plans").insert({ user_id: state.user.id, title, target_kcal: state.activeDayPlanTarget });
-    if(error){ alert("Fehler: " + error.message); return; }
-    await loadDayPlans();
-  });
-
-  document.querySelectorAll(".dayplan-swap-btn").forEach(btn=>{
-    btn.addEventListener("click", ()=>{ state.pickerOpen = { dayPlanId: btn.dataset.dayplanId, slot: btn.dataset.slot }; state.pickerSearch = ""; render(); });
-  });
-
-  document.querySelectorAll("[data-dayplan-id].today-remove").forEach(btn=>{
-    btn.addEventListener("click", async ()=>{
-      if(!confirm("Diesen Tagesplan wirklich l\u00f6schen?")) return;
-      const { error } = await sb.from("day_plans").delete().eq("id", btn.dataset.dayplanId);
-      if(error){ alert("Fehler: " + error.message); return; }
-      await loadDayPlans();
-    });
-  });
-
   const autoWeekBtn = document.getElementById("auto-week-btn");
   if(autoWeekBtn) autoWeekBtn.addEventListener("click", ()=>{ state.autoWeekOpen = true; render(); });
 
@@ -1572,7 +1455,6 @@ function bindAppEvents(){
   }
   if(state.detailRecipe) bindDetailEvents();
   if(state.planRecipeId) bindPlanPopupEvents();
-  if(state.pickerOpen) bindRecipePickerEvents();
   if(state.swapTarget) bindSwapEvents();
 }
 
@@ -1666,33 +1548,6 @@ function bindAutoWeekEvents(){
       const { error } = await sb.from("daily_log").insert(rows);
       if(error){ alert("Fehler: " + error.message); return; }
       await loadWeekLog();
-    });
-  });
-}
-
-function bindRecipePickerEvents(){
-  document.getElementById("picker-overlay").addEventListener("click", (e)=>{ if(e.target.id==="picker-overlay"){ state.pickerOpen=null; render(); } });
-  document.getElementById("picker-close").addEventListener("click", ()=>{ state.pickerOpen=null; render(); });
-  document.getElementById("picker-search").addEventListener("input", (e)=>{
-    state.pickerSearch = e.target.value; render();
-    const el = document.getElementById("picker-search"); el.focus(); el.selectionStart = el.value.length;
-  });
-  document.querySelectorAll(".picker-item").forEach(btn=>{
-    btn.addEventListener("click", async ()=>{
-      const recipeId = btn.dataset.recipeId;
-      const { dayPlanId, slot } = state.pickerOpen;
-      const recipe = state.recipes.find(r => r.id === recipeId);
-      const existing = state.dayPlanItems.find(i => i.day_plan_id === dayPlanId && i.slot === slot);
-      try{
-        if(existing){
-          const { error } = await sb.from("day_plan_items").update({ recipe_id: recipeId, servings: 1 }).eq("id", existing.id);
-          if(error) throw error;
-        } else {
-          const { error } = await sb.from("day_plan_items").insert({ day_plan_id: dayPlanId, recipe_id: recipeId, slot, servings: 1 });
-          if(error) throw error;
-        }
-        state.pickerOpen = null; await loadDayPlans();
-      }catch(err){ alert("Fehler: " + err.message); }
     });
   });
 }
@@ -1912,16 +1767,6 @@ async function loadWeekLog(){
       state.weekRecipeDetails = map;
     }
   }
-  render();
-}
-
-async function loadDayPlans(){
-  const { data: plans, error: plansError } = await sb.from("day_plans").select("*").order("created_at", { ascending: true });
-  if(plansError){ console.error(plansError); return; }
-  state.dayPlans = plans || [];
-  const { data: items, error: itemsError } = await sb.from("day_plan_items").select("*");
-  if(itemsError){ console.error(itemsError); return; }
-  state.dayPlanItems = items || [];
   render();
 }
 
