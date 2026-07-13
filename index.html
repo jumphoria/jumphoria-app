@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jumphoria - Rezeptbuch</title>
+<title>Vital Shape - Jumphoria</title>
 <style>
   /* ====== TOKENS (Jumphoria Gold) ====== */
   :root{
@@ -473,10 +473,10 @@ const ADMIN_USER_ID = "55eaffe1-6a42-42ec-8888-708f31210c4c";
 const REGISTRATION_CLOSED = true;
 // Debug: zeigt die eingeloggte User-ID in der Konsole
 function debugUserId(){ if(state.user) console.log("Eingeloggt als:", state.user.id, "| Admin?", state.user.id === ADMIN_USER_ID); }
-const ALL_TAGS = ["Vegan","Vegetarisch","Frühstück","Hauptgericht","Snack","Dessert","Low Carb","High Protein","Meal Prep","Schnell","Airfryer","Pre Workout","Post Workout"];
+const ALL_TAGS = ["Vegan","Vegetarisch","Frühstück","Hauptgericht","Snack","Dessert","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein","Meal Prep","Schnell","Airfryer","Pre Workout","Post Workout"];
 const KCAL_BANDS = ["100 kcal","200 kcal","300 kcal","400 kcal"];
 const FILTER_GROUPS = [
-  { label: "Ern\u00e4hrung", tags: ["Vegan","Vegetarisch","Low Carb","High Protein"] },
+ { label: "Ern\u00e4hrung", tags: ["Vegan","Vegetarisch","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein"] },
   { label: "Mahlzeit", tags: ["Fr\u00fchst\u00fcck","Hauptgericht","Snack","Dessert"] },
   { label: "Zubereitung", tags: ["Meal Prep","Schnell","Airfryer"] },
   { label: "Timing", tags: ["Pre Workout","Post Workout"] }
