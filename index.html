@@ -849,20 +849,21 @@ function renderSwapPopup(){
 
 function renderAutoWeekPopup(){
   const profilKcal = state.profilKcal;
-  const targets = profilKcal
-    ? [profilKcal, 1200, 1400, 1600, 1800, 2000]
-    : [1200, 1400, 1600, 1800, 2000];
   return `<div class="overlay" id="autoweek-overlay"><div class="modal plan-modal">
     <button class="modal-close" id="autoweek-close">✕</button>
     <h2>✨ Woche automatisch planen</h2>
-    <p style="color:var(--ink-on-paper); opacity:0.75; font-size:14px; margin:0 0 16px;">Wähle dein Kalorienziel pro Tag:</p>
-    ${profilKcal ? `<div style="background:var(--pine); color:#fff; border-radius:12px; padding:10px 14px; margin-bottom:14px; font-size:13px; font-weight:600;">💡 Dein Profil empfiehlt: ${profilKcal} kcal/Tag</div>` : ""}
-    <div class="dayplan-target-grid" style="margin-bottom:16px;">
-      ${targets.map((t,i) => `<button type="button" class="dayplan-target-card" data-kcal="${t}" style="${i===0 && profilKcal ? 'border:2px solid var(--pine);' : ''}">
-        ${i===0 && profilKcal ? '<small style="color:var(--pine-dark); font-size:10px; margin-bottom:4px;">Empfohlen</small>' : ""}<strong>${t}</strong><span>kcal / Tag</span>
-      </button>`).join("")}
-    </div>
-    <p style="color:var(--ink-on-paper); opacity:0.55; font-size:12px; margin:0;">Die App wählt automatisch passende Rezepte für jeden Tag der Woche aus.</p>
+    ${profilKcal ? `
+      <p style="color:var(--ink-on-paper); opacity:0.75; font-size:14px; margin:0 0 16px;">Dein Profil empfiehlt:</p>
+      <div style="background:var(--pine); color:#fff; border-radius:14px; padding:20px; margin-bottom:18px; text-align:center;">
+        <div style="font-size:32px; font-weight:700; font-family:Georgia,serif;">${profilKcal}</div>
+        <div style="font-size:12px; opacity:0.9; text-transform:uppercase; letter-spacing:.05em; margin-top:2px;">kcal / Tag</div>
+      </div>
+      <button type="button" class="btn btn-block" data-kcal="${profilKcal}" style="margin-bottom:14px;">Woche mit ${profilKcal} kcal planen</button>
+      <p style="color:var(--ink-on-paper); opacity:0.55; font-size:12px; margin:0;">Die App wählt automatisch passende Rezepte für jeden Tag der Woche aus.</p>
+    ` : `
+      <p style="color:var(--ink-on-paper); opacity:0.75; font-size:14px; margin:0 0 16px;">Für die automatische Wochenplanung brauchen wir erst dein persönliches Kalorienziel.</p>
+      <button type="button" class="btn btn-block" id="autoweek-goto-profil">Zum Profil</button>
+    `}
   </div></div>`;
 }
 
@@ -1463,6 +1464,13 @@ function bindAutoWeekEvents(){
   if(!overlay) return;
   overlay.addEventListener("click", (e)=>{ if(e.target.id==="autoweek-overlay"){ state.autoWeekOpen=false; render(); } });
   document.getElementById("autoweek-close").addEventListener("click", ()=>{ state.autoWeekOpen=false; render(); });
+
+  const gotoProfilBtn = document.getElementById("autoweek-goto-profil");
+  if(gotoProfilBtn) gotoProfilBtn.addEventListener("click", ()=>{
+    state.autoWeekOpen = false;
+    state.mainTab = "profil";
+    render();
+  });
 
   document.querySelectorAll("[data-kcal]").forEach(btn=>{
     btn.addEventListener("click", async ()=>{
