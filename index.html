@@ -454,6 +454,41 @@
     .row2{ grid-template-columns:1fr; }
   }
 .ing-estimate{ color:#999; font-size:0.9em; font-style:italic; }
+
+  /* ====== RISE (Meine Reise) ====== */
+  .rise-hero{
+    background:var(--ink-on-paper); border-radius:18px; padding:26px 22px;
+    text-align:center; margin-bottom:18px; border:1px solid var(--line);
+  }
+  .rise-flower{ width:110px; height:110px; margin:0 auto 12px; display:block; }
+  .rise-stage-name{ color:var(--paper); font-family:Georgia,serif; font-size:20px; margin:0 0 2px; }
+  .rise-stage-step{ color:var(--pine); font-size:12.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; margin:0 0 14px; }
+  .rise-ep-bar-track{ background:rgba(255,255,255,0.12); border-radius:20px; height:8px; overflow:hidden; margin-bottom:6px; }
+  .rise-ep-bar-fill{ background:var(--pine); height:100%; border-radius:20px; transition:width .4s ease; }
+  .rise-ep-label{ color:var(--ink); opacity:0.75; font-size:12px; margin:0; }
+  .rise-rhythm-msg{
+    background:rgba(201,151,58,0.15); border:1px solid var(--pine); border-radius:12px;
+    padding:12px 14px; font-size:13.5px; color:var(--ink-on-paper); text-align:center; margin-bottom:18px;
+  }
+  .rise-section-title{
+    font-size:12.5px; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--terracotta); margin:0 0 10px; font-weight:700;
+  }
+  .rise-crown-grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(84px,1fr)); gap:12px; margin-bottom:22px;
+  }
+  .rise-crown{
+    background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding:14px 8px; text-align:center; box-shadow:var(--shadow);
+  }
+  .rise-crown.locked{ opacity:0.38; filter:grayscale(1); box-shadow:none; }
+  .rise-crown-icon{ font-size:26px; display:block; margin-bottom:6px; }
+  .rise-crown-title{ font-size:10.5px; font-weight:700; color:var(--ink-on-paper); line-height:1.3; }
+  .rise-impulse-card{
+    background:var(--paper); border-radius:16px; padding:18px 20px; border:1px solid var(--line);
+    margin-bottom:18px;
+  }
+  .rise-impulse-card p{ color:var(--ink-on-paper); font-size:14.5px; margin:0; line-height:1.5; }
 </style>
 </head>
 <body>
@@ -482,6 +517,52 @@ const FILTER_GROUPS = [
   { label: "Timing", tags: ["Pre Workout","Post Workout"] }
 ];
 const WEEKDAY_NAMES = ["Mo","Di","Mi","Do","Fr","Sa","So"];
+
+// ── RISE Gamification: Stufen, Kronen, tägliche Impulse ──
+const RISE_STAGES = [
+  { name: "Erwachen",   minEP: 0   },
+  { name: "Erdung",     minEP: 150 },
+  { name: "Erhebung",   minEP: 400 },
+  { name: "Entfaltung", minEP: 800 },
+  { name: "Strahlen",   minEP: 1400 }
+];
+
+function getRiseStageInfo(totalEP){
+  let stage = RISE_STAGES[0];
+  for(const s of RISE_STAGES){ if(totalEP >= s.minEP) stage = s; }
+  const idx = RISE_STAGES.indexOf(stage);
+  const next = RISE_STAGES[idx + 1];
+  const step = next
+    ? Math.min(4, Math.floor(((totalEP - stage.minEP) / (next.minEP - stage.minEP)) * 4) + 1)
+    : 4;
+  const progressPct = next
+    ? Math.min(100, Math.round(((totalEP - stage.minEP) / (next.minEP - stage.minEP)) * 100))
+    : 100;
+  return { stageName: stage.name, step, next, progressPct };
+}
+
+const RISE_CROWNS_CATALOG = [
+  { id: "erste_erhebung",    icon: "👑", title: "Erste Erhebung",   check: (s)=> s.weekPlansCount >= 1 },
+  { id: "meal_prep_krone",   icon: "🌸", title: "Meal-Prep-Krone",  check: (s)=> s.autoWeekCount >= 1 },
+  { id: "selbstfuersorge",   icon: "🤍", title: "Selbstfürsorge",   check: (s)=> s.profilSet === true },
+  { id: "einkaufs_krone",    icon: "🛒", title: "Einkaufs-Krone",   check: (s)=> s.shoppingChecks >= 10 },
+  { id: "rhythmus_krone",    icon: "🌙", title: "Rhythmus-Krone",   check: (s)=> s.weekPlansCount >= 10 },
+  { id: "strahlen_krone",    icon: "☀️", title: "Strahlen-Krone",   check: (s)=> s.totalEP >= 1400 }
+];
+
+const RISE_DAILY_IMPULSES = [
+  "Plane heute ein Rezept für morgen ein \u2013 dein zukünftiges Ich wird sich freuen.",
+  "Trink dein erstes Glas Wasser heute ganz bewusst.",
+  "Notiere eine Sache, die dein Körper heute für dich geleistet hat.",
+  "Schau kurz in dein Profil \u2013 passt dein Kalorienziel noch zu dieser Woche?",
+  "Häkle drei Punkte auf deiner Einkaufsliste ab \u2013 kleine Schritte zählen.",
+  "Gönn dir heute bewusst eine Pause, ganz ohne schlechtes Gewissen.",
+  "Plane deine ganze Woche neu \u2013 mit einem Klick auf \u201eWoche automatisch planen\u201c."
+];
+function getTodaysImpulse(){
+  const dayIdx = new Date().getDay();
+  return RISE_DAILY_IMPULSES[dayIdx % RISE_DAILY_IMPULSES.length];
+}
 
 // ── NUR diese Felder für die Listenansicht laden (spart ~70% Egress) ──
 const LIST_COLUMNS = "id,title,kcal,protein,carbs,fat,tags,photo_url,servings,meal_type,created_at";
@@ -539,7 +620,11 @@ let state = {
   profilKcal: null,
   profilMakros: null,
   error: "",
-  serviceDown: false
+  serviceDown: false,
+  // RISE Gamification
+  riseEnergy: { total_ep: 0 },
+  riseCrowns: [],
+  riseStats: { weekPlansCount: 0, autoWeekCount: 0, profilSet: false, shoppingChecks: 0, totalEP: 0 }
 };
 
 function render(){
@@ -641,8 +726,9 @@ function renderAppShell(){
       <button class="main-tab ${state.mainTab==='today'?'active':''}" data-tab="today"><span class="main-tab-icon">\u{1F4C5}</span>Woche</button>
       <button class="main-tab ${state.mainTab==='shopping'?'active':''}" data-tab="shopping"><span class="main-tab-icon">\u{1F6D2}</span>Einkauf</button>
       <button class="main-tab ${state.mainTab==='profil'?'active':''}" data-tab="profil"><span class="main-tab-icon">\u{1F464}</span>Profil</button>
+      <button class="main-tab ${state.mainTab==='reise'?'active':''}" data-tab="reise"><span class="main-tab-icon">\u{1F451}</span>Reise</button>
     </div>
-    ${state.mainTab==='today' ? renderWeek() : state.mainTab==='shopping' ? renderShoppingList() : state.mainTab==='profil' ? renderProfil() : renderRecipesTab()}
+    ${state.mainTab==='today' ? renderWeek() : state.mainTab==='shopping' ? renderShoppingList() : state.mainTab==='profil' ? renderProfil() : state.mainTab==='reise' ? renderRise() : renderRecipesTab()}
     ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="fab" id="add-fab" title="Neues Rezept">+</button>` : ""}
     ${state.modalOpen ? renderModal() : ""}
     ${state.planRecipeId ? renderPlanPopup() : ""}
@@ -1018,6 +1104,55 @@ function renderProfil(){
   `;
 }
 
+function renderRiseFlowerSVG(progressPct){
+  // Einfache, ruhige Blüte: Blütenblätter füllen sich je nach Fortschritt in Rosegold/Ocker
+  const petals = 5;
+  const filledPetals = Math.max(1, Math.round((progressPct / 100) * petals));
+  let petalsSvg = "";
+  for(let i = 0; i < petals; i++){
+    const angle = (360 / petals) * i;
+    const filled = i < filledPetals;
+    petalsSvg += `<ellipse cx="55" cy="30" rx="13" ry="22" fill="${filled ? 'var(--pine)' : 'var(--line)'}" opacity="${filled ? '0.9' : '0.5'}" transform="rotate(${angle} 55 55)"/>`;
+  }
+  return `<svg class="rise-flower" viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+    ${petalsSvg}
+    <circle cx="55" cy="55" r="14" fill="var(--terracotta)"/>
+  </svg>`;
+}
+
+function renderRise(){
+  const totalEP = state.riseEnergy?.total_ep || 0;
+  const { stageName, step, progressPct } = getRiseStageInfo(totalEP);
+  const earnedCrownIds = new Set((state.riseCrowns||[]).map(c => c.crown_id));
+
+  return `
+    <div style="max-width:480px; margin:0 auto;">
+      <div class="rise-hero">
+        ${renderRiseFlowerSVG(progressPct)}
+        <h3 class="rise-stage-name">${stageName}</h3>
+        <p class="rise-stage-step">Schritt ${step} von 4</p>
+        <div class="rise-ep-bar-track"><div class="rise-ep-bar-fill" style="width:${progressPct}%;"></div></div>
+        <p class="rise-ep-label">${totalEP} Energie-Punkte gesammelt</p>
+      </div>
+
+      <div class="rise-impulse-card">
+        <h4 class="rise-section-title" style="margin-bottom:8px;">Heute erhebe ich mich</h4>
+        <p>${getTodaysImpulse()}</p>
+      </div>
+
+      <h4 class="rise-section-title">Deine Kronen</h4>
+      <div class="rise-crown-grid">
+        ${RISE_CROWNS_CATALOG.map(c => `
+          <div class="rise-crown ${earnedCrownIds.has(c.id) ? '' : 'locked'}">
+            <span class="rise-crown-icon">${c.icon}</span>
+            <span class="rise-crown-title">${c.title}</span>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
 function renderGrid(){
   const filtered = state.recipes.filter(r=>{
     const matchesSearch = !state.search || r.title.toLowerCase().includes(state.search.toLowerCase());
@@ -1246,6 +1381,7 @@ function bindAppEvents(){
       if(state.mainTab === "today") loadWeekLog();
       if(state.mainTab === "shopping"){ loadShoppingItems(); }
       if(state.mainTab === "profil") calcProfil();
+      if(state.mainTab === "reise"){ loadRiseData().then(render); }
       render();
     });
   });
@@ -1360,6 +1496,7 @@ function bindAppEvents(){
       render();
       const { error } = await sb.from("shopping_list_items").update({ checked: cb.checked }).eq("id", id);
       if(error) console.error(error);
+      if(cb.checked) await awardRiseEP(2, "shoppingChecks");
     });
   });
 
@@ -1433,17 +1570,19 @@ function bindAppEvents(){
 
   // Profil events
   document.querySelectorAll(".profil-pick").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
+    btn.addEventListener("click", async ()=>{
       state.profil[btn.dataset.field] = btn.dataset.val;
       calcProfil();
       render();
+      if(!state.riseStats.profilSet) await awardRiseEP(10, "profilSet");
     });
   });
   document.querySelectorAll(".profil-input").forEach(input=>{
-    input.addEventListener("change", ()=>{
+    input.addEventListener("change", async ()=>{
       state.profil[input.dataset.field] = parseFloat(input.value);
       calcProfil();
       render();
+      if(!state.riseStats.profilSet) await awardRiseEP(10, "profilSet");
     });
   });
   const useProfilBtn = document.getElementById("use-profil-kcal");
@@ -1555,6 +1694,7 @@ function bindAutoWeekEvents(){
       if(rows.length === 0){ alert("Keine passenden Rezepte gefunden."); return; }
       const { error } = await sb.from("daily_log").insert(rows);
       if(error){ alert("Fehler: " + error.message); return; }
+      await awardRiseEP(15, "autoWeekCount");
       await loadWeekLog();
     });
   });
@@ -1599,7 +1739,9 @@ function bindPlanPopupEvents(){
     const rows = state.planSelectedDays.map(date => ({ user_id: state.user.id, recipe_id: state.planRecipeId, log_date: date, servings_logged: 1 }));
     const { error } = await sb.from("daily_log").insert(rows);
     if(error){ alert("Fehler: " + error.message); confirmBtn.disabled=false; confirmBtn.textContent="Hinzuf\u00fcgen"; return; }
-    state.planRecipeId = null; await loadWeekLog();
+    state.planRecipeId = null;
+    await awardRiseEP(5, "weekPlansCount");
+    await loadWeekLog();
   });
 }
 
@@ -1782,6 +1924,55 @@ async function loadShoppingChecks(){
   // veraltet, ersetzt durch loadShoppingItems() (manuelle Einkaufsliste)
 }
 
+/* ---------- RISE GAMIFICATION ---------- */
+async function loadRiseData(){
+  if(!state.user) return;
+  const { data: row, error } = await sb.from("user_rise").select("*").eq("user_id", state.user.id).maybeSingle();
+  if(error){ console.error(error); return; }
+  if(row){
+    state.riseEnergy = { total_ep: row.total_ep };
+    state.riseStats = {
+      weekPlansCount: row.week_plans_count,
+      autoWeekCount: row.auto_week_count,
+      profilSet: row.profil_set,
+      shoppingChecks: row.shopping_checks,
+      totalEP: row.total_ep
+    };
+  } else {
+    await sb.from("user_rise").insert({ user_id: state.user.id });
+    state.riseEnergy = { total_ep: 0 };
+    state.riseStats = { weekPlansCount: 0, autoWeekCount: 0, profilSet: false, shoppingChecks: 0, totalEP: 0 };
+  }
+  const { data: crownRows, error: crownError } = await sb.from("user_crowns").select("*").eq("user_id", state.user.id);
+  if(!crownError) state.riseCrowns = crownRows || [];
+}
+
+async function awardRiseEP(amount, statKey){
+  if(!state.user) return;
+  const newTotal = (state.riseEnergy.total_ep || 0) + amount;
+  state.riseEnergy.total_ep = newTotal;
+  state.riseStats.totalEP = newTotal;
+  const dbUpdate = { total_ep: newTotal, updated_at: new Date().toISOString() };
+  if(statKey === "weekPlansCount"){ state.riseStats.weekPlansCount = (state.riseStats.weekPlansCount||0) + 1; dbUpdate.week_plans_count = state.riseStats.weekPlansCount; }
+  if(statKey === "autoWeekCount"){ state.riseStats.autoWeekCount = (state.riseStats.autoWeekCount||0) + 1; dbUpdate.auto_week_count = state.riseStats.autoWeekCount; }
+  if(statKey === "shoppingChecks"){ state.riseStats.shoppingChecks = (state.riseStats.shoppingChecks||0) + 1; dbUpdate.shopping_checks = state.riseStats.shoppingChecks; }
+  if(statKey === "profilSet"){ state.riseStats.profilSet = true; dbUpdate.profil_set = true; }
+  const { error } = await sb.from("user_rise").update(dbUpdate).eq("user_id", state.user.id);
+  if(error){ console.error(error); return; }
+  await checkAndAwardRiseCrowns();
+}
+
+async function checkAndAwardRiseCrowns(){
+  if(!state.user) return;
+  const earnedIds = new Set((state.riseCrowns||[]).map(c => c.crown_id));
+  for(const crown of RISE_CROWNS_CATALOG){
+    if(!earnedIds.has(crown.id) && crown.check(state.riseStats)){
+      const { error } = await sb.from("user_crowns").insert({ user_id: state.user.id, crown_id: crown.id });
+      if(!error) state.riseCrowns.push({ crown_id: crown.id, earned_at: new Date().toISOString() });
+    }
+  }
+}
+
 async function checkSession(){
   try{
     const { data, error } = await sb.auth.getSession();
@@ -1789,6 +1980,7 @@ async function checkSession(){
       state.user = data.session.user;
       state.view = "app";
       await loadRecipes();
+      await loadRiseData();
     debugUserId();
     } else if(error){
       state.view = "login";
