@@ -534,11 +534,11 @@ const WEEKDAY_NAMES = ["Mo","Di","Mi","Do","Fr","Sa","So"];
 
 // ── RISE Gamification: Stufen, Kronen, tägliche Impulse ──
 const RISE_STAGES = [
-  { name: "Erwachen",   minEP: 0   },
-  { name: "Erdung",     minEP: 150 },
-  { name: "Erhebung",   minEP: 400 },
-  { name: "Entfaltung", minEP: 800 },
-  { name: "Strahlen",   minEP: 1400 }
+  { name: "Rise",     minEP: 0   },
+  { name: "Elevate",  minEP: 150 },
+  { name: "Glow",     minEP: 400 },
+  { name: "Shine",    minEP: 800 },
+  { name: "Radiate",  minEP: 1400 }
 ];
 
 function getRiseStageInfo(totalEP){
@@ -750,7 +750,7 @@ function renderAppShell(){
       <button class="main-tab ${state.mainTab==='today'?'active':''}" data-tab="today"><span class="main-tab-icon">\u{1F4C5}</span>Woche</button>
       <button class="main-tab ${state.mainTab==='shopping'?'active':''}" data-tab="shopping"><span class="main-tab-icon">\u{1F6D2}</span>Einkauf</button>
       <button class="main-tab ${state.mainTab==='profil'?'active':''}" data-tab="profil"><span class="main-tab-icon">\u{1F464}</span>Profil</button>
-      <button class="main-tab ${state.mainTab==='reise'?'active':''}" data-tab="reise"><span class="main-tab-icon">\u{1F451}</span>Reise</button>
+      <button class="main-tab ${state.mainTab==='reise'?'active':''}" data-tab="reise"><span class="main-tab-icon">\u2600\ufe0f</span>Reise</button>
     </div>
     ${state.mainTab==='today' ? renderWeek() : state.mainTab==='shopping' ? renderShoppingList() : state.mainTab==='profil' ? renderProfil() : state.mainTab==='reise' ? renderRise() : renderRecipesTab()}
     ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="fab" id="add-fab" title="Neues Rezept">+</button>` : ""}
