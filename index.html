@@ -489,6 +489,20 @@
     margin-bottom:18px;
   }
   .rise-impulse-card p{ color:var(--ink-on-paper); font-size:14.5px; margin:0; line-height:1.5; }
+  .rise-workout-card{
+    background:var(--paper); border-radius:14px; padding:14px 16px; border:1px solid var(--line);
+    margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+  }
+  .rise-workout-info{ display:flex; flex-direction:column; gap:2px; flex:1; min-width:150px; }
+  .rise-workout-info a{ color:var(--ink-on-paper); font-size:14.5px; font-weight:600; text-decoration:none; }
+  .rise-workout-info a:hover{ color:var(--pine-dark); text-decoration:underline; }
+  .rise-workout-info span{ color:var(--ink-on-paper); opacity:0.6; font-size:12px; }
+  .rise-workout-done-btn{
+    background:var(--pine); color:#fff; border:none; padding:8px 14px; border-radius:10px;
+    font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap;
+  }
+  .rise-workout-done-btn:hover{ background:var(--pine-dark); }
+  .rise-workout-done-btn.done{ background:var(--terracotta-soft); color:var(--pine-dark); cursor:default; }
 </style>
 </head>
 <body>
@@ -547,7 +561,16 @@ const RISE_CROWNS_CATALOG = [
   { id: "selbstfuersorge",   icon: "🤍", title: "Selbstfürsorge",   check: (s)=> s.profilSet === true },
   { id: "einkaufs_krone",    icon: "🛒", title: "Einkaufs-Krone",   check: (s)=> s.shoppingChecks >= 10 },
   { id: "rhythmus_krone",    icon: "🌙", title: "Rhythmus-Krone",   check: (s)=> s.weekPlansCount >= 10 },
+  { id: "trampolin_kraft",   icon: "💪", title: "Trampolin-Kraft",  check: (s)=> s.trainingCount >= 5 },
   { id: "strahlen_krone",    icon: "☀️", title: "Strahlen-Krone",   check: (s)=> s.totalEP >= 1400 }
+];
+
+// ── Jump & Lift Workout-Videos ──
+// WICHTIG: url durch deine echten Video-Links ersetzen (z.B. YouTube, Vimeo, eigenes Hosting)
+const JUMP_LIFT_WORKOUTS = [
+  { id: "jl_ganzkoerper_1", title: "Jump & Lift · Ganzkörper Basics", duration: "25 Min", url: "https://youtube.com/DEIN-LINK-1" },
+  { id: "jl_bauch_rumpf",   title: "Jump & Lift · Kraft von innen (Bauch/Rumpf)", duration: "20 Min", url: "https://youtube.com/DEIN-LINK-2" },
+  { id: "jl_cardio_flow",   title: "Jump & Lift · Leichtigkeit (Cardio-Flow)", duration: "15 Min", url: "https://youtube.com/DEIN-LINK-3" }
 ];
 
 const RISE_DAILY_IMPULSES = [
@@ -624,7 +647,8 @@ let state = {
   // RISE Gamification
   riseEnergy: { total_ep: 0 },
   riseCrowns: [],
-  riseStats: { weekPlansCount: 0, autoWeekCount: 0, profilSet: false, shoppingChecks: 0, totalEP: 0 }
+  riseStats: { weekPlansCount: 0, autoWeekCount: 0, profilSet: false, shoppingChecks: 0, trainingCount: 0, totalEP: 0 },
+  riseTodayWorkoutIds: []
 };
 
 function render(){
@@ -982,7 +1006,7 @@ function calcProfil(){
   }
 
   // Aktivitätsfaktor
-  const faktoren = { "wenig": 1.2, "mittel": 1.55, "viel": 1.725 };
+  const faktoren = { "wenig": 1.2, "leicht": 1.375, "mittel": 1.55, "viel": 1.725 };
   const tdee = Math.round(bmr * (faktoren[p.aktivitaet] || 1.55));
 
   // Ziel-Anpassung
@@ -1051,7 +1075,7 @@ function renderProfil(){
         <div class="field">
           <label style="color:var(--ink); opacity:1;">Aktivitätslevel</label>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            ${[["wenig","🛋️ Wenig Sport"],["mittel","🏃 3× / Woche"],["viel","💪 5× / Woche"]].map(([val,label]) =>
+            ${[["wenig","🛋️ Kaum Sport"],["leicht","🚶 1-3× / Woche"],["mittel","🏃 3-5× / Woche"],["viel","💪 5-7× / Woche"]].map(([val,label]) =>
               `<button type="button" class="profil-pick" data-field="aktivitaet" data-val="${val}" style="flex:1; min-width:90px; padding:9px 6px; border-radius:10px; border:1.5px solid var(--line); background:${p.aktivitaet===val?'var(--pine)':'#fff'}; color:${p.aktivitaet===val?'#fff':'var(--ink-on-paper)'}; font-size:12.5px; font-weight:600; cursor:pointer;">${label}</button>`
             ).join("")}
           </div>
@@ -1140,7 +1164,21 @@ function renderRise(){
         <p>${getTodaysImpulse()}</p>
       </div>
 
-      <h4 class="rise-section-title">Deine Kronen</h4>
+      <h4 class="rise-section-title">Dein Training</h4>
+      ${JUMP_LIFT_WORKOUTS.map(w => {
+        const doneToday = state.riseTodayWorkoutIds.includes(w.id);
+        return `<div class="rise-workout-card">
+          <div class="rise-workout-info">
+            <a href="${w.url}" target="_blank" rel="noopener">${escapeHtml(w.title)}</a>
+            <span>${w.duration}</span>
+          </div>
+          <button type="button" class="rise-workout-done-btn ${doneToday ? 'done' : ''}" data-workout-id="${w.id}" ${doneToday ? 'disabled' : ''}>
+            ${doneToday ? '\u2713 Erledigt' : 'Training abgeschlossen'}
+          </button>
+        </div>`;
+      }).join("")}
+
+      <h4 class="rise-section-title" style="margin-top:22px;">Deine Kronen</h4>
       <div class="rise-crown-grid">
         ${RISE_CROWNS_CATALOG.map(c => `
           <div class="rise-crown ${earnedCrownIds.has(c.id) ? '' : 'locked'}">
@@ -1593,6 +1631,10 @@ function bindAppEvents(){
       render();
     });
   }
+
+  document.querySelectorAll(".rise-workout-done-btn:not(.done)").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ completeWorkout(btn.dataset.workoutId); });
+  });
   if(state.detailRecipe) bindDetailEvents();
   if(state.planRecipeId) bindPlanPopupEvents();
   if(state.swapTarget) bindSwapEvents();
@@ -1936,15 +1978,21 @@ async function loadRiseData(){
       autoWeekCount: row.auto_week_count,
       profilSet: row.profil_set,
       shoppingChecks: row.shopping_checks,
+      trainingCount: row.training_count || 0,
       totalEP: row.total_ep
     };
   } else {
     await sb.from("user_rise").insert({ user_id: state.user.id });
     state.riseEnergy = { total_ep: 0 };
-    state.riseStats = { weekPlansCount: 0, autoWeekCount: 0, profilSet: false, shoppingChecks: 0, totalEP: 0 };
+    state.riseStats = { weekPlansCount: 0, autoWeekCount: 0, profilSet: false, shoppingChecks: 0, trainingCount: 0, totalEP: 0 };
   }
   const { data: crownRows, error: crownError } = await sb.from("user_crowns").select("*").eq("user_id", state.user.id);
   if(!crownError) state.riseCrowns = crownRows || [];
+
+  const todayStr = new Date().toISOString().slice(0,10);
+  const { data: workoutRows, error: workoutError } = await sb.from("workout_log")
+    .select("workout_id").eq("user_id", state.user.id).eq("log_date", todayStr);
+  if(!workoutError) state.riseTodayWorkoutIds = (workoutRows||[]).map(w => w.workout_id);
 }
 
 async function awardRiseEP(amount, statKey){
@@ -1956,10 +2004,25 @@ async function awardRiseEP(amount, statKey){
   if(statKey === "weekPlansCount"){ state.riseStats.weekPlansCount = (state.riseStats.weekPlansCount||0) + 1; dbUpdate.week_plans_count = state.riseStats.weekPlansCount; }
   if(statKey === "autoWeekCount"){ state.riseStats.autoWeekCount = (state.riseStats.autoWeekCount||0) + 1; dbUpdate.auto_week_count = state.riseStats.autoWeekCount; }
   if(statKey === "shoppingChecks"){ state.riseStats.shoppingChecks = (state.riseStats.shoppingChecks||0) + 1; dbUpdate.shopping_checks = state.riseStats.shoppingChecks; }
+  if(statKey === "trainingCount"){ state.riseStats.trainingCount = (state.riseStats.trainingCount||0) + 1; dbUpdate.training_count = state.riseStats.trainingCount; }
   if(statKey === "profilSet"){ state.riseStats.profilSet = true; dbUpdate.profil_set = true; }
   const { error } = await sb.from("user_rise").update(dbUpdate).eq("user_id", state.user.id);
   if(error){ console.error(error); return; }
   await checkAndAwardRiseCrowns();
+}
+
+async function completeWorkout(workoutId){
+  if(!state.user) return;
+  const todayStr = new Date().toISOString().slice(0,10);
+  const { error } = await sb.from("workout_log").insert({ user_id: state.user.id, workout_id: workoutId, log_date: todayStr });
+  if(error){
+    // Unique-Constraint-Verletzung = heute schon eingetragen, kein Fehler, einfach ignorieren
+    if(error.code !== "23505") console.error(error);
+    return;
+  }
+  state.riseTodayWorkoutIds.push(workoutId);
+  await awardRiseEP(20, "trainingCount");
+  render();
 }
 
 async function checkAndAwardRiseCrowns(){
