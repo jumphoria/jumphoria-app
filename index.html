@@ -503,6 +503,16 @@
   }
   .rise-workout-done-btn:hover{ background:var(--pine-dark); }
   .rise-workout-done-btn.done{ background:var(--terracotta-soft); color:var(--pine-dark); cursor:default; }
+
+  /* ====== LYMPH TIMER ====== */
+  .lymph-modal{ text-align:center; padding-top:56px; }
+  .lymph-eyebrow{ color:var(--terracotta); font-size:12px; text-transform:uppercase; letter-spacing:.06em; font-weight:700; margin:0 0 8px; }
+  .lymph-exercise-name{ margin:0 0 8px; }
+  .lymph-cue{ color:var(--ink-on-paper); opacity:0.7; font-size:14px; margin:0 0 26px; line-height:1.5; }
+  .lymph-countdown{ font-size:58px; font-weight:700; font-family:Georgia,serif; color:var(--pine-dark); margin-bottom:20px; }
+  .lymph-next{ color:var(--ink-on-paper); opacity:0.55; font-size:13px; margin:0 0 22px; }
+  .lymph-controls{ display:flex; gap:10px; justify-content:center; }
+  .lymph-finish-icon{ font-size:46px; margin-bottom:10px; }
 </style>
 </head>
 <body>
@@ -534,11 +544,11 @@ const WEEKDAY_NAMES = ["Mo","Di","Mi","Do","Fr","Sa","So"];
 
 // ── RISE Gamification: Stufen, Kronen, tägliche Impulse ──
 const RISE_STAGES = [
-  { name: "Rise",     minEP: 0   },
-  { name: "Elevate",  minEP: 150 },
-  { name: "Glow",     minEP: 400 },
-  { name: "Shine",    minEP: 800 },
-  { name: "Radiate",  minEP: 1400 }
+  { name: "Erwachen",   minEP: 0   },
+  { name: "Erdung",     minEP: 150 },
+  { name: "Erhebung",   minEP: 400 },
+  { name: "Entfaltung", minEP: 800 },
+  { name: "Strahlen",   minEP: 1400 }
 ];
 
 function getRiseStageInfo(totalEP){
@@ -572,6 +582,24 @@ const JUMP_LIFT_WORKOUTS = [
   { id: "jl_bauch_rumpf",   title: "Jump & Lift · Kraft von innen (Bauch/Rumpf)", duration: "20 Min", url: "https://youtube.com/DEIN-LINK-2" },
   { id: "jl_cardio_flow",   title: "Jump & Lift · Leichtigkeit (Cardio-Flow)", duration: "15 Min", url: "https://youtube.com/DEIN-LINK-3" }
 ];
+
+// ── Morgenroutine · Lymphfluss aktivieren (echter In-App Timer, kein Video) ──
+// Übungen/Dauer hier einfach anpassen, ergänzen oder umsortieren.
+const LYMPH_FLOW_WORKOUT_ID = "lymph_morgenroutine";
+const LYMPH_FLOW_EXERCISES = [
+  { name: "Tiefe Bauchatmung",         cue: "Ruhig durch die Nase ein-, durch den Mund ausatmen.", seconds: 60 },
+  { name: "Armkreisen groß",           cue: "Große, lockere Kreise vor und zurück.",                seconds: 40 },
+  { name: "Schulterrollen",            cue: "Locker nach hinten rollen.",                            seconds: 30 },
+  { name: "Ausschütteln Arme & Beine", cue: "Ganz locker schütteln, wie ein Hund im Regen.",         seconds: 30 },
+  { name: "Sanfter Hampelmann",        cue: "Ohne Sprung, leicht und locker.",                       seconds: 40 },
+  { name: "Beinschwingen (links)",     cue: "Locker vor und zurück schwingen.",                      seconds: 30 },
+  { name: "Beinschwingen (rechts)",    cue: "Locker vor und zurück schwingen.",                      seconds: 30 },
+  { name: "Seitliche Dehnung (links)", cue: "Arm über den Kopf, sanft zur Seite lehnen.",             seconds: 30 },
+  { name: "Seitliche Dehnung (rechts)",cue: "Arm über den Kopf, sanft zur Seite lehnen.",             seconds: 30 },
+  { name: "Abschlussatmung",           cue: "Tief durchatmen, im Körper ankommen.",                  seconds: 40 }
+];
+function lymphTotalSeconds(){ return LYMPH_FLOW_EXERCISES.reduce((sum,e)=>sum+e.seconds,0); }
+function formatMinutesLabel(totalSeconds){ return `${Math.round(totalSeconds/60)} Min`; }
 
 const RISE_DAILY_IMPULSES = [
   "Plane heute ein Rezept für morgen ein \u2013 dein zukünftiges Ich wird sich freuen.",
@@ -648,7 +676,9 @@ let state = {
   riseEnergy: { total_ep: 0 },
   riseCrowns: [],
   riseStats: { weekPlansCount: 0, autoWeekCount: 0, profilSet: false, shoppingChecks: 0, trainingCount: 0, totalEP: 0 },
-  riseTodayWorkoutIds: []
+  riseTodayWorkoutIds: [],
+  // Lymphfluss-Timer (Morgenroutine)
+  lymphTimer: { open: false, currentIndex: 0, secondsLeft: 0, running: false, finished: false }
 };
 
 function render(){
@@ -750,7 +780,7 @@ function renderAppShell(){
       <button class="main-tab ${state.mainTab==='today'?'active':''}" data-tab="today"><span class="main-tab-icon">\u{1F4C5}</span>Woche</button>
       <button class="main-tab ${state.mainTab==='shopping'?'active':''}" data-tab="shopping"><span class="main-tab-icon">\u{1F6D2}</span>Einkauf</button>
       <button class="main-tab ${state.mainTab==='profil'?'active':''}" data-tab="profil"><span class="main-tab-icon">\u{1F464}</span>Profil</button>
-      <button class="main-tab ${state.mainTab==='reise'?'active':''}" data-tab="reise"><span class="main-tab-icon">\u2600\ufe0f</span>Reise</button>
+      <button class="main-tab ${state.mainTab==='reise'?'active':''}" data-tab="reise"><span class="main-tab-icon">\u{1F451}</span>Reise</button>
     </div>
     ${state.mainTab==='today' ? renderWeek() : state.mainTab==='shopping' ? renderShoppingList() : state.mainTab==='profil' ? renderProfil() : state.mainTab==='reise' ? renderRise() : renderRecipesTab()}
     ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="fab" id="add-fab" title="Neues Rezept">+</button>` : ""}
@@ -759,6 +789,7 @@ function renderAppShell(){
     ${state.autoWeekOpen ? renderAutoWeekPopup() : ""}
     ${state.swapTarget ? renderSwapPopup() : ""}
     ${state.detailRecipe ? renderDetail() : ""}
+    ${state.lymphTimer && state.lymphTimer.open ? renderLymphTimerModal() : ""}
   `;
 }
 
@@ -1148,6 +1179,7 @@ function renderRise(){
   const totalEP = state.riseEnergy?.total_ep || 0;
   const { stageName, step, progressPct } = getRiseStageInfo(totalEP);
   const earnedCrownIds = new Set((state.riseCrowns||[]).map(c => c.crown_id));
+  const lymphDoneToday = state.riseTodayWorkoutIds.includes(LYMPH_FLOW_WORKOUT_ID);
 
   return `
     <div style="max-width:480px; margin:0 auto;">
@@ -1165,6 +1197,15 @@ function renderRise(){
       </div>
 
       <h4 class="rise-section-title">Dein Training</h4>
+      <div class="rise-workout-card">
+        <div class="rise-workout-info">
+          <a href="#" id="lymph-open-btn" style="cursor:pointer;">\u{1F4A7} Morgenroutine · Lymphfluss aktivieren</a>
+          <span>${formatMinutesLabel(lymphTotalSeconds())} · ${LYMPH_FLOW_EXERCISES.length} Übungen mit Timer</span>
+        </div>
+        <button type="button" class="rise-workout-done-btn ${lymphDoneToday ? 'done' : ''}" id="lymph-start-btn" ${lymphDoneToday ? 'disabled' : ''}>
+          ${lymphDoneToday ? '\u2713 Erledigt' : 'Timer starten'}
+        </button>
+      </div>
       ${JUMP_LIFT_WORKOUTS.map(w => {
         const doneToday = state.riseTodayWorkoutIds.includes(w.id);
         return `<div class="rise-workout-card">
@@ -1189,6 +1230,126 @@ function renderRise(){
       </div>
     </div>
   `;
+}
+
+/* ---------- LYMPHFLUSS-TIMER ---------- */
+let lymphTickerHandle = null;
+
+function openLymphTimer(){
+  clearInterval(lymphTickerHandle);
+  state.lymphTimer = {
+    open: true,
+    currentIndex: 0,
+    secondsLeft: LYMPH_FLOW_EXERCISES[0].seconds,
+    running: true,
+    finished: false
+  };
+  render();
+  startLymphTicker();
+}
+
+function startLymphTicker(){
+  clearInterval(lymphTickerHandle);
+  lymphTickerHandle = setInterval(()=>{
+    const t = state.lymphTimer;
+    if(!t || !t.open || !t.running) return;
+    t.secondsLeft -= 1;
+    if(t.secondsLeft <= 0){
+      advanceLymphExercise();
+    } else {
+      updateLymphTimerDOM();
+    }
+  }, 1000);
+}
+
+function updateLymphTimerDOM(){
+  const t = state.lymphTimer;
+  if(!t || !t.open || t.finished) return;
+  const ex = LYMPH_FLOW_EXERCISES[t.currentIndex];
+  const countdownEl = document.getElementById("lymph-countdown");
+  const fillEl = document.getElementById("lymph-progress-fill");
+  if(!countdownEl || !fillEl) return;
+  const mins = Math.floor(t.secondsLeft / 60);
+  const secs = t.secondsLeft % 60;
+  countdownEl.textContent = `${mins}:${secs.toString().padStart(2,'0')}`;
+  const progressPct = Math.round(((ex.seconds - t.secondsLeft) / ex.seconds) * 100);
+  fillEl.style.width = progressPct + "%";
+}
+
+function advanceLymphExercise(){
+  const t = state.lymphTimer;
+  if(!t || !t.open) return;
+  if(t.currentIndex < LYMPH_FLOW_EXERCISES.length - 1){
+    t.currentIndex += 1;
+    t.secondsLeft = LYMPH_FLOW_EXERCISES[t.currentIndex].seconds;
+    render();
+  } else {
+    clearInterval(lymphTickerHandle);
+    t.running = false;
+    t.finished = true;
+    render();
+    completeWorkout(LYMPH_FLOW_WORKOUT_ID);
+  }
+}
+
+function closeLymphTimer(){
+  clearInterval(lymphTickerHandle);
+  state.lymphTimer = { open: false, currentIndex: 0, secondsLeft: 0, running: false, finished: false };
+  render();
+}
+
+function renderLymphTimerModal(){
+  const t = state.lymphTimer;
+
+  if(t.finished){
+    return `<div class="overlay" id="lymph-timer-overlay">
+      <div class="modal lymph-modal">
+        <button class="modal-close" id="lymph-timer-close">\u2715</button>
+        <div class="lymph-finish-icon">\u{1F338}</div>
+        <h2>Geschafft!</h2>
+        <p class="lymph-cue">Deine Morgenroutine ist abgeschlossen. Schön, dass du dir diese Zeit genommen hast \u2013 dein Lymphfluss dankt es dir.</p>
+        <button type="button" class="btn" id="lymph-finish-close">Schließen</button>
+      </div>
+    </div>`;
+  }
+
+  const ex = LYMPH_FLOW_EXERCISES[t.currentIndex];
+  const isLast = t.currentIndex === LYMPH_FLOW_EXERCISES.length - 1;
+  const progressPct = Math.round(((ex.seconds - t.secondsLeft) / ex.seconds) * 100);
+  const mins = Math.floor(t.secondsLeft / 60);
+  const secs = t.secondsLeft % 60;
+  const timeLabel = `${mins}:${secs.toString().padStart(2,'0')}`;
+  const nextEx = LYMPH_FLOW_EXERCISES[t.currentIndex + 1];
+
+  return `<div class="overlay" id="lymph-timer-overlay">
+    <div class="modal lymph-modal">
+      <button class="modal-close" id="lymph-timer-close">\u2715</button>
+      <p class="lymph-eyebrow">Übung ${t.currentIndex + 1} / ${LYMPH_FLOW_EXERCISES.length}</p>
+      <h2 class="lymph-exercise-name">${escapeHtml(ex.name)}</h2>
+      <p class="lymph-cue">${escapeHtml(ex.cue || "")}</p>
+      <div class="lymph-countdown" id="lymph-countdown">${timeLabel}</div>
+      <div class="rise-ep-bar-track" style="margin-bottom:22px;"><div class="rise-ep-bar-fill" id="lymph-progress-fill" style="width:${progressPct}%;"></div></div>
+      <p class="lymph-next">${nextEx ? `Als nächstes: ${escapeHtml(nextEx.name)}` : 'Letzte Übung \u{1F389}'}</p>
+      <div class="lymph-controls">
+        <button type="button" class="btn-outline" id="lymph-pause-btn">${t.running ? '\u23F8 Pause' : '\u25B6 Weiter'}</button>
+        <button type="button" class="btn-outline" id="lymph-skip-btn">${isLast ? 'Beenden' : 'Überspringen \u23ED'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function bindLymphTimerEvents(){
+  const overlay = document.getElementById("lymph-timer-overlay");
+  if(!overlay) return;
+  overlay.addEventListener("click", (e)=>{ if(e.target.id==="lymph-timer-overlay") closeLymphTimer(); });
+  const closeBtn = document.getElementById("lymph-timer-close");
+  if(closeBtn) closeBtn.addEventListener("click", closeLymphTimer);
+  const finishCloseBtn = document.getElementById("lymph-finish-close");
+  if(finishCloseBtn) finishCloseBtn.addEventListener("click", closeLymphTimer);
+  const pauseBtn = document.getElementById("lymph-pause-btn");
+  if(pauseBtn) pauseBtn.addEventListener("click", ()=>{ state.lymphTimer.running = !state.lymphTimer.running; render(); });
+  const skipBtn = document.getElementById("lymph-skip-btn");
+  if(skipBtn) skipBtn.addEventListener("click", ()=>{ advanceLymphExercise(); });
 }
 
 function renderGrid(){
@@ -1632,12 +1793,19 @@ function bindAppEvents(){
     });
   }
 
+  const lymphStartBtn = document.getElementById("lymph-start-btn");
+  if(lymphStartBtn) lymphStartBtn.addEventListener("click", (e)=>{ e.preventDefault(); openLymphTimer(); });
+  const lymphOpenLink = document.getElementById("lymph-open-btn");
+  if(lymphOpenLink) lymphOpenLink.addEventListener("click", (e)=>{ e.preventDefault(); if(!state.riseTodayWorkoutIds.includes(LYMPH_FLOW_WORKOUT_ID)) openLymphTimer(); });
+
   document.querySelectorAll(".rise-workout-done-btn:not(.done)").forEach(btn=>{
+    if(btn.id === "lymph-start-btn") return;
     btn.addEventListener("click", ()=>{ completeWorkout(btn.dataset.workoutId); });
   });
   if(state.detailRecipe) bindDetailEvents();
   if(state.planRecipeId) bindPlanPopupEvents();
   if(state.swapTarget) bindSwapEvents();
+  if(state.lymphTimer && state.lymphTimer.open) bindLymphTimerEvents();
 }
 
 function bindAutoWeekEvents(){
