@@ -509,6 +509,7 @@
   .lymph-eyebrow{ color:var(--terracotta); font-size:12px; text-transform:uppercase; letter-spacing:.06em; font-weight:700; margin:0 0 8px; }
   .lymph-exercise-name{ margin:0 0 8px; }
   .lymph-cue{ color:var(--ink-on-paper); opacity:0.7; font-size:14px; margin:0 0 26px; line-height:1.5; }
+  .lymph-video{ width:100%; max-width:280px; max-height:280px; border-radius:16px; margin:0 auto 18px; display:block; box-shadow:var(--shadow); object-fit:cover; }
   .lymph-countdown{ font-size:58px; font-weight:700; font-family:Georgia,serif; color:var(--pine-dark); margin-bottom:20px; }
   .lymph-next{ color:var(--ink-on-paper); opacity:0.55; font-size:13px; margin:0 0 22px; }
   .lymph-controls{ display:flex; gap:10px; justify-content:center; }
@@ -583,20 +584,21 @@ const JUMP_LIFT_WORKOUTS = [
   { id: "jl_cardio_flow",   title: "Jump & Lift · Leichtigkeit (Cardio-Flow)", duration: "15 Min", url: "https://youtube.com/DEIN-LINK-3" }
 ];
 
-// ── Morgenroutine · Lymphfluss aktivieren (echter In-App Timer, kein Video) ──
-// Übungen/Dauer hier einfach anpassen, ergänzen oder umsortieren.
+// ── Morgenroutine · Lymphfluss aktivieren (echter In-App Timer, kein Video-Link) ──
+// Übungen/Dauer/Video hier anpassen. "video" ist optional: leer lassen = nur Text,
+// oder die öffentliche Supabase-Storage-URL deines Clips eintragen (Bucket "lymph-videos").
 const LYMPH_FLOW_WORKOUT_ID = "lymph_morgenroutine";
 const LYMPH_FLOW_EXERCISES = [
-  { name: "Tiefe Bauchatmung",         cue: "Ruhig durch die Nase ein-, durch den Mund ausatmen.", seconds: 60 },
-  { name: "Armkreisen groß",           cue: "Große, lockere Kreise vor und zurück.",                seconds: 40 },
-  { name: "Schulterrollen",            cue: "Locker nach hinten rollen.",                            seconds: 30 },
-  { name: "Ausschütteln Arme & Beine", cue: "Ganz locker schütteln, wie ein Hund im Regen.",         seconds: 30 },
-  { name: "Sanfter Hampelmann",        cue: "Ohne Sprung, leicht und locker.",                       seconds: 40 },
-  { name: "Beinschwingen (links)",     cue: "Locker vor und zurück schwingen.",                      seconds: 30 },
-  { name: "Beinschwingen (rechts)",    cue: "Locker vor und zurück schwingen.",                      seconds: 30 },
-  { name: "Seitliche Dehnung (links)", cue: "Arm über den Kopf, sanft zur Seite lehnen.",             seconds: 30 },
-  { name: "Seitliche Dehnung (rechts)",cue: "Arm über den Kopf, sanft zur Seite lehnen.",             seconds: 30 },
-  { name: "Abschlussatmung",           cue: "Tief durchatmen, im Körper ankommen.",                  seconds: 40 }
+  { name: "Tiefe Bauchatmung",         cue: "Ruhig durch die Nase ein-, durch den Mund ausatmen.", seconds: 60, video: "https://enossxziqzvntcagndum.supabase.co/storage/v1/object/public/lymph-videos/atmung.mp4" },
+  { name: "Armkreisen groß",           cue: "Große, lockere Kreise vor und zurück.",                seconds: 40, video: "" },
+  { name: "Schulterrollen",            cue: "Locker nach hinten rollen.",                            seconds: 30, video: "" },
+  { name: "Ausschütteln Arme & Beine", cue: "Ganz locker schütteln, wie ein Hund im Regen.",         seconds: 30, video: "" },
+  { name: "Sanfter Hampelmann",        cue: "Ohne Sprung, leicht und locker.",                       seconds: 40, video: "" },
+  { name: "Beinschwingen (links)",     cue: "Locker vor und zurück schwingen.",                      seconds: 30, video: "" },
+  { name: "Beinschwingen (rechts)",    cue: "Locker vor und zurück schwingen.",                      seconds: 30, video: "" },
+  { name: "Seitliche Dehnung (links)", cue: "Arm über den Kopf, sanft zur Seite lehnen.",             seconds: 30, video: "" },
+  { name: "Seitliche Dehnung (rechts)",cue: "Arm über den Kopf, sanft zur Seite lehnen.",             seconds: 30, video: "" },
+  { name: "Abschlussatmung",           cue: "Tief durchatmen, im Körper ankommen.",                  seconds: 40, video: "" }
 ];
 function lymphTotalSeconds(){ return LYMPH_FLOW_EXERCISES.reduce((sum,e)=>sum+e.seconds,0); }
 function formatMinutesLabel(totalSeconds){ return `${Math.round(totalSeconds/60)} Min`; }
@@ -1326,6 +1328,7 @@ function renderLymphTimerModal(){
       <button class="modal-close" id="lymph-timer-close">\u2715</button>
       <p class="lymph-eyebrow">Übung ${t.currentIndex + 1} / ${LYMPH_FLOW_EXERCISES.length}</p>
       <h2 class="lymph-exercise-name">${escapeHtml(ex.name)}</h2>
+      ${ex.video ? `<video class="lymph-video" src="${escapeAttr(ex.video)}" autoplay muted loop playsinline></video>` : ""}
       <p class="lymph-cue">${escapeHtml(ex.cue || "")}</p>
       <div class="lymph-countdown" id="lymph-countdown">${timeLabel}</div>
       <div class="rise-ep-bar-track" style="margin-bottom:22px;"><div class="rise-ep-bar-fill" id="lymph-progress-fill" style="width:${progressPct}%;"></div></div>
