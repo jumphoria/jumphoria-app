@@ -552,6 +552,16 @@ const FILTER_GROUPS = [
 ];
 const WEEKDAY_NAMES = ["Mo","Di","Mi","Do","Fr","Sa","So"];
 
+// ── Automatische Sortierung im Tagesplan: Frühstück → Hauptgericht → Snack → Dessert ──
+const MEAL_ORDER_TAGS = ["Frühstück","Hauptgericht","Snack","Dessert"];
+function getMealOrderRank(recipe){
+  if(!recipe || !recipe.tags) return MEAL_ORDER_TAGS.length;
+  for(let i=0; i<MEAL_ORDER_TAGS.length; i++){
+    if(recipe.tags.includes(MEAL_ORDER_TAGS[i])) return i;
+  }
+  return MEAL_ORDER_TAGS.length;
+}
+
 // ── RISE Gamification: Stufen, Kronen, tägliche Impulse ──
 const RISE_STAGES = [
   { name: "Rise",     minEP: 0   },
@@ -886,7 +896,11 @@ function renderWeek(){
         </div>
         ${dayEntries.length === 0 ? `<p class="week-day-empty">Nichts geplant</p>` : `
           <div class="today-list">
-            ${dayEntries.map(e => {
+            ${[...dayEntries].sort((a,b) => {
+              const rankA = getMealOrderRank(state.recipes.find(r => r.id === a.recipe_id));
+              const rankB = getMealOrderRank(state.recipes.find(r => r.id === b.recipe_id));
+              return rankA - rankB;
+            }).map(e => {
               const recipe = state.recipes.find(r => r.id === e.recipe_id);
               if(!recipe) return "";
               const factor = e.servings_logged / (recipe.servings || 1);
