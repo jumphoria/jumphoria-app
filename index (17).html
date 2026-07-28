@@ -1539,6 +1539,22 @@ const STUECK_GEWICHTE = {
   "avocado": 150, "gurke": 300, "scheibe": 30, "dose": 150
 };
 
+// ── Kochfaktoren für Nudeln/Pasta (trocken → gekocht), nach Sorte ──
+const NUDEL_KOCH_FAKTOREN = {
+  "spätzle": 1.8,
+  "eiernudeln": 2.2,
+  "vollkornnudeln": 2.3,
+  "spaghetti": 2.4,
+  "nudeln": 2.4
+};
+function getNudelKochFaktor(name){
+  const nameLower = (name || "").toLowerCase();
+  for(const [key, faktor] of Object.entries(NUDEL_KOCH_FAKTOREN)){
+    if(nameLower.includes(key)) return faktor;
+  }
+  return null;
+}
+
 function estimateCookedWeight(recipe, servings){
   if(!recipe.ingredients_structured || recipe.ingredients_structured.length === 0) return null;
   const scale = servings / (recipe.servings || 1);
@@ -1636,6 +1652,14 @@ function renderDetail(){
             gramHint = ` <span class="ing-estimate">(~${estGrams}g)</span>`;
             break;
           }
+        }
+      }
+      // Bei Nudeln mit Trocken-Angabe (g) zusätzlich die ca. gekochte Menge anzeigen
+      if(ing.unit === 'g' && ing.name){
+        const nudelFaktor = getNudelKochFaktor(ing.name);
+        if(nudelFaktor){
+          const estCookedGrams = Math.round(scaledAmount * nudelFaktor);
+          gramHint = ` <span class="ing-estimate">(~${estCookedGrams}g gekocht)</span>`;
         }
       }
 
