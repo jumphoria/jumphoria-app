@@ -689,7 +689,10 @@ let state = {
   riseStats: { weekPlansCount: 0, autoWeekCount: 0, profilSet: false, shoppingChecks: 0, trainingCount: 0, totalEP: 0 },
   riseTodayWorkoutIds: [],
   // Lymphfluss-Timer (Morgenroutine)
-  lymphTimer: { open: false, currentIndex: 0, secondsLeft: 0, running: false, finished: false }
+  lymphTimer: { open: false, currentIndex: 0, secondsLeft: 0, running: false, finished: false },
+  // Rezept direkt zu einem Tag im Wochenplan hinzufügen
+  dayAddTarget: null,
+  dayAddSearch: ""
 };
 
 function render(){
@@ -797,6 +800,7 @@ function renderAppShell(){
     ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="fab" id="add-fab" title="Neues Rezept">+</button>` : ""}
     ${state.modalOpen ? renderModal() : ""}
     ${state.planRecipeId ? renderPlanPopup() : ""}
+    ${state.dayAddTarget ? renderDayAddPopup() : ""}
     ${state.autoWeekOpen ? renderAutoWeekPopup() : ""}
     ${state.swapTarget ? renderSwapPopup() : ""}
     ${state.detailRecipe ? renderDetail() : ""}
@@ -875,7 +879,10 @@ function renderWeek(){
       <div class="week-day ${isToday?'is-today':''}">
         <div class="week-day-header">
           <h4>${dayLabel}${isToday?' \u2022 heute':''}</h4>
-          ${dayEntries.length > 0 ? `<div class="week-day-macros"><span class="week-day-kcal">${Math.round(kcalSum)} kcal</span><span class="week-day-macro-detail">E ${Math.round(proteinSum)}g \u00b7 KH ${Math.round(carbsSum)}g \u00b7 F ${Math.round(fatSum)}g</span></div>` : ""}
+          <div style="display:flex; align-items:center; gap:8px;">
+            ${dayEntries.length > 0 ? `<div class="week-day-macros"><span class="week-day-kcal">${Math.round(kcalSum)} kcal</span><span class="week-day-macro-detail">E ${Math.round(proteinSum)}g \u00b7 KH ${Math.round(carbsSum)}g \u00b7 F ${Math.round(fatSum)}g</span></div>` : ""}
+            <button type="button" class="btn-outline day-add-btn" data-date="${date}" style="font-size:12px; padding:5px 10px; white-space:nowrap;">+ Rezept</button>
+          </div>
         </div>
         ${dayEntries.length === 0 ? `<p class="week-day-empty">Nichts geplant</p>` : `
           <div class="today-list">
@@ -1036,6 +1043,29 @@ function renderPlanPopup(){
       ${WEEKDAY_NAMES.map((name, idx) => `<button type="button" class="day-pick ${state.planSelectedDays.includes(weekDates[idx])?'active':''}" data-date="${weekDates[idx]}">${name}</button>`).join("")}
     </div>
     <div class="modal-actions"><button type="button" class="btn" id="plan-confirm">Hinzuf\u00fcgen</button></div>
+  </div></div>`;
+}
+
+function renderDayAddPopup(){
+  const date = state.dayAddTarget;
+  if(!date) return "";
+  const dateObj = new Date(date + "T00:00:00");
+  const dayIdxInWeek = getCurrentWeekDates().indexOf(date);
+  const dayName = dayIdxInWeek >= 0 ? WEEKDAY_NAMES[dayIdxInWeek] : "";
+  const label = `${dayName}, ${dateObj.getDate()}.${dateObj.getMonth()+1}.`;
+  const search = state.dayAddSearch || "";
+  const filtered = state.recipes.filter(r => !search || r.title.toLowerCase().includes(search.toLowerCase()));
+  return `<div class="overlay" id="dayadd-overlay"><div class="modal plan-modal">
+    <button class="modal-close" id="dayadd-close">\u2715</button>
+    <h2>Rezept hinzuf\u00fcgen \u2013 ${label}</h2>
+    <input class="search-input" id="dayadd-search" placeholder="Rezept suchen \u2026" value="${escapeAttr(search)}" style="margin-bottom:14px; width:100%;">
+    <div class="picker-list">
+      ${filtered.map(r => {
+        const kcalPerServing = (r.kcal != null && r.servings) ? Math.round(r.kcal / r.servings) : null;
+        return `<button type="button" class="picker-item" data-dayadd-recipe-id="${r.id}"><span>${escapeHtml(r.title)}</span>${kcalPerServing !== null ? `<span class="picker-kcal">${kcalPerServing} kcal</span>` : ""}</button>`;
+      }).join("")}
+      ${filtered.length === 0 ? `<p style="color:var(--ink-on-paper); opacity:0.6;">Keine Rezepte gefunden.</p>` : ""}
+    </div>
   </div></div>`;
 }
 
@@ -1784,6 +1814,14 @@ function bindAppEvents(){
   const autoWeekBtn = document.getElementById("auto-week-btn");
   if(autoWeekBtn) autoWeekBtn.addEventListener("click", ()=>{ state.autoWeekOpen = true; render(); });
 
+  document.querySelectorAll(".day-add-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      state.dayAddTarget = btn.dataset.date;
+      state.dayAddSearch = "";
+      render();
+    });
+  });
+
   const clearWeekBtn = document.getElementById("clear-week-btn");
   if(clearWeekBtn) clearWeekBtn.addEventListener("click", async ()=>{
     if(!confirm("Alle Einträge dieser Woche löschen?")) return;
@@ -1835,6 +1873,7 @@ function bindAppEvents(){
   });
   if(state.detailRecipe) bindDetailEvents();
   if(state.planRecipeId) bindPlanPopupEvents();
+  if(state.dayAddTarget) bindDayAddEvents();
   if(state.swapTarget) bindSwapEvents();
   if(state.lymphTimer && state.lymphTimer.open) bindLymphTimerEvents();
 }
@@ -1983,6 +2022,37 @@ function bindPlanPopupEvents(){
     state.planRecipeId = null;
     await awardRiseEP(5, "weekPlansCount");
     await loadWeekLog();
+  });
+}
+
+function bindDayAddEvents(){
+  const overlay = document.getElementById("dayadd-overlay");
+  if(!overlay) return;
+  overlay.addEventListener("click", (e)=>{ if(e.target.id==="dayadd-overlay"){ state.dayAddTarget=null; state.dayAddSearch=""; render(); } });
+  document.getElementById("dayadd-close").addEventListener("click", ()=>{ state.dayAddTarget=null; state.dayAddSearch=""; render(); });
+
+  const searchInput = document.getElementById("dayadd-search");
+  if(searchInput){
+    searchInput.addEventListener("input", (e)=>{
+      state.dayAddSearch = e.target.value;
+      render();
+      const el = document.getElementById("dayadd-search");
+      if(el){ el.focus(); el.selectionStart = el.value.length; }
+    });
+  }
+
+  document.querySelectorAll("[data-dayadd-recipe-id]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const recipeId = btn.dataset.dayaddRecipeId;
+      const date = state.dayAddTarget;
+      btn.disabled = true;
+      const { error } = await sb.from("daily_log").insert({ user_id: state.user.id, recipe_id: recipeId, log_date: date, servings_logged: 1 });
+      if(error){ alert("Fehler: " + error.message); btn.disabled = false; return; }
+      state.dayAddTarget = null;
+      state.dayAddSearch = "";
+      await awardRiseEP(5, "weekPlansCount");
+      await loadWeekLog();
+    });
   });
 }
 
