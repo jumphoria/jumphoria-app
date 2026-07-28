@@ -702,7 +702,8 @@ let state = {
   lymphTimer: { open: false, currentIndex: 0, secondsLeft: 0, running: false, finished: false },
   // Rezept direkt zu einem Tag im Wochenplan hinzufügen
   dayAddTarget: null,
-  dayAddSearch: ""
+  dayAddSearch: "",
+  dayAddTag: null
 };
 
 function render(){
@@ -1068,11 +1069,17 @@ function renderDayAddPopup(){
   const dayName = dayIdxInWeek >= 0 ? WEEKDAY_NAMES[dayIdxInWeek] : "";
   const label = `${dayName}, ${dateObj.getDate()}.${dateObj.getMonth()+1}.`;
   const search = state.dayAddSearch || "";
-  const filtered = state.recipes.filter(r => !search || r.title.toLowerCase().includes(search.toLowerCase()));
+  const filtered = state.recipes.filter(r =>
+    (!search || r.title.toLowerCase().includes(search.toLowerCase())) &&
+    (!state.dayAddTag || (r.tags||[]).includes(state.dayAddTag))
+  );
   return `<div class="overlay" id="dayadd-overlay"><div class="modal plan-modal">
     <button class="modal-close" id="dayadd-close">\u2715</button>
     <h2>Rezept hinzuf\u00fcgen \u2013 ${label}</h2>
-    <input class="search-input" id="dayadd-search" placeholder="Rezept suchen \u2026" value="${escapeAttr(search)}" style="margin-bottom:14px; width:100%;">
+    <input class="search-input" id="dayadd-search" placeholder="Rezept suchen \u2026" value="${escapeAttr(search)}" style="margin-bottom:12px; width:100%;">
+    <div class="tag-filters" id="dayadd-tag-filters" style="margin-bottom:14px;">
+      ${ALL_TAGS.map(t => `<span class="tag-chip dayadd-tag-chip ${state.dayAddTag===t?'active':''}" data-tag="${t}">${t}</span>`).join("")}
+    </div>
     <div class="picker-list">
       ${filtered.map(r => {
         const kcalPerServing = (r.kcal != null && r.servings) ? Math.round(r.kcal / r.servings) : null;
@@ -1832,6 +1839,7 @@ function bindAppEvents(){
     btn.addEventListener("click", ()=>{
       state.dayAddTarget = btn.dataset.date;
       state.dayAddSearch = "";
+      state.dayAddTag = null;
       render();
     });
   });
@@ -2042,8 +2050,15 @@ function bindPlanPopupEvents(){
 function bindDayAddEvents(){
   const overlay = document.getElementById("dayadd-overlay");
   if(!overlay) return;
-  overlay.addEventListener("click", (e)=>{ if(e.target.id==="dayadd-overlay"){ state.dayAddTarget=null; state.dayAddSearch=""; render(); } });
-  document.getElementById("dayadd-close").addEventListener("click", ()=>{ state.dayAddTarget=null; state.dayAddSearch=""; render(); });
+  overlay.addEventListener("click", (e)=>{ if(e.target.id==="dayadd-overlay"){ state.dayAddTarget=null; state.dayAddSearch=""; state.dayAddTag=null; render(); } });
+  document.getElementById("dayadd-close").addEventListener("click", ()=>{ state.dayAddTarget=null; state.dayAddSearch=""; state.dayAddTag=null; render(); });
+
+  document.querySelectorAll(".dayadd-tag-chip").forEach(chip=>{
+    chip.addEventListener("click", ()=>{
+      state.dayAddTag = state.dayAddTag === chip.dataset.tag ? null : chip.dataset.tag;
+      render();
+    });
+  });
 
   const searchInput = document.getElementById("dayadd-search");
   if(searchInput){
@@ -2064,6 +2079,7 @@ function bindDayAddEvents(){
       if(error){ alert("Fehler: " + error.message); btn.disabled = false; return; }
       state.dayAddTarget = null;
       state.dayAddSearch = "";
+      state.dayAddTag = null;
       await awardRiseEP(5, "weekPlansCount");
       await loadWeekLog();
     });
