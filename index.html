@@ -158,6 +158,15 @@
     cursor:pointer; font-size:15px; padding:6px;
   }
   .today-shopping-add:hover{ color:var(--terracotta); opacity:1; }
+  .today-qty-stepper{
+    display:flex; align-items:center; gap:5px; flex-shrink:0;
+  }
+  .today-qty-stepper .stepper-btn{
+    width:24px; height:24px; font-size:14px;
+  }
+  .today-qty-value{
+    min-width:16px; text-align:center; font-size:13px; font-weight:700; color:var(--ink-on-paper);
+  }
   .shopping-add-btn{
     display:inline-flex; align-items:center; gap:6px; margin:8px 0 12px;
     font-size:13px; padding:8px 14px;
@@ -880,6 +889,11 @@ function renderWeek(){
                 <div class="today-entry-info today-entry-clickable" data-recipe-id="${recipe.id}">
                   <strong>${escapeHtml(recipe.title)}</strong>
                   <span>${e.servings_logged} Portion${e.servings_logged==1?'':'en'}${kcalForEntry!==null?` \u00b7 ${kcalForEntry} kcal${isBatchEntry?'/Portion':''}`:''}</span>
+                </div>
+                <div class="today-qty-stepper">
+                  <button type="button" class="stepper-btn today-qty-minus" data-log-id="${e.id}" data-current="${e.servings_logged}" title="Weniger Portionen">\u2212</button>
+                  <span class="today-qty-value">${e.servings_logged}</span>
+                  <button type="button" class="stepper-btn today-qty-plus" data-log-id="${e.id}" data-current="${e.servings_logged}" title="Mehr Portionen">+</button>
                 </div>
                 <button type="button" class="today-shopping-add" data-log-id="${e.id}" data-recipe-id="${recipe.id}" title="Zutaten zur Einkaufsliste">\u{1F6D2}</button>
                 <button type="button" class="today-swap" data-log-id="${e.id}" data-recipe-id="${recipe.id}" title="Rezept tauschen">\u{1F504}</button>
@@ -1673,6 +1687,20 @@ function bindAppEvents(){
       e.stopPropagation();
       state.swapTarget = { logId: btn.dataset.logId, recipeId: btn.dataset.recipeId };
       render();
+    });
+  });
+
+  document.querySelectorAll(".today-qty-minus, .today-qty-plus").forEach(btn=>{
+    btn.addEventListener("click", async (e)=>{
+      e.stopPropagation();
+      const logId = btn.dataset.logId;
+      const current = parseFloat(btn.dataset.current) || 1;
+      const delta = btn.classList.contains("today-qty-plus") ? 1 : -1;
+      const newAmount = current + delta;
+      if(newAmount < 1) return; // Zum Entfernen bitte ✕ nutzen
+      const { error } = await sb.from("daily_log").update({ servings_logged: newAmount }).eq("id", logId);
+      if(error){ alert("Fehler: " + error.message); return; }
+      await loadWeekLog();
     });
   });
 
