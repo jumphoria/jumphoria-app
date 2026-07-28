@@ -1192,4 +1192,1383 @@ function renderProfil(){
             <input type="number" class="profil-input" data-field="alter" value="${p.alter}" min="15" max="80" style="width:100%; padding:10px; border-radius:9px; border:1.5px solid var(--line); background:#fff; font-size:14px; color:var(--ink-on-paper);">
           </div>
           <div class="field">
-            <la
+            <label style="color:var(--ink); opacity:1;">Größe (cm)</label>
+            <input type="number" class="profil-input" data-field="groesse" value="${p.groesse}" min="140" max="210" style="width:100%; padding:10px; border-radius:9px; border:1.5px solid var(--line); background:#fff; font-size:14px; color:var(--ink-on-paper);">
+          </div>
+          <div class="field" style="grid-column:1/-1;">
+            <label style="color:var(--ink); opacity:1;">Gewicht (kg)</label>
+            <input type="number" class="profil-input" data-field="gewicht" value="${p.gewicht}" min="40" max="200" style="width:100%; padding:10px; border-radius:9px; border:1.5px solid var(--line); background:#fff; font-size:14px; color:var(--ink-on-paper);">
+          </div>
+        </div>
+
+        <div class="field">
+          <label style="color:var(--ink); opacity:1;">Aktivitätslevel</label>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            ${[["wenig","🛋️ Kaum Sport"],["leicht","🚶 1-3× / Woche"],["mittel","🏃 3-5× / Woche"],["viel","💪 5-7× / Woche"]].map(([val,label]) =>
+              `<button type="button" class="profil-pick" data-field="aktivitaet" data-val="${val}" style="flex:1; min-width:90px; padding:9px 6px; border-radius:10px; border:1.5px solid var(--line); background:${p.aktivitaet===val?'var(--pine)':'#fff'}; color:${p.aktivitaet===val?'#fff':'var(--ink-on-paper)'}; font-size:12.5px; font-weight:600; cursor:pointer;">${label}</button>`
+            ).join("")}
+          </div>
+        </div>
+
+        <div class="field" style="margin-bottom:0;">
+          <label style="color:var(--ink); opacity:1;">Ziel</label>
+          <div style="display:flex; gap:10px;">
+            ${[["abnehmen","⬇️ Abnehmen"],["halten","➡️ Gewicht halten"]].map(([val,label]) =>
+              `<button type="button" class="profil-pick" data-field="ziel" data-val="${val}" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.ziel===val?'var(--terracotta)':'#fff'}; color:${p.ziel===val?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">${label}</button>`
+            ).join("")}
+          </div>
+        </div>
+      </div>
+
+      ${kcal ? `
+      <div style="background:var(--ink-on-paper); border-radius:16px; padding:22px; margin-bottom:16px;">
+        <h4 style="color:var(--pine); font-size:13px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 16px;">Dein tägliches Ziel</h4>
+        ${state.profilKcalCapped ? `<div style="background:rgba(201,151,58,0.15); border:1px solid var(--pine); border-radius:10px; padding:10px 12px; margin-bottom:14px; font-size:12.5px; color:var(--ink-on-paper); line-height:1.4;">⚠️ Dein Kalorienziel wurde auf deinen Grundumsatz (${state.profilBmr} kcal) angehoben. Weniger zu essen wäre auf Dauer ungesund, da dein Körper auch in Ruhe diese Energie für lebenswichtige Funktionen braucht.</div>` : ""}
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+          <div style="flex:1; min-width:80px; background:rgba(255,255,255,0.1); border-radius:12px; padding:14px; text-align:center;">
+            <div style="font-size:28px; font-weight:700; color:var(--pine); font-family:Georgia,serif;">${kcal}</div>
+            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">kcal</div>
+          </div>
+          <div style="flex:1; min-width:70px; background:rgba(255,255,255,0.1); border-radius:12px; padding:14px; text-align:center;">
+            <div style="font-size:22px; font-weight:700; color:var(--ink);">${m.protein}g</div>
+            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">Eiweiß</div>
+          </div>
+          <div style="flex:1; min-width:70px; background:rgba(255,255,255,0.1); border-radius:12px; padding:14px; text-align:center;">
+            <div style="font-size:22px; font-weight:700; color:var(--ink);">${m.carbs}g</div>
+            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">KH</div>
+          </div>
+          <div style="flex:1; min-width:70px; background:rgba(255,255,255,0.1); border-radius:12px; padding:14px; text-align:center;">
+            <div style="font-size:22px; font-weight:700; color:var(--ink);">${m.fat}g</div>
+            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">Fett</div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-block" id="use-profil-kcal" style="background:var(--pine);">✨ Diese Kalorien für Wochenplanung verwenden</button>
+      </div>
+
+      <div style="background:var(--paper); border-radius:16px; padding:18px; border:1px solid var(--line);">
+        <h4 style="color:var(--terracotta); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 10px;">Jump & Lift Empfehlungen</h4>
+        <div style="font-size:14px; color:var(--ink-on-paper); line-height:1.7; font-size:14px;">
+          <div style="margin-bottom:8px;">⚡ <strong>Pre Workout</strong> (30-60 Min vorher): ${Math.round(kcal * 0.15)} kcal · leichte KH + etwas Eiweiß</div>
+          <div>💪 <strong>Post Workout</strong> (direkt danach): ${Math.round(kcal * 0.25)} kcal · viel Eiweiß + KH zur Regeneration</div>
+        </div>
+      </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function renderRiseFlowerSVG(progressPct){
+  // Einfache, ruhige Blüte: Blütenblätter füllen sich je nach Fortschritt in Rosegold/Ocker
+  const petals = 5;
+  const filledPetals = Math.max(1, Math.round((progressPct / 100) * petals));
+  let petalsSvg = "";
+  for(let i = 0; i < petals; i++){
+    const angle = (360 / petals) * i;
+    const filled = i < filledPetals;
+    petalsSvg += `<ellipse cx="55" cy="30" rx="13" ry="22" fill="${filled ? 'var(--pine)' : 'var(--line)'}" opacity="${filled ? '0.9' : '0.5'}" transform="rotate(${angle} 55 55)"/>`;
+  }
+  return `<svg class="rise-flower" viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+    ${petalsSvg}
+    <circle cx="55" cy="55" r="14" fill="var(--terracotta)"/>
+  </svg>`;
+}
+
+function renderRise(){
+  const totalEP = state.riseEnergy?.total_ep || 0;
+  const { stageName, step, progressPct } = getRiseStageInfo(totalEP);
+  const earnedCrownIds = new Set((state.riseCrowns||[]).map(c => c.crown_id));
+  const lymphDoneToday = state.riseTodayWorkoutIds.includes(LYMPH_FLOW_WORKOUT_ID);
+
+  return `
+    <div style="max-width:480px; margin:0 auto;">
+      <div class="rise-hero">
+        ${renderRiseFlowerSVG(progressPct)}
+        <h3 class="rise-stage-name">${stageName}</h3>
+        <p class="rise-stage-step">Schritt ${step} von 4</p>
+        <div class="rise-ep-bar-track"><div class="rise-ep-bar-fill" style="width:${progressPct}%;"></div></div>
+        <p class="rise-ep-label">${totalEP} Energie-Punkte gesammelt</p>
+      </div>
+
+      <div class="rise-impulse-card">
+        <h4 class="rise-section-title" style="margin-bottom:8px;">Heute erhebe ich mich</h4>
+        <p>${getTodaysImpulse()}</p>
+      </div>
+
+      <h4 class="rise-section-title">Dein Training</h4>
+      <div class="rise-workout-card">
+        <div class="rise-workout-info">
+          <a href="#" id="lymph-open-btn" style="cursor:pointer;">\u{1F4A7} Morgenroutine · Lymphfluss aktivieren</a>
+          <span>${formatMinutesLabel(lymphTotalSeconds())} · ${LYMPH_FLOW_EXERCISES.length} Übungen mit Timer</span>
+        </div>
+        <button type="button" class="rise-workout-done-btn ${lymphDoneToday ? 'done' : ''}" id="lymph-start-btn" ${lymphDoneToday ? 'disabled' : ''}>
+          ${lymphDoneToday ? '\u2713 Erledigt' : 'Timer starten'}
+        </button>
+      </div>
+      ${JUMP_LIFT_WORKOUTS.map(w => {
+        const doneToday = state.riseTodayWorkoutIds.includes(w.id);
+        return `<div class="rise-workout-card">
+          <div class="rise-workout-info">
+            <a href="${w.url}" target="_blank" rel="noopener">${escapeHtml(w.title)}</a>
+            <span>${w.duration}</span>
+          </div>
+          <button type="button" class="rise-workout-done-btn ${doneToday ? 'done' : ''}" data-workout-id="${w.id}" ${doneToday ? 'disabled' : ''}>
+            ${doneToday ? '\u2713 Erledigt' : 'Training abgeschlossen'}
+          </button>
+        </div>`;
+      }).join("")}
+
+      <h4 class="rise-section-title" style="margin-top:22px;">Deine Kronen</h4>
+      <div class="rise-crown-grid">
+        ${RISE_CROWNS_CATALOG.map(c => `
+          <div class="rise-crown ${earnedCrownIds.has(c.id) ? '' : 'locked'}">
+            <span class="rise-crown-icon">${c.icon}</span>
+            <span class="rise-crown-title">${c.title}</span>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- LYMPHFLUSS-TIMER ---------- */
+let lymphTickerHandle = null;
+
+function openLymphTimer(){
+  clearInterval(lymphTickerHandle);
+  state.lymphTimer = {
+    open: true,
+    currentIndex: 0,
+    secondsLeft: LYMPH_FLOW_EXERCISES[0].seconds,
+    running: true,
+    finished: false
+  };
+  render();
+  startLymphTicker();
+}
+
+function startLymphTicker(){
+  clearInterval(lymphTickerHandle);
+  lymphTickerHandle = setInterval(()=>{
+    const t = state.lymphTimer;
+    if(!t || !t.open || !t.running) return;
+    t.secondsLeft -= 1;
+    if(t.secondsLeft <= 0){
+      advanceLymphExercise();
+    } else {
+      updateLymphTimerDOM();
+    }
+  }, 1000);
+}
+
+function updateLymphTimerDOM(){
+  const t = state.lymphTimer;
+  if(!t || !t.open || t.finished) return;
+  const ex = LYMPH_FLOW_EXERCISES[t.currentIndex];
+  const countdownEl = document.getElementById("lymph-countdown");
+  const fillEl = document.getElementById("lymph-progress-fill");
+  if(!countdownEl || !fillEl) return;
+  const mins = Math.floor(t.secondsLeft / 60);
+  const secs = t.secondsLeft % 60;
+  countdownEl.textContent = `${mins}:${secs.toString().padStart(2,'0')}`;
+  const progressPct = Math.round(((ex.seconds - t.secondsLeft) / ex.seconds) * 100);
+  fillEl.style.width = progressPct + "%";
+}
+
+function advanceLymphExercise(){
+  const t = state.lymphTimer;
+  if(!t || !t.open) return;
+  if(t.currentIndex < LYMPH_FLOW_EXERCISES.length - 1){
+    t.currentIndex += 1;
+    t.secondsLeft = LYMPH_FLOW_EXERCISES[t.currentIndex].seconds;
+    render();
+  } else {
+    clearInterval(lymphTickerHandle);
+    t.running = false;
+    t.finished = true;
+    render();
+    completeWorkout(LYMPH_FLOW_WORKOUT_ID);
+  }
+}
+
+function closeLymphTimer(){
+  clearInterval(lymphTickerHandle);
+  state.lymphTimer = { open: false, currentIndex: 0, secondsLeft: 0, running: false, finished: false };
+  render();
+}
+
+function renderLymphTimerModal(){
+  const t = state.lymphTimer;
+
+  if(t.finished){
+    return `<div class="overlay" id="lymph-timer-overlay">
+      <div class="modal lymph-modal">
+        <button class="modal-close" id="lymph-timer-close">\u2715</button>
+        <div class="lymph-finish-icon">\u{1F338}</div>
+        <h2>Geschafft!</h2>
+        <p class="lymph-cue">Deine Morgenroutine ist abgeschlossen. Schön, dass du dir diese Zeit genommen hast \u2013 dein Lymphfluss dankt es dir.</p>
+        <button type="button" class="btn" id="lymph-finish-close">Schließen</button>
+      </div>
+    </div>`;
+  }
+
+  const ex = LYMPH_FLOW_EXERCISES[t.currentIndex];
+  const isLast = t.currentIndex === LYMPH_FLOW_EXERCISES.length - 1;
+  const progressPct = Math.round(((ex.seconds - t.secondsLeft) / ex.seconds) * 100);
+  const mins = Math.floor(t.secondsLeft / 60);
+  const secs = t.secondsLeft % 60;
+  const timeLabel = `${mins}:${secs.toString().padStart(2,'0')}`;
+  const nextEx = LYMPH_FLOW_EXERCISES[t.currentIndex + 1];
+
+  return `<div class="overlay" id="lymph-timer-overlay">
+    <div class="modal lymph-modal">
+      <button class="modal-close" id="lymph-timer-close">\u2715</button>
+      <p class="lymph-eyebrow">Übung ${t.currentIndex + 1} / ${LYMPH_FLOW_EXERCISES.length}</p>
+      <h2 class="lymph-exercise-name">${escapeHtml(ex.name)}</h2>
+      ${ex.video ? `<video class="lymph-video" src="${escapeAttr(ex.video)}" autoplay muted loop playsinline></video>` : ""}
+      <p class="lymph-cue">${escapeHtml(ex.cue || "")}</p>
+      <div class="lymph-countdown" id="lymph-countdown">${timeLabel}</div>
+      <div class="rise-ep-bar-track" style="margin-bottom:22px;"><div class="rise-ep-bar-fill" id="lymph-progress-fill" style="width:${progressPct}%;"></div></div>
+      <p class="lymph-next">${nextEx ? `Als nächstes: ${escapeHtml(nextEx.name)}` : 'Letzte Übung \u{1F389}'}</p>
+      <div class="lymph-controls">
+        <button type="button" class="btn-outline" id="lymph-pause-btn">${t.running ? '\u23F8 Pause' : '\u25B6 Weiter'}</button>
+        <button type="button" class="btn-outline" id="lymph-skip-btn">${isLast ? 'Beenden' : 'Überspringen \u23ED'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function bindLymphTimerEvents(){
+  const overlay = document.getElementById("lymph-timer-overlay");
+  if(!overlay) return;
+  overlay.addEventListener("click", (e)=>{ if(e.target.id==="lymph-timer-overlay") closeLymphTimer(); });
+  const closeBtn = document.getElementById("lymph-timer-close");
+  if(closeBtn) closeBtn.addEventListener("click", closeLymphTimer);
+  const finishCloseBtn = document.getElementById("lymph-finish-close");
+  if(finishCloseBtn) finishCloseBtn.addEventListener("click", closeLymphTimer);
+  const pauseBtn = document.getElementById("lymph-pause-btn");
+  if(pauseBtn) pauseBtn.addEventListener("click", ()=>{ state.lymphTimer.running = !state.lymphTimer.running; render(); });
+  const skipBtn = document.getElementById("lymph-skip-btn");
+  if(skipBtn) skipBtn.addEventListener("click", ()=>{ advanceLymphExercise(); });
+}
+
+function renderGrid(){
+  const filtered = state.recipes.filter(r=>{
+    const matchesSearch = !state.search || r.title.toLowerCase().includes(state.search.toLowerCase());
+    const matchesTag = !state.activeTag || (r.tags||[]).includes(state.activeTag);
+    const matchesKcalBand = !state.activeKcalBand || getKcalBand(r.kcal, r.servings) === state.activeKcalBand;
+    return matchesSearch && matchesTag && matchesKcalBand;
+  });
+  if(filtered.length === 0){
+    return `<div class="empty-state"><h3>Noch keine Rezepte hier</h3><p>Tippe auf das + unten rechts, um dein erstes Rezept anzulegen.</p></div>`;
+  }
+  return `<div class="grid">${filtered.map(r => {
+    const kcalPerServing = (r.kcal != null && r.servings) ? Math.round(r.kcal / r.servings) : null;
+    return `<div class="card" data-id="${r.id}">
+      <div class="card-hole"></div>
+      ${r.photo_url ? `<img class="card-photo" src="${r.photo_url}" alt="${escapeAttr(r.title)}">` : `<div class="card-photo empty">\u{1F372}</div>`}
+      ${kcalPerServing !== null ? `<div class="kcal-badge">${kcalPerServing} kcal</div>` : ""}
+      <div class="card-body">
+        <h3 class="recipe-title">${escapeHtml(r.title)}</h3>
+        <div class="card-tags">${(r.tags||[]).slice(0,3).map(t=>`<span class="tag-badge">${t}</span>`).join("")}</div>
+        <button type="button" class="today-add-btn" data-recipe-id="${r.id}">+ Geplant</button>
+      </div>
+    </div>`;
+  }).join("")}</div>`;
+}
+
+function renderModal(){
+  const r = state.editingRecipe || { title:"", steps:"", tags:[], servings:4 };
+  const rows = state.ingredientRows && state.ingredientRows.length ? state.ingredientRows : [{amount:"", unit:"g", name:""}];
+  return `<div class="overlay" id="modal-overlay"><div class="modal">
+    <button class="modal-close" id="modal-close">\u2715</button>
+    <h2>${state.editingRecipe ? "Rezept bearbeiten" : "Neues Rezept"}</h2>
+    <form id="recipe-form">
+      <div class="photo-drop" id="photo-drop">
+        ${state.photoDataUrl ? `<img src="${state.photoDataUrl}" alt="Vorschau">` : `\u{1F4F7} Foto hinzuf\u00fcgen (optional)<br><small>Tippen zum Ausw\u00e4hlen</small>`}
+        <input type="file" id="photo-input" accept="image/*">
+      </div>
+      <div class="field"><label>Titel</label><input type="text" id="r-title" required value="${escapeAttr(r.title)}" placeholder="z. B. Linsensuppe"></div>
+      <div class="field"><label>Ergibt wie viele Portionen?</label><input type="number" id="r-servings" min="1" step="1" value="${r.servings||4}" style="max-width:120px;"></div>
+      <div class="field">
+        <label>N\u00e4hrwerte gesamt (f\u00fcr alle Portionen zusammen, optional)</label>
+        <div class="macro-row">
+          <div class="macro-field"><span>kcal</span><input type="number" id="r-kcal" min="0" step="any" value="${r.kcal!=null?r.kcal:''}"></div>
+          <div class="macro-field"><span>Eiwei\u00df (g)</span><input type="number" id="r-protein" min="0" step="any" value="${r.protein!=null?r.protein:''}"></div>
+          <div class="macro-field"><span>KH (g)</span><input type="number" id="r-carbs" min="0" step="any" value="${r.carbs!=null?r.carbs:''}"></div>
+          <div class="macro-field"><span>Fett (g)</span><input type="number" id="r-fat" min="0" step="any" value="${r.fat!=null?r.fat:''}"></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Kategorien</label>
+        <div class="tag-select-row" id="tag-select-row">
+          ${ALL_TAGS.map(t => `<span class="tag-pick ${state.selectedTags.includes(t)?'active':''}" data-tag="${t}">${t}</span>`).join("")}
+        </div>
+      </div>
+      <div class="field">
+        <label>Zutaten</label>
+        <div id="ingredient-rows">
+          ${rows.map((row, i) => `<div class="ingredient-row" data-idx="${i}">
+            <input type="number" class="ing-amount" placeholder="Menge" value="${row.amount!==undefined?escapeAttr(String(row.amount)):''}" step="any" style="width:70px;">
+            <select class="ing-unit" style="width:80px;">
+              ${["g","kg","ml","l","stk","tl","el","prise"].map(u => `<option value="${u}" ${row.unit===u?'selected':''}>${u}</option>`).join("")}
+            </select>
+            <input type="text" class="ing-name" placeholder="Zutat, z.B. Rinderhack" value="${escapeAttr(row.name||'')}" style="flex:1;">
+            <button type="button" class="ing-remove" data-idx="${i}" title="Entfernen">\u2715</button>
+          </div>`).join("")}
+        </div>
+        <button type="button" id="add-ingredient-row" class="btn-outline" style="margin-top:8px; font-size:13px; padding:6px 14px;">+ Zutat hinzuf\u00fcgen</button>
+      </div>
+      <div class="field"><label>Zubereitung</label><textarea id="r-steps" rows="6" placeholder="Schritt f\u00fcr Schritt \u2026">${escapeHtml(r.steps||"")}</textarea></div>
+      <div class="modal-actions">
+        <button type="submit" class="btn">Speichern</button>
+        ${state.editingRecipe ? `<button type="button" class="btn-danger" id="delete-recipe">Rezept l\u00f6schen</button>` : ""}
+      </div>
+    </form>
+  </div></div>`;
+}
+
+
+// ── Automatische Gewichtsschätzung für gekochte Portionen ──
+const STUECK_GEWICHTE = {
+  "zwiebel": 80, "zehe": 5, "knoblauchzehe": 5, "ei": 60, "eiklar": 30,
+  "tomate": 120, "paprika": 150, "zucchini": 200, "karotte": 80, "karotten": 80,
+  "avocado": 150, "gurke": 300, "scheibe": 30, "dose": 150
+};
+
+function estimateCookedWeight(recipe, servings){
+  if(!recipe.ingredients_structured || recipe.ingredients_structured.length === 0) return null;
+  const scale = servings / (recipe.servings || 1);
+  const steps = (recipe.steps || '').toLowerCase();
+
+  // Kochverlust ermitteln
+  const isFried = steps.includes('braten') || steps.includes('anbraten');
+  const isBoiled = steps.includes('kochen') || steps.includes('köcheln');
+  const isSoup = steps.includes('suppe') || steps.includes('wasser') || steps.includes('brühe');
+  const hasRice = steps.includes('reis') || steps.includes('nudeln') || steps.includes('linsen');
+
+  let totalRawGrams = 0;
+  let liquidGrams = 0;
+
+  recipe.ingredients_structured.forEach(ing => {
+    if(!ing.name) return;
+    const nameLower = ing.name.toLowerCase();
+
+    // Gramm direkt
+    if(ing.unit === 'g' && ing.amount){
+      const g = ing.amount * scale;
+      // Flüssigkeiten separat
+      if(nameLower.includes('wasser') || nameLower.includes('milch') ||
+         nameLower.includes('brühe') || nameLower.includes('tomaten') ||
+         nameLower.includes('kokosmilch') || nameLower.includes('sauce')){
+        liquidGrams += g;
+      } else {
+        totalRawGrams += g;
+      }
+    }
+    // ml → g (ca. 1:1)
+    else if(ing.unit === 'ml' && ing.amount){
+      liquidGrams += ing.amount * scale;
+    }
+    // Stück-Angaben schätzen
+    else if(!ing.unit && ing.amount){
+      for(const [key, weight] of Object.entries(STUECK_GEWICHTE)){
+        if(nameLower.includes(key)){
+          totalRawGrams += ing.amount * weight * scale;
+          break;
+        }
+      }
+    }
+    // TL/EL
+    else if(ing.unit === 'TL' && ing.amount){ totalRawGrams += ing.amount * 5 * scale; }
+    else if(ing.unit === 'EL' && ing.amount){ totalRawGrams += ing.amount * 15 * scale; }
+  });
+
+  // Kochverlust berechnen
+  let cookedSolids = totalRawGrams;
+  if(isFried) cookedSolids *= 0.80; // -20%
+  else if(isBoiled) cookedSolids *= 0.90; // -10%
+  if(hasRice) cookedSolids *= 2.5; // Reis/Linsen saugen Wasser auf
+
+  // Flüssigkeit: -10% Reduktion
+  const cookedLiquid = liquidGrams * (isSoup ? 0.92 : 0.50);
+
+  const total = Math.round(cookedSolids + cookedLiquid);
+  if(total < 50) return null;
+  return total;
+}
+
+function renderDetail(){
+  const r = state.detailRecipe;
+  const baseServings = r.servings || 1;
+  const currentServings = state.detailServings || baseServings;
+  const scale = currentServings / baseServings;
+
+  // Falls Detail noch lädt
+  if(r._loading){
+    return `<div class="overlay" id="detail-overlay"><div class="modal">
+      <button class="modal-close" id="detail-close">\u2715</button>
+      <h2>${escapeHtml(r.title)}</h2>
+      <div class="loading">Zutaten werden geladen \u2026</div>
+    </div></div>`;
+  }
+
+  const hasStructured = r.ingredients_structured && r.ingredients_structured.length > 0;
+  let ingredientsHtml;
+  if(hasStructured){
+    ingredientsHtml = r.ingredients_structured.map((ing, idx) => {
+      if(ing.amount === null || ing.amount === undefined) return `<li><label class="ing-row"><input type="checkbox" class="ing-select" data-ing-index="${idx}" checked><span>${escapeHtml(ing.name)}</span></label></li>`;
+      const scaledAmount = ing.amount * scale;
+      const displayAmount = scaledAmount % 1 === 0 ? scaledAmount.toFixed(0) : scaledAmount.toFixed(1);
+      const unitStr = ing.unit ? ing.unit : '';
+      const separator = ing.unit ? '' : ' ';
+
+      // Bei Stück-Angaben (kein unit) Gramm-Schätzung aus STUECK_GEWICHTE ergänzen
+      let gramHint = '';
+      if(!ing.unit && ing.name){
+        const nameLower = ing.name.toLowerCase();
+        for(const [key, weight] of Object.entries(STUECK_GEWICHTE)){
+          if(nameLower.includes(key)){
+            const estGrams = Math.round(scaledAmount * weight);
+            gramHint = ` <span class="ing-estimate">(~${estGrams}g)</span>`;
+            break;
+          }
+        }
+      }
+
+      return `<li><label class="ing-row"><input type="checkbox" class="ing-select" data-ing-index="${idx}" checked><span>${displayAmount}${unitStr}${separator}${escapeHtml(ing.name)}${gramHint}</span></label></li>`;
+    }).join("");
+  } else {
+    ingredientsHtml = (r.ingredients||"").split("\n").filter(Boolean).map(i=>`<li>${escapeHtml(i)}</li>`).join("");
+  }
+
+  return `<div class="overlay" id="detail-overlay"><div class="modal">
+    <button class="modal-close" id="detail-close">\u2715</button>
+    ${r.photo_url ? `<img class="detail-photo" src="${r.photo_url}" alt="${escapeAttr(r.title)}">` : ""}
+    <h2>${escapeHtml(r.title)}</h2>
+    <div class="card-tags" style="margin-bottom:10px;">${(r.tags||[]).map(t=>`<span class="tag-badge">${t}</span>`).join("")}</div>
+    ${r.servings ? `<div class="servings-stepper"><span>Portionen:</span><button type="button" id="servings-minus" class="stepper-btn">\u2212</button><span class="servings-value">${currentServings}</span><button type="button" id="servings-plus" class="stepper-btn">+</button></div>` : ""}
+    ${r.kcal != null ? `<div class="macro-summary">
+      <div class="macro-pill"><strong>${Math.round(r.kcal*scale)}</strong><span>kcal</span></div>
+      ${r.protein != null ? `<div class="macro-pill"><strong>${Math.round(r.protein*scale)}g</strong><span>Eiwei\u00df</span></div>` : ""}
+      ${r.carbs != null ? `<div class="macro-pill"><strong>${Math.round(r.carbs*scale)}g</strong><span>KH</span></div>` : ""}
+      ${r.fat != null ? `<div class="macro-pill"><strong>${Math.round(r.fat*scale)}g</strong><span>Fett</span></div>` : ""}
+      ${(() => { const w = estimateCookedWeight(r, currentServings); return w ? `<div class="macro-pill"><strong>~${w}g</strong><span>\u{1F963} GEKOCHT</span></div>` : ""; })()}
+    </div>` : ""}
+    <div class="detail-section">
+      <h4>Zutaten</h4>
+      ${hasStructured ? `<button type="button" class="btn-outline shopping-add-btn" id="detail-add-shopping">\u{1F6D2} Ausgewählte zur Einkaufsliste</button>` : ""}
+      <ul>${ingredientsHtml}</ul>
+    </div>
+    <div class="detail-section"><h4>Zubereitung</h4><p class="ztext">${escapeHtml(r.steps||"")}</p></div>
+    <div class="modal-actions">
+      ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="btn-outline" id="edit-from-detail">Bearbeiten</button>` : ""}
+    </div>
+  </div></div>`;
+}
+
+/* ---------- EVENTS ---------- */
+function bindAppEvents(){
+  document.getElementById("logout-btn").addEventListener("click", async ()=>{
+    await sb.auth.signOut();
+    state.user = null; state.recipes = []; state.view = "login"; render();
+  });
+
+  document.querySelectorAll(".main-tab").forEach(tab=>{
+    tab.addEventListener("click", ()=>{
+      state.mainTab = tab.dataset.tab;
+      if(state.mainTab === "today") loadWeekLog();
+      if(state.mainTab === "shopping"){ loadShoppingItems(); }
+      if(state.mainTab === "profil") calcProfil();
+      if(state.mainTab === "reise"){ loadRiseData().then(render); }
+      render();
+    });
+  });
+
+  const searchInput = document.getElementById("search-input");
+  if(searchInput){
+    searchInput.addEventListener("input", (e)=>{
+      state.search = e.target.value; render();
+      document.getElementById("search-input").focus();
+      document.getElementById("search-input").selectionStart = document.getElementById("search-input").value.length;
+    });
+  }
+
+  document.querySelectorAll("#tag-filters .tag-chip[data-tag]").forEach(chip=>{
+    chip.addEventListener("click", ()=>{ state.activeTag = state.activeTag === chip.dataset.tag ? null : chip.dataset.tag; render(); });
+  });
+  const clearBtn = document.getElementById("clear-tag-filter");
+  if(clearBtn) clearBtn.addEventListener("click", ()=>{ state.activeTag=null; render(); });
+
+  document.querySelectorAll("#kcal-filters .kcal-chip[data-band]").forEach(chip=>{
+    chip.addEventListener("click", ()=>{ state.activeKcalBand = state.activeKcalBand === chip.dataset.band ? null : chip.dataset.band; render(); });
+  });
+  const clearKcalBtn = document.getElementById("clear-kcal-filter");
+  if(clearKcalBtn) clearKcalBtn.addEventListener("click", ()=>{ state.activeKcalBand=null; render(); });
+
+  const openFilterBtn = document.getElementById("open-filter-sheet");
+  if(openFilterBtn) openFilterBtn.addEventListener("click", ()=>{ state.filterSheetOpen = true; render(); });
+  const filterSheetClose = document.getElementById("filter-sheet-close");
+  if(filterSheetClose) filterSheetClose.addEventListener("click", ()=>{ state.filterSheetOpen = false; render(); });
+  const filterSheetApply = document.getElementById("filter-sheet-apply");
+  if(filterSheetApply) filterSheetApply.addEventListener("click", ()=>{ state.filterSheetOpen = false; render(); });
+  const filterSheetReset = document.getElementById("filter-sheet-reset");
+  if(filterSheetReset) filterSheetReset.addEventListener("click", ()=>{ state.activeTag = null; state.activeKcalBand = null; render(); });
+  const filterSheetOverlay = document.getElementById("filter-sheet-overlay");
+  if(filterSheetOverlay) filterSheetOverlay.addEventListener("click", (e)=>{ if(e.target.id==="filter-sheet-overlay"){ state.filterSheetOpen=false; render(); } });
+
+  const addFab = document.getElementById("add-fab");
+  if(addFab){
+    addFab.addEventListener("click", ()=>{
+      state.modalOpen = true; state.editingRecipe = null; state.photoDataUrl = null; state.photoFile = null; state.uploadedPhotoUrl = null;
+      state.selectedTags = []; state.ingredientRows = [{amount:"", unit:"g", name:""}]; render();
+    });
+  }
+
+  document.querySelectorAll(".card").forEach(card=>{
+    card.addEventListener("click", async (e)=>{
+      if(e.target.closest(".today-add-btn")) return;
+      const baseRecipe = state.recipes.find(r=>r.id === card.dataset.id);
+      // Zeige sofort die Karte mit Ladeanzeige
+      state.detailRecipe = { ...baseRecipe, _loading: true };
+      state.detailServings = baseRecipe.servings || 1;
+      render();
+      // Lade die vollständigen Daten (ingredients, steps, ingredients_structured)
+      const { data, error } = await sb.from("recipes")
+        .select("id,title,kcal,protein,carbs,fat,tags,photo_url,servings,meal_type,ingredients,steps,ingredients_structured")
+        .eq("id", baseRecipe.id)
+        .single();
+      if(!error && data){
+        state.detailRecipe = data;
+        render();
+      } else {
+        state.detailRecipe = { ...baseRecipe, _loading: false };
+        render();
+      }
+    });
+  });
+
+  document.querySelectorAll(".today-add-btn").forEach(btn=>{
+    btn.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      state.planRecipeId = btn.dataset.recipeId;
+      state.planSelectedDays = []; render();
+    });
+  });
+
+  document.querySelectorAll(".today-remove").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const logId = btn.dataset.logId;
+      const { error } = await sb.from("daily_log").delete().eq("id", logId);
+      if(error){ alert("Fehler: " + error.message); return; }
+      await loadWeekLog();
+    });
+  });
+
+  document.querySelectorAll(".today-swap").forEach(btn=>{
+    btn.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      state.swapTarget = { logId: btn.dataset.logId, recipeId: btn.dataset.recipeId };
+      render();
+    });
+  });
+
+  document.querySelectorAll(".today-qty-minus, .today-qty-plus").forEach(btn=>{
+    btn.addEventListener("click", async (e)=>{
+      e.stopPropagation();
+      const logId = btn.dataset.logId;
+      const current = parseFloat(btn.dataset.current) || 1;
+      const delta = btn.classList.contains("today-qty-plus") ? 1 : -1;
+      const newAmount = current + delta;
+      if(newAmount < 1) return; // Zum Entfernen bitte ✕ nutzen
+      const { error } = await sb.from("daily_log").update({ servings_logged: newAmount }).eq("id", logId);
+      if(error){ alert("Fehler: " + error.message); return; }
+      await loadWeekLog();
+    });
+  });
+
+  document.querySelectorAll(".today-entry-clickable").forEach(el=>{
+    el.addEventListener("click", async ()=>{
+      const baseRecipe = state.recipes.find(r => r.id === el.dataset.recipeId);
+      if(!baseRecipe) return;
+      state.detailRecipe = { ...baseRecipe, _loading: true };
+      state.detailServings = baseRecipe.servings || 1;
+      render();
+      const { data, error } = await sb.from("recipes")
+        .select("id,title,kcal,protein,carbs,fat,tags,photo_url,servings,meal_type,ingredients,steps,ingredients_structured")
+        .eq("id", baseRecipe.id).single();
+      if(!error && data){ state.detailRecipe = data; render(); }
+    });
+  });
+
+  document.querySelectorAll(".shopping-checkbox").forEach(cb=>{
+    cb.addEventListener("change", async ()=>{
+      const id = cb.dataset.id;
+      const item = state.shoppingItems.find(i => i.id === id);
+      if(item) item.checked = cb.checked;
+      render();
+      const { error } = await sb.from("shopping_list_items").update({ checked: cb.checked }).eq("id", id);
+      if(error) console.error(error);
+      if(cb.checked) await awardRiseEP(2, "shoppingChecks");
+    });
+  });
+
+  document.querySelectorAll("[data-shopping-id]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const id = btn.dataset.shoppingId;
+      const { error } = await sb.from("shopping_list_items").delete().eq("id", id);
+      if(error){ alert("Fehler: " + error.message); return; }
+      await loadShoppingItems();
+    });
+  });
+
+  const clearAllBtn = document.getElementById("shopping-clear-all");
+  if(clearAllBtn) clearAllBtn.addEventListener("click", async ()=>{
+    if(!confirm("Wirklich die gesamte Einkaufsliste leeren?")) return;
+    const { error } = await sb.from("shopping_list_items").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+    if(error){ alert("Fehler: " + error.message); return; }
+    await loadShoppingItems();
+  });
+
+  document.querySelectorAll(".today-shopping-add").forEach(btn=>{
+    btn.addEventListener("click", async (e)=>{
+      e.stopPropagation();
+      const logId = btn.dataset.logId;
+      const entry = (state.weekLog||[]).find(x => x.id === logId);
+      const detail = state.weekRecipeDetails && state.weekRecipeDetails[btn.dataset.recipeId];
+      const recipe = state.recipes.find(r => r.id === btn.dataset.recipeId);
+      if(!entry || !detail || !detail.ingredients_structured){ alert("Zutaten werden noch geladen, bitte kurz warten."); return; }
+      const baseServings = detail.servings || (recipe && recipe.servings) || 1;
+      const factor = entry.servings_logged / baseServings;
+      btn.textContent = "\u23f3";
+      await addIngredientsToShoppingList(detail.ingredients_structured, factor);
+      btn.textContent = "\u{1F6D2}";
+    });
+  });
+
+  const detailAddShoppingBtn = document.getElementById("detail-add-shopping");
+  if(detailAddShoppingBtn){
+    detailAddShoppingBtn.addEventListener("click", async ()=>{
+      const r = state.detailRecipe;
+      const baseServings = r.servings || 1;
+      const currentServings = state.detailServings || baseServings;
+      const scale = currentServings / baseServings;
+      const selectedIndexes = new Set();
+      document.querySelectorAll(".ing-select").forEach(cb => { if(cb.checked) selectedIndexes.add(parseInt(cb.dataset.ingIndex, 10)); });
+      const selectedIngredients = r.ingredients_structured.filter((ing, idx) => selectedIndexes.has(idx));
+      if(selectedIngredients.length === 0){ alert("Bitte mindestens eine Zutat auswählen."); return; }
+      detailAddShoppingBtn.textContent = "\u23f3 Wird hinzugef\u00fcgt \u2026";
+      await addIngredientsToShoppingList(selectedIngredients, scale);
+      detailAddShoppingBtn.textContent = "\u2705 Hinzugef\u00fcgt!";
+      setTimeout(()=>{ detailAddShoppingBtn.textContent = "\u{1F6D2} Ausgewählte zur Einkaufsliste"; }, 1800);
+    });
+  }
+
+  const autoWeekBtn = document.getElementById("auto-week-btn");
+  if(autoWeekBtn) autoWeekBtn.addEventListener("click", ()=>{ state.autoWeekOpen = true; render(); });
+
+  document.querySelectorAll(".day-add-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      state.dayAddTarget = btn.dataset.date;
+      state.dayAddSearch = "";
+      state.dayAddTag = null;
+      state.dayAddKcalBand = null;
+      state.dayAddStage = "filter";
+      render();
+    });
+  });
+
+  const clearWeekBtn = document.getElementById("clear-week-btn");
+  if(clearWeekBtn) clearWeekBtn.addEventListener("click", async ()=>{
+    if(!confirm("Alle Einträge dieser Woche löschen?")) return;
+    const weekDates = getCurrentWeekDates();
+    await sb.from("daily_log").delete()
+      .eq("user_id", state.user.id)
+      .gte("log_date", weekDates[0])
+      .lte("log_date", weekDates[6]);
+    await loadWeekLog();
+  });
+
+  if(state.autoWeekOpen) bindAutoWeekEvents();
+  if(state.modalOpen) bindModalEvents();
+
+  // Profil events
+  document.querySelectorAll(".profil-pick").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      state.profil[btn.dataset.field] = btn.dataset.val;
+      calcProfil();
+      render();
+      if(!state.riseStats.profilSet) await awardRiseEP(10, "profilSet");
+    });
+  });
+  document.querySelectorAll(".profil-input").forEach(input=>{
+    input.addEventListener("change", async ()=>{
+      state.profil[input.dataset.field] = parseFloat(input.value);
+      calcProfil();
+      render();
+      if(!state.riseStats.profilSet) await awardRiseEP(10, "profilSet");
+    });
+  });
+  const useProfilBtn = document.getElementById("use-profil-kcal");
+  if(useProfilBtn){
+    useProfilBtn.addEventListener("click", ()=>{
+      state.mainTab = "today";
+      state.autoWeekOpen = true;
+      render();
+    });
+  }
+
+  const lymphStartBtn = document.getElementById("lymph-start-btn");
+  if(lymphStartBtn) lymphStartBtn.addEventListener("click", (e)=>{ e.preventDefault(); openLymphTimer(); });
+  const lymphOpenLink = document.getElementById("lymph-open-btn");
+  if(lymphOpenLink) lymphOpenLink.addEventListener("click", (e)=>{ e.preventDefault(); if(!state.riseTodayWorkoutIds.includes(LYMPH_FLOW_WORKOUT_ID)) openLymphTimer(); });
+
+  document.querySelectorAll(".rise-workout-done-btn:not(.done)").forEach(btn=>{
+    if(btn.id === "lymph-start-btn") return;
+    btn.addEventListener("click", ()=>{ completeWorkout(btn.dataset.workoutId); });
+  });
+  if(state.detailRecipe) bindDetailEvents();
+  if(state.planRecipeId) bindPlanPopupEvents();
+  if(state.dayAddTarget) bindDayAddEvents();
+  if(state.swapTarget) bindSwapEvents();
+  if(state.lymphTimer && state.lymphTimer.open) bindLymphTimerEvents();
+}
+
+function bindAutoWeekEvents(){
+  const overlay = document.getElementById("autoweek-overlay");
+  if(!overlay) return;
+  overlay.addEventListener("click", (e)=>{ if(e.target.id==="autoweek-overlay"){ state.autoWeekOpen=false; render(); } });
+  document.getElementById("autoweek-close").addEventListener("click", ()=>{ state.autoWeekOpen=false; render(); });
+
+  const gotoProfilBtn = document.getElementById("autoweek-goto-profil");
+  if(gotoProfilBtn) gotoProfilBtn.addEventListener("click", ()=>{
+    state.autoWeekOpen = false;
+    state.mainTab = "profil";
+    render();
+  });
+
+  document.querySelectorAll("[data-kcal]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const targetKcal = parseInt(btn.dataset.kcal);
+      state.autoWeekOpen = false;
+      btn.disabled = true;
+
+      const weekDates = getCurrentWeekDates();
+      const allRecipes = state.recipes.filter(r => r.kcal != null && r.servings != null);
+      if(allRecipes.length === 0){ alert("Keine Rezepte mit Kalorienangaben gefunden."); return; }
+
+      // Kalorienbasierte Auswahl: pro Slot das Rezept wählen, dessen kcal
+      // am nächsten am Slot-Ziel liegt (statt komplett zufällig).
+      // Damit sich Rezepte über die Woche abwechseln, werden bereits
+      // verwendete Rezepte erst nach Ausschöpfen des Pools wiederholt.
+      function pickClosest(pool, target, usedCounts){
+        if(pool.length === 0) return null;
+        const perServingKcal = (r) => r.kcal / (r.servings || 1);
+        // Sortiere nach: zuerst wie oft schon verwendet (weniger zuerst), dann Kalorien-Distanz (pro Portion)
+        const sorted = [...pool].sort((a,b)=>{
+          const usedA = usedCounts.get(a.id) || 0;
+          const usedB = usedCounts.get(b.id) || 0;
+          if(usedA !== usedB) return usedA - usedB;
+          return Math.abs(perServingKcal(a) - target) - Math.abs(perServingKcal(b) - target);
+        });
+        // Unter den am wenigsten benutzten Rezepten: die 3 kalorien-nächsten nehmen und leicht zufällig wählen (Abwechslung)
+        const leastUsed = usedCounts.get(sorted[0].id) || 0;
+        const candidates = sorted.filter(r => (usedCounts.get(r.id)||0) === leastUsed)
+          .sort((a,b)=>Math.abs(perServingKcal(a)-target)-Math.abs(perServingKcal(b)-target))
+          .slice(0, 3);
+        const chosen = candidates[Math.floor(Math.random()*candidates.length)];
+        usedCounts.set(chosen.id, (usedCounts.get(chosen.id)||0) + 1);
+        return chosen;
+      }
+
+      const fruehstueckPool = allRecipes.filter(r => (r.tags||[]).includes('Frühstück'));
+      const snackPool = allRecipes.filter(r => (r.tags||[]).includes('Snack'));
+      const hauptPool = allRecipes.filter(r => (r.tags||[]).includes('Hauptgericht'));
+      const fallback = allRecipes;
+
+      // Kalorienziel aufteilen: 25% Frühstück, 35% Mittag, 30% Abend, 10% Snack
+      const kcalFrueh = Math.round(targetKcal * 0.25);
+      const kcalMittag = Math.round(targetKcal * 0.35);
+      const kcalAbend = Math.round(targetKcal * 0.30);
+
+      // Meal-Prep-Prinzip: nur 3 Hauptgerichte für die GANZE Woche fix wählen,
+      // die sich bei Mittag/Abend abwechseln. Kein tägliches Neukochen mehr.
+      const MAIN_DISH_COUNT = 3;
+      const avgHauptTarget = Math.round((kcalMittag + kcalAbend) / 2);
+      const hauptSourcePool = hauptPool.length ? hauptPool : fallback;
+      const mainDishes = [...hauptSourcePool]
+        .sort((a,b)=>Math.abs((a.kcal/(a.servings||1))-avgHauptTarget) - Math.abs((b.kcal/(b.servings||1))-avgHauptTarget))
+        .slice(0, Math.min(MAIN_DISH_COUNT, hauptSourcePool.length));
+      let mainSlotCounter = 0;
+
+      const usedFrueh = new Map();
+      const usedSnack = new Map();
+
+      const rows = [];
+      weekDates.forEach((date) => {
+        let tagesKcal = 0;
+
+        const frueh = pickClosest(fruehstueckPool.length ? fruehstueckPool : fallback, kcalFrueh, usedFrueh);
+        if(frueh){ rows.push({ user_id: state.user.id, recipe_id: frueh.id, log_date: date, servings_logged: 1 }); tagesKcal += frueh.kcal / (frueh.servings || 1); }
+
+        if(mainDishes.length > 0){
+          const mittag = mainDishes[mainSlotCounter % mainDishes.length]; mainSlotCounter++;
+          rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: 1 }); tagesKcal += mittag.kcal / (mittag.servings || 1);
+
+          const abend = mainDishes[mainSlotCounter % mainDishes.length]; mainSlotCounter++;
+          rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: 1 }); tagesKcal += abend.kcal / (abend.servings || 1);
+        }
+
+        // Snack ergänzen, um die Lücke zum Tagesziel zu schließen
+        const restKcal = targetKcal - tagesKcal;
+        if(restKcal >= 50 && snackPool.length > 0){
+          const snack = pickClosest(snackPool, restKcal, usedSnack);
+          if(snack) rows.push({ user_id: state.user.id, recipe_id: snack.id, log_date: date, servings_logged: 1 });
+        }
+      });
+
+      if(rows.length === 0){ alert("Keine passenden Rezepte gefunden."); return; }
+      const { error } = await sb.from("daily_log").insert(rows);
+      if(error){ alert("Fehler: " + error.message); return; }
+      await awardRiseEP(15, "autoWeekCount");
+      await loadWeekLog();
+    });
+  });
+}
+
+function bindSwapEvents(){
+  const overlay = document.getElementById("swap-overlay");
+  if(!overlay) return;
+  overlay.addEventListener("click", (e)=>{ if(e.target.id==="swap-overlay"){ state.swapTarget=null; render(); } });
+  document.getElementById("swap-close").addEventListener("click", ()=>{ state.swapTarget=null; render(); });
+  document.querySelectorAll("[data-swap-recipe-id]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const newRecipeId = btn.dataset.swapRecipeId;
+      const { logId } = state.swapTarget;
+      const newRecipe = state.recipes.find(r => r.id === newRecipeId);
+      try{
+        const { error } = await sb.from("daily_log").update({ recipe_id: newRecipeId, servings_logged: 1 }).eq("id", logId);
+        if(error) throw error;
+        state.swapTarget = null;
+        await loadWeekLog();
+      }catch(err){ alert("Fehler: " + err.message); }
+    });
+  });
+}
+
+function bindPlanPopupEvents(){
+  document.getElementById("plan-overlay").addEventListener("click", (e)=>{ if(e.target.id==="plan-overlay"){ state.planRecipeId=null; render(); } });
+  document.getElementById("plan-close").addEventListener("click", ()=>{ state.planRecipeId=null; render(); });
+  document.querySelectorAll(".day-pick").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const date = btn.dataset.date;
+      if(state.planSelectedDays.includes(date)){ state.planSelectedDays = state.planSelectedDays.filter(d=>d!==date); }
+      else { state.planSelectedDays.push(date); }
+      render();
+    });
+  });
+  document.getElementById("plan-confirm").addEventListener("click", async ()=>{
+    if(state.planSelectedDays.length === 0){ alert("Bitte w\u00e4hle mindestens einen Tag aus."); return; }
+    const recipe = state.recipes.find(r => r.id === state.planRecipeId);
+    const confirmBtn = document.getElementById("plan-confirm");
+    confirmBtn.disabled = true; confirmBtn.textContent = "Wird hinzugef\u00fcgt \u2026";
+    const rows = state.planSelectedDays.map(date => ({ user_id: state.user.id, recipe_id: state.planRecipeId, log_date: date, servings_logged: 1 }));
+    const { error } = await sb.from("daily_log").insert(rows);
+    if(error){ alert("Fehler: " + error.message); confirmBtn.disabled=false; confirmBtn.textContent="Hinzuf\u00fcgen"; return; }
+    state.planRecipeId = null;
+    await awardRiseEP(5, "weekPlansCount");
+    await loadWeekLog();
+  });
+}
+
+function closeDayAddPopup(){
+  state.dayAddTarget = null;
+  state.dayAddSearch = "";
+  state.dayAddTag = null;
+  state.dayAddKcalBand = null;
+  state.dayAddStage = "filter";
+  render();
+}
+
+function bindDayAddEvents(){
+  const overlay = document.getElementById("dayadd-overlay");
+  if(!overlay) return;
+  overlay.addEventListener("click", (e)=>{ if(e.target.id==="dayadd-overlay") closeDayAddPopup(); });
+  document.getElementById("dayadd-close").addEventListener("click", closeDayAddPopup);
+
+  if(state.dayAddStage === "filter"){
+    document.querySelectorAll(".dayadd-tag-chip").forEach(chip=>{
+      chip.addEventListener("click", ()=>{
+        state.dayAddTag = state.dayAddTag === chip.dataset.tag ? null : chip.dataset.tag;
+        render();
+      });
+    });
+    document.querySelectorAll(".dayadd-kcal-chip").forEach(chip=>{
+      chip.addEventListener("click", ()=>{
+        state.dayAddKcalBand = state.dayAddKcalBand === chip.dataset.band ? null : chip.dataset.band;
+        render();
+      });
+    });
+    const resetBtn = document.getElementById("dayadd-filter-reset");
+    if(resetBtn) resetBtn.addEventListener("click", ()=>{
+      state.dayAddTag = null;
+      state.dayAddKcalBand = null;
+      render();
+    });
+    const doneBtn = document.getElementById("dayadd-filter-done");
+    if(doneBtn) doneBtn.addEventListener("click", ()=>{
+      state.dayAddStage = "pick";
+      render();
+    });
+    return;
+  }
+
+  // Stufe 2: Rezeptauswahl
+  const backBtn = document.getElementById("dayadd-back-to-filter");
+  if(backBtn) backBtn.addEventListener("click", ()=>{
+    state.dayAddStage = "filter";
+    render();
+  });
+
+  const searchInput = document.getElementById("dayadd-search");
+  if(searchInput){
+    searchInput.addEventListener("input", (e)=>{
+      state.dayAddSearch = e.target.value;
+      render();
+      const el = document.getElementById("dayadd-search");
+      if(el){ el.focus(); el.selectionStart = el.value.length; }
+    });
+  }
+
+  document.querySelectorAll("[data-dayadd-recipe-id]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const recipeId = btn.dataset.dayaddRecipeId;
+      const date = state.dayAddTarget;
+      btn.disabled = true;
+      const { error } = await sb.from("daily_log").insert({ user_id: state.user.id, recipe_id: recipeId, log_date: date, servings_logged: 1 });
+      if(error){ alert("Fehler: " + error.message); btn.disabled = false; return; }
+      await awardRiseEP(5, "weekPlansCount");
+      closeDayAddPopup();
+      await loadWeekLog();
+    });
+  });
+}
+
+function bindModalEvents(){
+  document.getElementById("modal-overlay").addEventListener("click", (e)=>{ if(e.target.id==="modal-overlay") closeModal(); });
+  document.getElementById("modal-close").addEventListener("click", closeModal);
+  document.getElementById("photo-drop").addEventListener("click", ()=>{ document.getElementById("photo-input").click(); });
+  document.getElementById("photo-input").addEventListener("change", async (e)=>{
+    const file = e.target.files[0]; if(!file) return;
+    // Vorschau sofort anzeigen (lokal, ohne DB)
+    const previewUrl = URL.createObjectURL(file);
+    state.photoDataUrl = previewUrl;
+    state.photoFile = file;
+    render();
+  });
+  document.querySelectorAll("#tag-select-row .tag-pick").forEach(chip=>{
+    chip.addEventListener("click", ()=>{
+      const tag = chip.dataset.tag;
+      if(state.selectedTags.includes(tag)){ state.selectedTags = state.selectedTags.filter(t=>t!==tag); }
+      else { state.selectedTags.push(tag); }
+      render();
+    });
+  });
+
+  function syncIngredientRowsFromDOM(){
+    const rowEls = document.querySelectorAll("#ingredient-rows .ingredient-row");
+    state.ingredientRows = Array.from(rowEls).map(rowEl => ({
+      amount: rowEl.querySelector(".ing-amount").value,
+      unit: rowEl.querySelector(".ing-unit").value,
+      name: rowEl.querySelector(".ing-name").value
+    }));
+  }
+
+  document.getElementById("add-ingredient-row").addEventListener("click", ()=>{
+    syncIngredientRowsFromDOM(); state.ingredientRows.push({amount:"", unit:"g", name:""}); render();
+  });
+  document.querySelectorAll(".ing-remove").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      syncIngredientRowsFromDOM();
+      state.ingredientRows.splice(parseInt(btn.dataset.idx, 10), 1);
+      if(state.ingredientRows.length === 0) state.ingredientRows.push({amount:"", unit:"g", name:""});
+      render();
+    });
+  });
+  document.querySelectorAll("#ingredient-rows input, #ingredient-rows select").forEach(el=>{
+    el.addEventListener("input", syncIngredientRowsFromDOM);
+    el.addEventListener("change", syncIngredientRowsFromDOM);
+  });
+
+  document.getElementById("recipe-form").addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    const submitBtn = e.target.querySelector("button[type=submit]");
+    submitBtn.disabled = true; submitBtn.textContent = "Speichert \u2026";
+    syncIngredientRowsFromDOM();
+
+    // ── Foto zu Supabase Storage hochladen (statt Base64 in DB) ──
+    state.uploadedPhotoUrl = null;
+    if(state.photoFile){
+      try{
+        const fileExt = state.photoFile.name.split(".").pop().toLowerCase();
+        const fileName = `recipe-${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+        const { data: uploadData, error: uploadError } = await sb.storage
+          .from("recipe-photos")
+          .upload(fileName, state.photoFile, { contentType: state.photoFile.type, upsert: false });
+        if(uploadError) throw uploadError;
+        const { data: urlData } = sb.storage.from("recipe-photos").getPublicUrl(fileName);
+        state.uploadedPhotoUrl = urlData.publicUrl;
+      }catch(uploadErr){
+        alert("Foto-Upload fehlgeschlagen: " + uploadErr.message);
+        submitBtn.disabled = false; submitBtn.textContent = "Speichern"; return;
+      }
+    }
+
+    const cleanRows = state.ingredientRows.filter(row => row.name && row.name.trim()).map(row => ({
+      amount: row.amount !== "" ? parseFloat(row.amount) : null,
+      unit: row.unit, name: row.name.trim()
+    }));
+    const ingredientsText = cleanRows.map(row => (row.amount !== null ? row.amount + row.unit + " " : "") + row.name).join("\n");
+    const payload = {
+      user_id: state.user.id,
+      title: document.getElementById("r-title").value.trim(),
+      servings: parseInt(document.getElementById("r-servings").value, 10) || 1,
+      ingredients: ingredientsText,
+      ingredients_structured: cleanRows,
+      steps: document.getElementById("r-steps").value.trim(),
+      tags: state.selectedTags,
+      kcal: document.getElementById("r-kcal").value !== "" ? parseFloat(document.getElementById("r-kcal").value) : null,
+      protein: document.getElementById("r-protein").value !== "" ? parseFloat(document.getElementById("r-protein").value) : null,
+      carbs: document.getElementById("r-carbs").value !== "" ? parseFloat(document.getElementById("r-carbs").value) : null,
+      fat: document.getElementById("r-fat").value !== "" ? parseFloat(document.getElementById("r-fat").value) : null,
+      photo_url: state.uploadedPhotoUrl || (state.editingRecipe ? state.editingRecipe.photo_url : null)
+    };
+    try{
+      if(state.editingRecipe){
+        const { error } = await sb.from("recipes").update(payload).eq("id", state.editingRecipe.id);
+        if(error) throw error;
+      } else {
+        const { error } = await sb.from("recipes").insert(payload);
+        if(error) throw error;
+      }
+      await loadRecipes(); closeModal();
+    }catch(err){ alert("Fehler beim Speichern: " + err.message); submitBtn.disabled=false; submitBtn.textContent="Speichern"; }
+  });
+
+  const delBtn = document.getElementById("delete-recipe");
+  if(delBtn){
+    delBtn.addEventListener("click", async ()=>{
+      if(!confirm("Dieses Rezept wirklich l\u00f6schen?")) return;
+      const { error } = await sb.from("recipes").delete().eq("id", state.editingRecipe.id);
+      if(error){ alert("Fehler: " + error.message); return; }
+      await loadRecipes(); closeModal();
+    });
+  }
+}
+
+function bindDetailEvents(){
+  document.getElementById("detail-overlay").addEventListener("click", (e)=>{ if(e.target.id==="detail-overlay"){ state.detailRecipe=null; render(); } });
+  document.getElementById("detail-close").addEventListener("click", ()=>{ state.detailRecipe=null; render(); });
+  const minusBtn = document.getElementById("servings-minus");
+  const plusBtn = document.getElementById("servings-plus");
+  if(minusBtn) minusBtn.addEventListener("click", ()=>{ if(state.detailServings > 1){ state.detailServings -= 1; render(); } });
+  if(plusBtn) plusBtn.addEventListener("click", ()=>{ state.detailServings += 1; render(); });
+  const editBtn = document.getElementById("edit-from-detail");
+  if(editBtn){
+    editBtn.addEventListener("click", ()=>{
+      state.editingRecipe = state.detailRecipe;
+      state.selectedTags = [...(state.detailRecipe.tags||[])];
+      state.photoDataUrl = state.detailRecipe.photo_url || null;
+      state.ingredientRows = (state.detailRecipe.ingredients_structured && state.detailRecipe.ingredients_structured.length)
+        ? state.detailRecipe.ingredients_structured.map(row => ({ amount: row.amount !== null && row.amount !== undefined ? row.amount : "", unit: row.unit || "g", name: row.name || "" }))
+        : [{amount:"", unit:"g", name:""}];
+      state.detailRecipe = null; state.modalOpen = true; render();
+    });
+  }
+}
+
+function closeModal(){
+  state.modalOpen = false; state.editingRecipe = null; state.photoDataUrl = null; state.photoFile = null; state.uploadedPhotoUrl = null;
+  state.selectedTags = []; state.ingredientRows = [{amount:"", unit:"g", name:""}]; render();
+}
+
+/* ---------- DATA ---------- */
+async function loadRecipes(){
+  // ── Nur Listenfelder laden, KEIN ingredients/steps/ingredients_structured ──
+  const { data, error } = await sb.from("recipes")
+    .select(LIST_COLUMNS)
+    .order("created_at", { ascending: false });
+  if(error){ console.error(error); return; }
+  state.recipes = data || [];
+  render();
+}
+
+async function loadWeekLog(){
+  const weekDates = getCurrentWeekDates();
+  const { data, error } = await sb.from("daily_log")
+    .select("*")
+    .gte("log_date", weekDates[0])
+    .lte("log_date", weekDates[6])
+    .order("created_at", { ascending: true })
+    .order("id", { ascending: true });
+  if(error){ console.error(error); return; }
+  state.weekLog = data || [];
+
+  // Vollständige Zutaten (ingredients_structured) für alle Rezepte in der Woche nachladen,
+  // da state.recipes (Listenansicht) diese aus Performance-Gründen nicht enthält.
+  const recipeIds = [...new Set(state.weekLog.map(e => e.recipe_id))];
+  if(recipeIds.length > 0){
+    const { data: detailData, error: detailError } = await sb.from("recipes")
+      .select("id,servings,ingredients_structured")
+      .in("id", recipeIds);
+    if(!detailError && detailData){
+      const map = {};
+      detailData.forEach(r => { map[r.id] = r; });
+      state.weekRecipeDetails = map;
+    }
+  }
+  render();
+}
+
+async function loadShoppingChecks(){
+  // veraltet, ersetzt durch loadShoppingItems() (manuelle Einkaufsliste)
+}
+
+/* ---------- RISE GAMIFICATION ---------- */
+async function loadRiseData(){
+  if(!state.user) return;
+  const { data: row, error } = await sb.from("user_rise").select("*").eq("user_id", state.user.id).maybeSingle();
+  if(error){ console.error(error); return; }
+  if(row){
+    state.riseEnergy = { total_ep: row.total_ep };
+    state.riseStats = {
+      weekPlansCount: row.week_plans_count,
+      autoWeekCount: row.auto_week_count,
+      profilSet: row.profil_set,
+      shoppingChecks: row.shopping_checks,
+      trainingCount: row.training_count || 0,
+      totalEP: row.total_ep
+    };
+  } else {
+    await sb.from("user_rise").insert({ user_id: state.user.id });
+    state.riseEnergy = { total_ep: 0 };
+    state.riseStats = { weekPlansCount: 0, autoWeekCount: 0, profilSet: false, shoppingChecks: 0, trainingCount: 0, totalEP: 0 };
+  }
+  const { data: crownRows, error: crownError } = await sb.from("user_crowns").select("*").eq("user_id", state.user.id);
+  if(!crownError) state.riseCrowns = crownRows || [];
+
+  const todayStr = new Date().toISOString().slice(0,10);
+  const { data: workoutRows, error: workoutError } = await sb.from("workout_log")
+    .select("workout_id").eq("user_id", state.user.id).eq("log_date", todayStr);
+  if(!workoutError) state.riseTodayWorkoutIds = (workoutRows||[]).map(w => w.workout_id);
+}
+
+async function awardRiseEP(amount, statKey){
+  if(!state.user) return;
+  const newTotal = (state.riseEnergy.total_ep || 0) + amount;
+  state.riseEnergy.total_ep = newTotal;
+  state.riseStats.totalEP = newTotal;
+  const dbUpdate = { total_ep: newTotal, updated_at: new Date().toISOString() };
+  if(statKey === "weekPlansCount"){ state.riseStats.weekPlansCount = (state.riseStats.weekPlansCount||0) + 1; dbUpdate.week_plans_count = state.riseStats.weekPlansCount; }
+  if(statKey === "autoWeekCount"){ state.riseStats.autoWeekCount = (state.riseStats.autoWeekCount||0) + 1; dbUpdate.auto_week_count = state.riseStats.autoWeekCount; }
+  if(statKey === "shoppingChecks"){ state.riseStats.shoppingChecks = (state.riseStats.shoppingChecks||0) + 1; dbUpdate.shopping_checks = state.riseStats.shoppingChecks; }
+  if(statKey === "trainingCount"){ state.riseStats.trainingCount = (state.riseStats.trainingCount||0) + 1; dbUpdate.training_count = state.riseStats.trainingCount; }
+  if(statKey === "profilSet"){ state.riseStats.profilSet = true; dbUpdate.profil_set = true; }
+  const { error } = await sb.from("user_rise").update(dbUpdate).eq("user_id", state.user.id);
+  if(error){ console.error(error); return; }
+  await checkAndAwardRiseCrowns();
+}
+
+async function completeWorkout(workoutId){
+  if(!state.user) return;
+  const todayStr = new Date().toISOString().slice(0,10);
+  const { error } = await sb.from("workout_log").insert({ user_id: state.user.id, workout_id: workoutId, log_date: todayStr });
+  if(error){
+    // Unique-Constraint-Verletzung = heute schon eingetragen, kein Fehler, einfach ignorieren
+    if(error.code !== "23505") console.error(error);
+    return;
+  }
+  state.riseTodayWorkoutIds.push(workoutId);
+  await awardRiseEP(20, "trainingCount");
+  render();
+}
+
+async function checkAndAwardRiseCrowns(){
+  if(!state.user) return;
+  const earnedIds = new Set((state.riseCrowns||[]).map(c => c.crown_id));
+  for(const crown of RISE_CROWNS_CATALOG){
+    if(!earnedIds.has(crown.id) && crown.check(state.riseStats)){
+      const { error } = await sb.from("user_crowns").insert({ user_id: state.user.id, crown_id: crown.id });
+      if(!error) state.riseCrowns.push({ crown_id: crown.id, earned_at: new Date().toISOString() });
+    }
+  }
+}
+
+/* ==========================================================
+   PERSONALISIERTE PORTIONSBERECHNUNG
+   (nutzt den oben schon vorhandenen `sb`-Client)
+   ========================================================== */
+
+async function loadNutrients(ingredientNames){
+  const { data, error } = await sb
+    .from("ingredient_nutrients")
+    .select("name, kcal_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g")
+    .in("name", ingredientNames);
+
+  if(error){ console.error("Fehler beim Laden der Nährwerte:", error); throw error; }
+
+  const lookup = {};
+  (data || []).forEach(row => {
+    lookup[row.name] = {
+      kcal: Number(row.kcal_per_100g),
+      protein: Number(row.protein_per_100g),
+      carbs: Number(row.carbs_per_100g),
+      fat: Number(row.fat_per_100g)
+    };
+  });
+  return lookup;
+}
+
+async function loadRecipeWithNutrients(recipeId){
+  const { data: recipe, error } = await sb
+    .from("recipes")
+    .select("id, title, servings, kcal, protein, carbs, fat, ingredients_structured")
+    .eq("id", recipeId)
+    .single();
+
+  if(error){ console.error("Fehler beim Laden des Rezepts:", error); throw error; }
+
+  const namesToLookup = (recipe.ingredients_structured || [])
+    .filter(i => i.amount !== null && i.amount !== undefined)
+    .map(i => i.name);
+
+  const nutrientDb = await loadNutrients(namesToLookup);
+  return { recipe, nutrientDb };
+}
+
+function calculatePersonalizedPortion(recipe, target, nutrientDb){
+  const ingredients = recipe.ingredients_structured || [];
+  const carbComponent = ingredients.find(i => i.role === "carb_component");
+  const proteinComponent = ingredients.find(i => i.role === "protein_component");
+  const fixedIngredients = ingredients.filter(i => i.role === "fixed" || !i.role);
+
+  const fixedTotals = fixedIngredients.reduce((sum, ing) => {
+    const data = nutrientDb[ing.name];
+    if(!data || !ing.amount) return sum;
+    const factor = ing.amount / 100;
+    return {
+      kcal: sum.kcal + data.kcal * factor,
+      protein: sum.protein + data.protein * factor,
+      carbs: sum.carbs + data.carbs * factor,
+      fat: sum.fat + data.fat * factor
+    };
+  }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+
+  let carbResult = null;
+  let carbContribution = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
+  if(carbComponent && nutrientDb[carbComponent.name]){
+    const carbData = nutrientDb[carbComponent.name];
+    const remainingCarbs = Math.max(0, target.carbs - fixedTotals.carbs);
+    const carbAmount = carbData.carbs > 0 ? (remainingCarbs / carbData.carbs) * 100 : 0;
+    carbContribution = {
+      kcal: (carbAmount/100) * carbData.kcal,
+      protein: (carbAmount/100) * carbData.protein,
+      carbs: (carbAmount/100) * carbData.carbs,
+      fat: (carbAmount/100) * carbData.fat
+    };
+    carbResult = { name: carbComponent.name, amount: Math.round(carbAmount), unit: carbComponent.unit };
+  }
+
+  let proteinResult = null;
+  let proteinContribution = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
+  if(proteinComponent && nutrientDb[proteinComponent.name]){
+    const proteinData = nutrientDb[proteinComponent.name];
+    const remainingProtein = Math.max(0, target.protein - fixedTotals.protein - carbContribution.protein);
+    const proteinAmount = proteinData.protein > 0 ? (remainingProtein / proteinData.protein) * 100 : 0;
+    proteinContribution = {
+      kcal: (proteinAmount/100) * proteinData.kcal,
+      protein: (proteinAmount/100) * proteinData.protein,
+      carbs: (proteinAmount/100) * proteinData.carbs,
+      fat: (proteinAmount/100) * proteinData.fat
+    };
+    proteinResult = { name: proteinComponent.name, amount: Math.round(proteinAmount), unit: proteinComponent.unit };
+  }
+
+  const resultTotals = {
+    kcal: Math.round(fixedTotals.kcal + carbContribution.kcal + proteinContribution.kcal),
+    protein: Math.round(fixedTotals.protein + carbContribution.protein + proteinContribution.protein),
+    carbs: Math.round(fixedTotals.carbs + carbContribution.carbs + proteinContribution.carbs),
+    fat: Math.round(fixedTotals.fat + carbContribution.fat + proteinContribution.fat)
+  };
+
+  return {
+    recipeTitle: recipe.title,
+    carbComponent: carbResult,
+    proteinComponent: proteinResult,
+    fixedIngredients,
+    target,
+    resultTotals,
+    diffFromTarget: {
+      kcal: resultTotals.kcal - target.kcal,
+      protein: resultTotals.protein - target.protein,
+      carbs: resultTotals.carbs - target.carbs,
+      fat: resultTotals.fat - target.fat
+    }
+  };
+}
+
+async function getPersonalizedPortion(recipeId, target){
+  const { recipe, nutrientDb } = await loadRecipeWithNutrients(recipeId);
+  return calculatePersonalizedPortion(recipe, target, nutrientDb);
+}
+
+/* Test in der Browser-Konsole (F12 → Console):
+   getPersonalizedPortion("4c274196-1d59-4307-af77-d3d9d97dc38a", {kcal:650, protein:45, carbs:70, fat:20}).then(r => console.log(r));
+*/
+
+async function checkSession(){
+  try{
+    const { data, error } = await sb.auth.getSession();
+    if(data && data.session){
+      state.user = data.session.user;
+      state.view = "app";
+      await loadRecipes();
+      await loadRiseData();
+    debugUserId();
+    } else if(error){
+      state.view = "login";
+      state.serviceDown = true;
+      state.error = "";
+      render();
+    } else {
+      state.view = "login";
+      state.serviceDown = false;
+      state.error = "";
+      render();
+    }
+  }catch(err){
+    state.view = "login";
+    state.serviceDown = true;
+    state.error = "";
+    render();
+  }
+}
+
+/* ---------- HELPERS ---------- */
+function escapeHtml(str){
+  if(!str) return "";
+  return str.replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+function escapeAttr(str){ return escapeHtml(str); }
+
+/* ---------- INIT ---------- */
+sb.auth.onAuthStateChange((_event, session)=>{
+  if(session && state.view !== "app"){
+    state.user = session.user; state.view = "app"; loadRecipes();
+  }
+});
+
+checkSession();
+render();
+</script>
+</body>
+</html>
