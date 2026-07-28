@@ -2141,7 +2141,8 @@ async function loadWeekLog(){
     .select("*")
     .gte("log_date", weekDates[0])
     .lte("log_date", weekDates[6])
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .order("id", { ascending: true });
   if(error){ console.error(error); return; }
   state.weekLog = data || [];
 
