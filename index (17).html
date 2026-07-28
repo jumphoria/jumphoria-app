@@ -133,6 +133,11 @@
   }
   .today-summary h3{ color:var(--pine-dark); font-size:16px; margin:0 0 12px; }
   .today-list{ display:flex; flex-direction:column; gap:10px; }
+  .meal-section-label{
+    font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--ink-on-paper); opacity:0.5; margin:6px 0 -2px 4px;
+  }
+  .meal-section-label:first-child{ margin-top:0; }
   .today-entry{
     background:var(--paper); border-radius:14px; padding:14px 16px;
     display:flex; align-items:center; justify-content:space-between;
@@ -558,6 +563,7 @@ const WEEKDAY_NAMES = ["Mo","Di","Mi","Do","Fr","Sa","So"];
 
 // ── Automatische Sortierung im Tagesplan: Frühstück → Hauptgericht → Snack → Dessert ──
 const MEAL_ORDER_TAGS = ["Frühstück","Hauptgericht","Snack","Dessert"];
+const MEAL_ORDER_LABELS = ["Frühstück","Hauptgericht","Snack","Dessert","Weiteres"];
 function getMealOrderRank(recipe){
   if(!recipe || !recipe.tags) return MEAL_ORDER_TAGS.length;
   for(let i=0; i<MEAL_ORDER_TAGS.length; i++){
@@ -903,17 +909,26 @@ function renderWeek(){
         </div>
         ${dayEntries.length === 0 ? `<p class="week-day-empty">Nichts geplant</p>` : `
           <div class="today-list">
-            ${[...dayEntries].sort((a,b) => {
-              const rankA = getMealOrderRank(state.recipes.find(r => r.id === a.recipe_id));
-              const rankB = getMealOrderRank(state.recipes.find(r => r.id === b.recipe_id));
-              return rankA - rankB;
-            }).map(e => {
+            ${(() => {
+              const sortedEntries = [...dayEntries].sort((a,b) => {
+                const rankA = getMealOrderRank(state.recipes.find(r => r.id === a.recipe_id));
+                const rankB = getMealOrderRank(state.recipes.find(r => r.id === b.recipe_id));
+                return rankA - rankB;
+              });
+              let lastRank = -1;
+              return sortedEntries.map(e => {
               const recipe = state.recipes.find(r => r.id === e.recipe_id);
               if(!recipe) return "";
+              const rank = getMealOrderRank(recipe);
+              let sectionLabelHtml = "";
+              if(rank !== lastRank){
+                sectionLabelHtml = `<div class="meal-section-label">${MEAL_ORDER_LABELS[rank]}</div>`;
+                lastRank = rank;
+              }
               const factor = e.servings_logged / (recipe.servings || 1);
               const kcalForEntry = recipe.kcal != null ? Math.round(recipe.kcal * factor) : null;
               const isBatchEntry = (recipe.servings || 1) > 1;
-              return `<div class="today-entry">
+              return sectionLabelHtml + `<div class="today-entry">
                 <div class="today-entry-info today-entry-clickable" data-recipe-id="${recipe.id}">
                   <strong>${escapeHtml(recipe.title)}</strong>
                   <span>${e.servings_logged} Portion${e.servings_logged==1?'':'en'}${kcalForEntry!==null?` \u00b7 ${kcalForEntry} kcal${isBatchEntry?'/Portion':''}`:''}</span>
@@ -927,7 +942,8 @@ function renderWeek(){
                 <button type="button" class="today-swap" data-log-id="${e.id}" data-recipe-id="${recipe.id}" title="Rezept tauschen">\u{1F504}</button>
                 <button type="button" class="today-remove" data-log-id="${e.id}">\u2715</button>
               </div>`;
-            }).join("")}
+              }).join("");
+            })()}
           </div>`}
       </div>`;
   }).join("")}</div>`;
