@@ -2207,6 +2207,128 @@ async function checkAndAwardRiseCrowns(){
   }
 }
 
+/* ==========================================================
+   PERSONALISIERTE PORTIONSBERECHNUNG
+   (nutzt den oben schon vorhandenen `sb`-Client)
+   ========================================================== */
+
+async function loadNutrients(ingredientNames){
+  const { data, error } = await sb
+    .from("ingredient_nutrients")
+    .select("name, kcal_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g")
+    .in("name", ingredientNames);
+
+  if(error){ console.error("Fehler beim Laden der Nährwerte:", error); throw error; }
+
+  const lookup = {};
+  (data || []).forEach(row => {
+    lookup[row.name] = {
+      kcal: Number(row.kcal_per_100g),
+      protein: Number(row.protein_per_100g),
+      carbs: Number(row.carbs_per_100g),
+      fat: Number(row.fat_per_100g)
+    };
+  });
+  return lookup;
+}
+
+async function loadRecipeWithNutrients(recipeId){
+  const { data: recipe, error } = await sb
+    .from("recipes")
+    .select("id, title, servings, kcal, protein, carbs, fat, ingredients_structured")
+    .eq("id", recipeId)
+    .single();
+
+  if(error){ console.error("Fehler beim Laden des Rezepts:", error); throw error; }
+
+  const namesToLookup = (recipe.ingredients_structured || [])
+    .filter(i => i.amount !== null && i.amount !== undefined)
+    .map(i => i.name);
+
+  const nutrientDb = await loadNutrients(namesToLookup);
+  return { recipe, nutrientDb };
+}
+
+function calculatePersonalizedPortion(recipe, target, nutrientDb){
+  const ingredients = recipe.ingredients_structured || [];
+  const carbComponent = ingredients.find(i => i.role === "carb_component");
+  const proteinComponent = ingredients.find(i => i.role === "protein_component");
+  const fixedIngredients = ingredients.filter(i => i.role === "fixed" || !i.role);
+
+  const fixedTotals = fixedIngredients.reduce((sum, ing) => {
+    const data = nutrientDb[ing.name];
+    if(!data || !ing.amount) return sum;
+    const factor = ing.amount / 100;
+    return {
+      kcal: sum.kcal + data.kcal * factor,
+      protein: sum.protein + data.protein * factor,
+      carbs: sum.carbs + data.carbs * factor,
+      fat: sum.fat + data.fat * factor
+    };
+  }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+
+  let carbResult = null;
+  let carbContribution = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
+  if(carbComponent && nutrientDb[carbComponent.name]){
+    const carbData = nutrientDb[carbComponent.name];
+    const remainingCarbs = Math.max(0, target.carbs - fixedTotals.carbs);
+    const carbAmount = carbData.carbs > 0 ? (remainingCarbs / carbData.carbs) * 100 : 0;
+    carbContribution = {
+      kcal: (carbAmount/100) * carbData.kcal,
+      protein: (carbAmount/100) * carbData.protein,
+      carbs: (carbAmount/100) * carbData.carbs,
+      fat: (carbAmount/100) * carbData.fat
+    };
+    carbResult = { name: carbComponent.name, amount: Math.round(carbAmount), unit: carbComponent.unit };
+  }
+
+  let proteinResult = null;
+  let proteinContribution = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
+  if(proteinComponent && nutrientDb[proteinComponent.name]){
+    const proteinData = nutrientDb[proteinComponent.name];
+    const remainingProtein = Math.max(0, target.protein - fixedTotals.protein - carbContribution.protein);
+    const proteinAmount = proteinData.protein > 0 ? (remainingProtein / proteinData.protein) * 100 : 0;
+    proteinContribution = {
+      kcal: (proteinAmount/100) * proteinData.kcal,
+      protein: (proteinAmount/100) * proteinData.protein,
+      carbs: (proteinAmount/100) * proteinData.carbs,
+      fat: (proteinAmount/100) * proteinData.fat
+    };
+    proteinResult = { name: proteinComponent.name, amount: Math.round(proteinAmount), unit: proteinComponent.unit };
+  }
+
+  const resultTotals = {
+    kcal: Math.round(fixedTotals.kcal + carbContribution.kcal + proteinContribution.kcal),
+    protein: Math.round(fixedTotals.protein + carbContribution.protein + proteinContribution.protein),
+    carbs: Math.round(fixedTotals.carbs + carbContribution.carbs + proteinContribution.carbs),
+    fat: Math.round(fixedTotals.fat + carbContribution.fat + proteinContribution.fat)
+  };
+
+  return {
+    recipeTitle: recipe.title,
+    carbComponent: carbResult,
+    proteinComponent: proteinResult,
+    fixedIngredients,
+    target,
+    resultTotals,
+    diffFromTarget: {
+      kcal: resultTotals.kcal - target.kcal,
+      protein: resultTotals.protein - target.protein,
+      carbs: resultTotals.carbs - target.carbs,
+      fat: resultTotals.fat - target.fat
+    }
+  };
+}
+
+async function getPersonalizedPortion(recipeId, target){
+  const { recipe, nutrientDb } = await loadRecipeWithNutrients(recipeId);
+  return calculatePersonalizedPortion(recipe, target, nutrientDb);
+}
+
+/* Test in der Browser-Konsole (F12 → Console):
+   getPersonalizedPortion("4c274196-1d59-4307-af77-d3d9d97dc38a", {kcal:650, protein:45, carbs:70, fat:20}).then(r => console.log(r));
+*/
+
 async function checkSession(){
   try{
     const { data, error } = await sb.auth.getSession();
