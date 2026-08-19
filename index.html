@@ -515,6 +515,37 @@
   .rise-workout-done-btn:hover{ background:var(--pine-dark); }
   .rise-workout-done-btn.done{ background:var(--terracotta-soft); color:var(--pine-dark); cursor:default; }
 
+  /* ====== WORKOUT PHOTO-KARTEN (Jump & Lift / Bounce & Flow etc.) ====== */
+  .workout-grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(150px,1fr));
+    gap:14px; margin-bottom:22px;
+  }
+  .workout-card{
+    position:relative; border-radius:16px; overflow:hidden; aspect-ratio:3/4;
+    cursor:pointer; box-shadow:var(--shadow); border:1px solid var(--line);
+    background:var(--ink-on-paper); transition:transform .18s cubic-bezier(.22,1,.36,1);
+  }
+  .workout-card:active{ transform:scale(0.97); }
+  .workout-card img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .workout-card-noimg{
+    width:100%; height:100%; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg, var(--pine) 0%, var(--terracotta) 100%);
+    color:#fff; font-size:15px; font-weight:700; text-align:center; padding:16px;
+    font-family:Georgia,serif;
+  }
+  .workout-card-overlay{
+    position:absolute; inset:0; display:flex; flex-direction:column; justify-content:flex-end;
+    padding:14px; background:linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0) 70%);
+    pointer-events:none;
+  }
+  .workout-card-title{ color:#fff; font-family:Georgia,serif; font-size:16px; font-weight:700; margin:0 0 2px; line-height:1.2; }
+  .workout-card-meta{ color:rgba(255,255,255,0.85); font-size:11px; font-weight:600; letter-spacing:.02em; }
+  .workout-card-done-badge{
+    position:absolute; top:10px; right:10px; background:var(--pine); color:#fff;
+    width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:13px; box-shadow:0 2px 6px rgba(0,0,0,0.3); font-weight:700;
+  }
+
   /* ====== LYMPH TIMER ====== */
   .lymph-modal{ text-align:center; padding-top:56px; }
   .lymph-eyebrow{ color:var(--terracotta); font-size:12px; text-transform:uppercase; letter-spacing:.06em; font-weight:700; margin:0 0 8px; }
@@ -579,19 +610,23 @@ function getMealOrderRank(recipe){
 // ── Workout-Videos ──
 // WICHTIG: url durch deine echten Video-Links ersetzen (z.B. Bunny Stream, YouTube, Vimeo)
 // duration bitte pro Workout noch auf die tatsächliche Länge anpassen (aktuell Platzhalter).
+// image: Cover-Foto fürs Kartenlayout. Leer lassen = zeigt automatisch einen Farbverlauf mit Titel statt Foto.
+//   Empfohlen: eigenes Hochformat-Foto (z.B. Screenshot aus dem Video), hochgeladen zu Supabase Storage
+//   (Bucket "workout-covers") oder direkt die Bunny-Thumbnail-URL des Videos.
 const JUMP_LIFT_WORKOUTS = [
-  { id: "jl_basics",              title: "Basics",              duration: "20 Min", url: "https://youtube.com/DEIN-LINK-1" },
-  { id: "jl_bounce_flow",         title: "Bounce & Flow",        duration: "20 Min", url: "https://youtube.com/DEIN-LINK-2" },
-  { id: "jl_jump_flow",           title: "Jump & Flow",          duration: "20 Min", url: "https://youtube.com/DEIN-LINK-3" },
-  { id: "jl_jump_flow_strength",  title: "Jump & Flow Strength", duration: "20 Min", url: "https://youtube.com/DEIN-LINK-4" },
-  { id: "jl_jump_lift",           title: "Jump & Lift",          duration: "20 Min", url: "https://youtube.com/DEIN-LINK-5" },
-  { id: "jl_jump_reset",          title: "Jump & Reset",         duration: "20 Min", url: "https://youtube.com/DEIN-LINK-6" }
+  { id: "jl_basics",              title: "Basics",              duration: "20 Min", url: "https://youtube.com/DEIN-LINK-1", image: "" },
+  { id: "jl_bounce_flow",         title: "Bounce & Flow",        duration: "20 Min", url: "https://youtube.com/DEIN-LINK-2", image: "" },
+  { id: "jl_jump_flow",           title: "Jump & Flow",          duration: "20 Min", url: "https://youtube.com/DEIN-LINK-3", image: "" },
+  { id: "jl_jump_flow_strength",  title: "Jump & Flow Strength", duration: "20 Min", url: "https://youtube.com/DEIN-LINK-4", image: "" },
+  { id: "jl_jump_lift",           title: "Jump & Lift",          duration: "20 Min", url: "https://youtube.com/DEIN-LINK-5", image: "" },
+  { id: "jl_jump_reset",          title: "Jump & Reset",         duration: "20 Min", url: "https://youtube.com/DEIN-LINK-6", image: "" }
 ];
 
 // ── Morgenroutine · Lymphfluss aktivieren (echter In-App Timer, kein Video-Link) ──
 // Übungen/Dauer/Video hier anpassen. "video" ist optional: leer lassen = nur Text,
 // oder die öffentliche Supabase-Storage-URL deines Clips eintragen (Bucket "lymph-videos").
 const LYMPH_FLOW_WORKOUT_ID = "lymph_morgenroutine";
+const LYMPH_FLOW_IMAGE = ""; // Cover-Foto fürs Kartenlayout, leer = Farbverlauf mit Titel
 const LYMPH_FLOW_EXERCISES = [
   { name: "Tiefe Bauchatmung",         cue: "Ruhig durch die Nase ein-, durch den Mund ausatmen.", seconds: 60, video: "https://enossxziqzvntcagndum.supabase.co/storage/v1/object/public/lymph-videos/atmung.mp4" },
   { name: "Armkreisen groß",           cue: "Große, lockere Kreise vor und zurück.",                seconds: 40, video: "" },
@@ -1234,37 +1269,44 @@ function renderProfil(){
   `;
 }
 
+function renderWorkoutCoverInner(title, image){
+  if(image){
+    return `<img src="${escapeAttr(image)}" alt="${escapeAttr(title)}">`;
+  }
+  return `<div class="workout-card-noimg">${escapeHtml(title)}</div>`;
+}
+
 function renderRise(){
   const lymphDoneToday = state.riseTodayWorkoutIds.includes(LYMPH_FLOW_WORKOUT_ID);
 
   return `
-    <div style="max-width:480px; margin:0 auto;">
+    <div style="max-width:520px; margin:0 auto;">
       <div class="training-intro">
         <h3>Deine Workout-Videos</h3>
         <p>Alle Trainings-Videos an einem Ort \u2013 tippe auf ein Training, um zu starten.</p>
       </div>
 
-      <div class="rise-workout-card">
-        <div class="rise-workout-info">
-          <a href="#" id="lymph-open-btn" style="cursor:pointer;">\u{1F4A7} Morgenroutine · Lymphfluss aktivieren</a>
-          <span>${formatMinutesLabel(lymphTotalSeconds())} · ${LYMPH_FLOW_EXERCISES.length} Übungen mit Timer</span>
-        </div>
-        <button type="button" class="rise-workout-done-btn ${lymphDoneToday ? 'done' : ''}" id="lymph-start-btn" ${lymphDoneToday ? 'disabled' : ''}>
-          ${lymphDoneToday ? '\u2713 Erledigt' : 'Timer starten'}
-        </button>
-      </div>
-      ${JUMP_LIFT_WORKOUTS.map(w => {
-        const doneToday = state.riseTodayWorkoutIds.includes(w.id);
-        return `<div class="rise-workout-card">
-          <div class="rise-workout-info">
-            <a href="${w.url}" target="_blank" rel="noopener">${escapeHtml(w.title)}</a>
-            <span>${w.duration}</span>
+      <div class="workout-grid">
+        <div class="workout-card" id="lymph-card" data-lymph="1">
+          ${renderWorkoutCoverInner("Morgenroutine", LYMPH_FLOW_IMAGE)}
+          <div class="workout-card-overlay">
+            <div class="workout-card-title">Morgenroutine</div>
+            <div class="workout-card-meta">${formatMinutesLabel(lymphTotalSeconds())} \u00b7 Lymphfluss</div>
           </div>
-          <button type="button" class="rise-workout-done-btn ${doneToday ? 'done' : ''}" data-workout-id="${w.id}" ${doneToday ? 'disabled' : ''}>
-            ${doneToday ? '\u2713 Erledigt' : 'Training abgeschlossen'}
-          </button>
-        </div>`;
-      }).join("")}
+          ${lymphDoneToday ? `<div class="workout-card-done-badge">\u2713</div>` : ""}
+        </div>
+        ${JUMP_LIFT_WORKOUTS.map(w => {
+          const doneToday = state.riseTodayWorkoutIds.includes(w.id);
+          return `<div class="workout-card" data-workout-id="${w.id}" data-workout-url="${escapeAttr(w.url)}">
+            ${renderWorkoutCoverInner(w.title, w.image)}
+            <div class="workout-card-overlay">
+              <div class="workout-card-title">${escapeHtml(w.title)}</div>
+              <div class="workout-card-meta">${w.duration}</div>
+            </div>
+            ${doneToday ? `<div class="workout-card-done-badge">\u2713</div>` : ""}
+          </div>`;
+        }).join("")}
+      </div>
     </div>
   `;
 }
@@ -1886,14 +1928,18 @@ function bindAppEvents(){
     });
   }
 
-  const lymphStartBtn = document.getElementById("lymph-start-btn");
-  if(lymphStartBtn) lymphStartBtn.addEventListener("click", (e)=>{ e.preventDefault(); openLymphTimer(); });
-  const lymphOpenLink = document.getElementById("lymph-open-btn");
-  if(lymphOpenLink) lymphOpenLink.addEventListener("click", (e)=>{ e.preventDefault(); if(!state.riseTodayWorkoutIds.includes(LYMPH_FLOW_WORKOUT_ID)) openLymphTimer(); });
+  const lymphCard = document.getElementById("lymph-card");
+  if(lymphCard) lymphCard.addEventListener("click", ()=>{
+    if(!state.riseTodayWorkoutIds.includes(LYMPH_FLOW_WORKOUT_ID)) openLymphTimer();
+  });
 
-  document.querySelectorAll(".rise-workout-done-btn:not(.done)").forEach(btn=>{
-    if(btn.id === "lymph-start-btn") return;
-    btn.addEventListener("click", ()=>{ completeWorkout(btn.dataset.workoutId); });
+  document.querySelectorAll(".workout-card[data-workout-id]").forEach(card=>{
+    card.addEventListener("click", ()=>{
+      const id = card.dataset.workoutId;
+      const url = card.dataset.workoutUrl;
+      if(url) window.open(url, "_blank", "noopener");
+      if(!state.riseTodayWorkoutIds.includes(id)) completeWorkout(id);
+    });
   });
   if(state.detailRecipe) bindDetailEvents();
   if(state.planRecipeId) bindPlanPopupEvents();
