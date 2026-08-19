@@ -576,12 +576,16 @@ function getMealOrderRank(recipe){
   return MEAL_ORDER_TAGS.length;
 }
 
-// ── Jump & Lift Workout-Videos ──
+// ── Workout-Videos ──
 // WICHTIG: url durch deine echten Video-Links ersetzen (z.B. Bunny Stream, YouTube, Vimeo)
+// duration bitte pro Workout noch auf die tatsächliche Länge anpassen (aktuell Platzhalter).
 const JUMP_LIFT_WORKOUTS = [
-  { id: "jl_ganzkoerper_1", title: "Jump & Lift · Ganzkörper Basics", duration: "25 Min", url: "https://youtube.com/DEIN-LINK-1" },
-  { id: "jl_bauch_rumpf",   title: "Jump & Lift · Kraft von innen (Bauch/Rumpf)", duration: "20 Min", url: "https://youtube.com/DEIN-LINK-2" },
-  { id: "jl_cardio_flow",   title: "Jump & Lift · Leichtigkeit (Cardio-Flow)", duration: "15 Min", url: "https://youtube.com/DEIN-LINK-3" }
+  { id: "jl_basics",              title: "Basics",              duration: "20 Min", url: "https://youtube.com/DEIN-LINK-1" },
+  { id: "jl_bounce_flow",         title: "Bounce & Flow",        duration: "20 Min", url: "https://youtube.com/DEIN-LINK-2" },
+  { id: "jl_jump_flow",           title: "Jump & Flow",          duration: "20 Min", url: "https://youtube.com/DEIN-LINK-3" },
+  { id: "jl_jump_flow_strength",  title: "Jump & Flow Strength", duration: "20 Min", url: "https://youtube.com/DEIN-LINK-4" },
+  { id: "jl_jump_lift",           title: "Jump & Lift",          duration: "20 Min", url: "https://youtube.com/DEIN-LINK-5" },
+  { id: "jl_jump_reset",          title: "Jump & Reset",         duration: "20 Min", url: "https://youtube.com/DEIN-LINK-6" }
 ];
 
 // ── Morgenroutine · Lymphfluss aktivieren (echter In-App Timer, kein Video-Link) ──
