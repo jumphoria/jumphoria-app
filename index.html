@@ -865,7 +865,8 @@ let state = {
   dayAddTag: null,
   dayAddKcalBand: null,
   dayAddStage: "filter",
-  irSearch: ""
+  irSearch: "",
+  autoWeekIROnly: false
 };
 
 function render(){
@@ -991,7 +992,8 @@ function renderIRTab(){
   });
   return `
     <div style="background:var(--ink-on-paper); border-radius:16px; padding:16px 20px; margin-bottom:18px; border:1px solid var(--line);">
-      <p style="color:var(--paper); opacity:0.9; font-size:13.5px; margin:0; line-height:1.5;">${t("ir_intro")}</p>
+      <p style="color:var(--paper); opacity:0.9; font-size:13.5px; margin:0 0 12px; line-height:1.5;">${t("ir_intro")}</p>
+      <button type="button" class="btn btn-block" id="ir-auto-week-btn">&#x2728; ${currentLang==='hu' ? 'Hét tervezése csak IR receptekből' : 'Woche nur mit IR-Rezepten planen'}</button>
     </div>
     <div class="toolbar">
       <input class="search-input" id="ir-search-input" placeholder="${currentLang==='hu' ? 'Recept keresése …' : 'Rezept suchen …'}" value="${escapeAttr(state.irSearch)}">
@@ -1246,9 +1248,15 @@ function renderSwapPopup(){
 
 function renderAutoWeekPopup(){
   const profilKcal = state.profilKcal;
+  const irLabel = currentLang==='hu' ? 'Csak IR receptekből' : 'Nur aus IR-Rezepten';
+  const irCheckbox = `<label style="display:flex; align-items:center; gap:8px; margin-bottom:16px; font-size:13.5px; color:var(--ink-on-paper); opacity:0.85; cursor:pointer;">
+    <input type="checkbox" id="autoweek-ir-only" ${state.autoWeekIROnly ? 'checked' : ''} style="width:16px; height:16px;">
+    ${irLabel}
+  </label>`;
   return `<div class="overlay" id="autoweek-overlay"><div class="modal plan-modal">
     <button class="modal-close" id="autoweek-close">✕</button>
     <h2>✨ Woche automatisch planen</h2>
+    ${irCheckbox}
     ${profilKcal ? `
       <p style="color:var(--ink-on-paper); opacity:0.75; font-size:14px; margin:0 0 16px;">Dein Profil empfiehlt:</p>
       <div style="background:var(--pine); color:#fff; border-radius:14px; padding:20px; margin-bottom:18px; text-align:center;">
@@ -2097,6 +2105,14 @@ function bindAppEvents(){
   const autoWeekBtn = document.getElementById("auto-week-btn");
   if(autoWeekBtn) autoWeekBtn.addEventListener("click", ()=>{ state.autoWeekOpen = true; render(); });
 
+  const irAutoWeekBtn = document.getElementById("ir-auto-week-btn");
+  if(irAutoWeekBtn) irAutoWeekBtn.addEventListener("click", ()=>{
+    calcProfil();
+    state.autoWeekIROnly = true;
+    state.autoWeekOpen = true;
+    render();
+  });
+
   document.querySelectorAll(".day-add-btn").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       state.dayAddTarget = btn.dataset.date;
@@ -2179,6 +2195,11 @@ function bindAutoWeekEvents(){
     render();
   });
 
+  const irOnlyCheckbox = document.getElementById("autoweek-ir-only");
+  if(irOnlyCheckbox) irOnlyCheckbox.addEventListener("change", ()=>{
+    state.autoWeekIROnly = irOnlyCheckbox.checked;
+  });
+
   document.querySelectorAll("[data-kcal]").forEach(btn=>{
     btn.addEventListener("click", async ()=>{
       const targetKcal = parseInt(btn.dataset.kcal);
@@ -2186,8 +2207,10 @@ function bindAutoWeekEvents(){
       btn.disabled = true;
 
       const weekDates = getCurrentWeekDates();
-      const allRecipes = state.recipes.filter(r => r.kcal != null && r.servings != null);
-      if(allRecipes.length === 0){ alert("Keine Rezepte mit Kalorienangaben gefunden."); return; }
+      const irOnly = state.autoWeekIROnly;
+      const baseRecipePool = irOnly ? state.recipes.filter(r => (r.tags||[]).includes('IR')) : state.recipes;
+      const allRecipes = baseRecipePool.filter(r => r.kcal != null && r.servings != null);
+      if(allRecipes.length === 0){ alert(irOnly ? (currentLang==='hu' ? "Nincs elég IR-jelölt recept kalóriaadatokkal." : "Keine IR-Rezepte mit Kalorienangaben gefunden.") : "Keine Rezepte mit Kalorienangaben gefunden."); return; }
 
       // Fett-Zielwert aus dem Profil (falls vorhanden) – wird jetzt mit in die Auswahl einbezogen,
       // damit die Woche nicht strukturell zu fettarm wird, nur weil viele Rezepte kalorisch passen
