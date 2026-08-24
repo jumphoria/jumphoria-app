@@ -617,7 +617,18 @@ const translations = {
     nav_ir: "IR-Rezepte",
     ir_intro: "Rezepte mit wenig Kohlenhydraten und viel Eiweiß — gut geeignet bei Insulinresistenz.",
     logout: "Abmelden",
-    loading: "Lädt …"
+    loading: "Lädt …",
+    portionen: "Portionen",
+    eiweiss: "Eiweiß",
+    kh: "KH",
+    fett: "Fett",
+    gekocht: "GEKOCHT",
+    zutaten: "Zutaten",
+    zubereitung: "Zubereitung",
+    geplant: "Geplant",
+    filter: "Filter",
+    fertig: "Fertig",
+    zuruecksetzen: "Zurücksetzen"
   },
   hu: {
     nav_recipes: "Receptek",
@@ -628,9 +639,45 @@ const translations = {
     nav_ir: "IR receptek",
     ir_intro: "Alacsony szénhidrát- és magas fehérjetartalmú receptek — inzulinrezisztencia esetén ajánlott.",
     logout: "Kijelentkezés",
-    loading: "Betöltés…"
+    loading: "Betöltés…",
+    portionen: "Adag",
+    eiweiss: "Fehérje",
+    kh: "SZH",
+    fett: "Zsír",
+    gekocht: "FŐZVE",
+    zutaten: "Hozzávalók",
+    zubereitung: "Elkészítés",
+    geplant: "Tervezve",
+    filter: "Szűrő",
+    fertig: "Kész",
+    zuruecksetzen: "Visszaállítás"
   }
 };
+
+// Übersetzt einzelne Tag-Namen (Hauptgericht, High Protein, ...) für die Anzeige,
+// ohne die zugrunde liegenden Tag-Werte in der Datenbank/Filterlogik zu verändern.
+const TAG_TRANSLATIONS_HU = {
+  "Vegan": "Vegán",
+  "Vegetarisch": "Vegetáriánus",
+  "Frühstück": "Reggeli",
+  "Hauptgericht": "Főétel",
+  "Snack": "Snack",
+  "Dessert": "Desszert",
+  "Balanced Macros": "Kiegyensúlyozott",
+  "Wenig Carbs": "Kevés szénhidrát",
+  "Wenig Fett": "Kevés zsír",
+  "High Protein": "Magas fehérje",
+  "Meal Prep": "Előkészíthető",
+  "Schnell": "Gyors",
+  "Airfryer": "Airfryer",
+  "Pre Workout": "Edzés előtt",
+  "Post Workout": "Edzés után",
+  "IR": "IR"
+};
+function trTag(tag){
+  if(currentLang === "hu" && TAG_TRANSLATIONS_HU[tag]) return TAG_TRANSLATIONS_HU[tag];
+  return tag;
+}
 
 let currentLang = localStorage.getItem("vs_lang") || "de";
 
@@ -970,11 +1017,11 @@ function renderIRGrid(list){
       <div class="card-body">
         <h3 class="recipe-title">${escapeHtml(getRecipeTitle(r))}</h3>
         ${hasMacros ? `<div class="card-macro-row">
-          ${proteinPerServing !== null ? `<span class="card-macro-chip">E ${proteinPerServing}g</span>` : ""}
-          ${carbsPerServing !== null ? `<span class="card-macro-chip">KH ${carbsPerServing}g</span>` : ""}
-          ${fatPerServing !== null ? `<span class="card-macro-chip">F ${fatPerServing}g</span>` : ""}
+          ${proteinPerServing !== null ? `<span class="card-macro-chip">${t("eiweiss").slice(0,1)} ${proteinPerServing}g</span>` : ""}
+          ${carbsPerServing !== null ? `<span class="card-macro-chip">${t("kh")} ${carbsPerServing}g</span>` : ""}
+          ${fatPerServing !== null ? `<span class="card-macro-chip">${t("fett").slice(0,1)} ${fatPerServing}g</span>` : ""}
         </div>` : ""}
-        <button type="button" class="today-add-btn" data-recipe-id="${r.id}">+ ${currentLang==='hu' ? 'Tervezett' : 'Geplant'}</button>
+        <button type="button" class="today-add-btn" data-recipe-id="${r.id}">+ ${t("geplant")}</button>
       </div>
     </div>`;
   }).join("")}</div>`;
@@ -984,9 +1031,9 @@ function renderRecipesTab(){
   const activeFilterCount = (state.activeTag ? 1 : 0) + (state.activeKcalBand ? 1 : 0);
   return `
     <div class="toolbar">
-      <input class="search-input" id="search-input" placeholder="Rezept suchen \u2026" value="${escapeAttr(state.search)}">
+      <input class="search-input" id="search-input" placeholder="${currentLang==='hu' ? 'Recept keresése …' : 'Rezept suchen …'}" value="${escapeAttr(state.search)}">
       <button type="button" class="filter-toggle-btn" id="open-filter-sheet">
-        \u2699\ufe0f Filter${activeFilterCount > 0 ? `<span class="filter-count-badge">${activeFilterCount}</span>` : ""}
+        \u2699\ufe0f ${t("filter")}${activeFilterCount > 0 ? `<span class="filter-count-badge">${activeFilterCount}</span>` : ""}
       </button>
     </div>
     ${state.filterSheetOpen ? renderFilterSheet() : ""}
@@ -998,12 +1045,12 @@ function renderFilterSheet(){
   return `<div class="overlay" id="filter-sheet-overlay">
     <div class="modal filter-sheet">
       <button class="modal-close" id="filter-sheet-close">\u2715</button>
-      <h2>Filter</h2>
+      <h2>${t("filter")}</h2>
       ${FILTER_GROUPS.map(group => `
         <div class="filter-group">
           <h4 class="filter-group-label">${group.label}</h4>
           <div class="tag-filters" id="tag-filters">
-            ${group.tags.map(t => `<span class="tag-chip ${state.activeTag===t?'active':''}" data-tag="${t}">${t}</span>`).join("")}
+            ${group.tags.map(tg => `<span class="tag-chip ${state.activeTag===tg?'active':''}" data-tag="${tg}">${trTag(tg)}</span>`).join("")}
           </div>
         </div>
       `).join("")}
@@ -1014,8 +1061,8 @@ function renderFilterSheet(){
         </div>
       </div>
       <div class="modal-actions">
-        <button type="button" class="btn-outline" id="filter-sheet-reset">Zur\u00fccksetzen</button>
-        <button type="button" class="btn" id="filter-sheet-apply">Fertig</button>
+        <button type="button" class="btn-outline" id="filter-sheet-reset">${t("zuruecksetzen")}</button>
+        <button type="button" class="btn" id="filter-sheet-apply">${t("fertig")}</button>
       </div>
     </div>
   </div>`;
@@ -1248,7 +1295,7 @@ function renderDayAddPopup(){
         <div class="filter-group">
           <h4 class="filter-group-label">${group.label}</h4>
           <div class="tag-filters">
-            ${group.tags.map(t => `<span class="tag-chip dayadd-tag-chip ${state.dayAddTag===t?'active':''}" data-tag="${t}">${t}</span>`).join("")}
+            ${group.tags.map(tg => `<span class="tag-chip dayadd-tag-chip ${state.dayAddTag===tg?'active':''}" data-tag="${tg}">${trTag(tg)}</span>`).join("")}
           </div>
         </div>
       `).join("")}
@@ -1259,8 +1306,8 @@ function renderDayAddPopup(){
         </div>
       </div>
       <div class="modal-actions">
-        <button type="button" class="btn-outline" id="dayadd-filter-reset">Zur\u00fccksetzen</button>
-        <button type="button" class="btn" id="dayadd-filter-done">Fertig</button>
+        <button type="button" class="btn-outline" id="dayadd-filter-reset">${t("zuruecksetzen")}</button>
+        <button type="button" class="btn" id="dayadd-filter-done">${t("fertig")}</button>
       </div>
     </div></div>`;
   }
@@ -1612,12 +1659,12 @@ function renderGrid(){
       <div class="card-body">
         <h3 class="recipe-title">${escapeHtml(getRecipeTitle(r))}</h3>
         ${hasMacros ? `<div class="card-macro-row">
-          ${proteinPerServing !== null ? `<span class="card-macro-chip">E ${proteinPerServing}g</span>` : ""}
-          ${carbsPerServing !== null ? `<span class="card-macro-chip">KH ${carbsPerServing}g</span>` : ""}
-          ${fatPerServing !== null ? `<span class="card-macro-chip">F ${fatPerServing}g</span>` : ""}
+          ${proteinPerServing !== null ? `<span class="card-macro-chip">${t("eiweiss").slice(0,1)} ${proteinPerServing}g</span>` : ""}
+          ${carbsPerServing !== null ? `<span class="card-macro-chip">${t("kh")} ${carbsPerServing}g</span>` : ""}
+          ${fatPerServing !== null ? `<span class="card-macro-chip">${t("fett").slice(0,1)} ${fatPerServing}g</span>` : ""}
         </div>` : ""}
-        <div class="card-tags">${(r.tags||[]).slice(0,3).map(t=>`<span class="tag-badge">${t}</span>`).join("")}</div>
-        <button type="button" class="today-add-btn" data-recipe-id="${r.id}">+ Geplant</button>
+        <div class="card-tags">${(r.tags||[]).slice(0,3).map(t=>`<span class="tag-badge">${trTag(t)}</span>`).join("")}</div>
+        <button type="button" class="today-add-btn" data-recipe-id="${r.id}">+ ${t("geplant")}</button>
       </div>
     </div>`;
   }).join("")}</div>`;
@@ -1817,21 +1864,21 @@ function renderDetail(){
     <button class="modal-close" id="detail-close">\u2715</button>
     ${r.photo_url ? `<img class="detail-photo" src="${r.photo_url}" alt="${escapeAttr(getRecipeTitle(r))}">` : ""}
     <h2>${escapeHtml(getRecipeTitle(r))}</h2>
-    <div class="card-tags" style="margin-bottom:10px;">${(r.tags||[]).map(t=>`<span class="tag-badge">${t}</span>`).join("")}</div>
-    ${r.servings ? `<div class="servings-stepper"><span>Portionen:</span><button type="button" id="servings-minus" class="stepper-btn">\u2212</button><span class="servings-value">${currentServings}</span><button type="button" id="servings-plus" class="stepper-btn">+</button></div>` : ""}
+    <div class="card-tags" style="margin-bottom:10px;">${(r.tags||[]).map(t=>`<span class="tag-badge">${trTag(t)}</span>`).join("")}</div>
+    ${r.servings ? `<div class="servings-stepper"><span>${t("portionen")}:</span><button type="button" id="servings-minus" class="stepper-btn">\u2212</button><span class="servings-value">${currentServings}</span><button type="button" id="servings-plus" class="stepper-btn">+</button></div>` : ""}
     ${r.kcal != null ? `<div class="macro-summary">
       <div class="macro-pill"><strong>${Math.round(r.kcal*scale)}</strong><span>kcal</span></div>
-      ${r.protein != null ? `<div class="macro-pill"><strong>${Math.round(r.protein*scale)}g</strong><span>Eiwei\u00df</span></div>` : ""}
-      ${r.carbs != null ? `<div class="macro-pill"><strong>${Math.round(r.carbs*scale)}g</strong><span>KH</span></div>` : ""}
-      ${r.fat != null ? `<div class="macro-pill"><strong>${Math.round(r.fat*scale)}g</strong><span>Fett</span></div>` : ""}
-      ${(() => { const w = estimateCookedWeight(r, currentServings); return w ? `<div class="macro-pill"><strong>~${w}g</strong><span>\u{1F963} GEKOCHT</span></div>` : ""; })()}
+      ${r.protein != null ? `<div class="macro-pill"><strong>${Math.round(r.protein*scale)}g</strong><span>${t("eiweiss")}</span></div>` : ""}
+      ${r.carbs != null ? `<div class="macro-pill"><strong>${Math.round(r.carbs*scale)}g</strong><span>${t("kh")}</span></div>` : ""}
+      ${r.fat != null ? `<div class="macro-pill"><strong>${Math.round(r.fat*scale)}g</strong><span>${t("fett")}</span></div>` : ""}
+      ${(() => { const w = estimateCookedWeight(r, currentServings); return w ? `<div class="macro-pill"><strong>~${w}g</strong><span>\u{1F963} ${t("gekocht")}</span></div>` : ""; })()}
     </div>` : ""}
     <div class="detail-section">
-      <h4>Zutaten</h4>
-      ${hasStructured ? `<button type="button" class="btn-outline shopping-add-btn" id="detail-add-shopping">\u{1F6D2} Ausgewählte zur Einkaufsliste</button>` : ""}
+      <h4>${t("zutaten")}</h4>
+      ${hasStructured ? `<button type="button" class="btn-outline shopping-add-btn" id="detail-add-shopping">\u{1F6D2} ${currentLang==='hu' ? 'Kiválasztottak a bevásárlólistához' : 'Ausgewählte zur Einkaufsliste'}</button>` : ""}
       <ul>${ingredientsHtml}</ul>
     </div>
-    <div class="detail-section"><h4>Zubereitung</h4><p class="ztext">${escapeHtml(getRecipeSteps(r)||"")}</p></div>
+    <div class="detail-section"><h4>${t("zubereitung")}</h4><p class="ztext">${escapeHtml(getRecipeSteps(r)||"")}</p></div>
     <div class="modal-actions">
       ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="btn-outline" id="edit-from-detail">Bearbeiten</button>` : ""}
     </div>
