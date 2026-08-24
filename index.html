@@ -121,7 +121,7 @@
 
   /* ====== MAIN TABS ====== */
   .main-tabs{
-    display:grid; grid-template-columns:repeat(5, 1fr); gap:3px;
+    display:grid; grid-template-columns:repeat(6, 1fr); gap:3px;
     margin-bottom:22px;
     background:var(--ink-on-paper); border-radius:14px; padding:5px;
   }
@@ -587,7 +587,7 @@ const ADMIN_USER_ID = "55eaffe1-6a42-42ec-8888-708f31210c4c";
 const REGISTRATION_CLOSED = true;
 // Debug: zeigt die eingeloggte User-ID in der Konsole
 function debugUserId(){ if(state.user) console.log("Eingeloggt als:", state.user.id, "| Admin?", state.user.id === ADMIN_USER_ID); }
-const ALL_TAGS = ["Vegan","Vegetarisch","Frühstück","Hauptgericht","Snack","Dessert","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein","Meal Prep","Schnell","Airfryer","Pre Workout","Post Workout"];
+const ALL_TAGS = ["Vegan","Vegetarisch","Frühstück","Hauptgericht","Snack","Dessert","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein","Meal Prep","Schnell","Airfryer","Pre Workout","Post Workout","IR"];
 const KCAL_BANDS = ["100 kcal","200 kcal","300 kcal","400 kcal"];
 const FILTER_GROUPS = [
   { label: "Ern\u00e4hrung", tags: ["Vegan","Vegetarisch","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein"] },
@@ -614,6 +614,8 @@ const translations = {
     nav_shopping: "Einkauf",
     nav_profil: "Profil",
     nav_training: "Training",
+    nav_ir: "IR-Rezepte",
+    ir_intro: "Rezepte mit wenig Kohlenhydraten und viel Eiweiß — gut geeignet bei Insulinresistenz.",
     logout: "Abmelden",
     loading: "Lädt …"
   },
@@ -623,6 +625,8 @@ const translations = {
     nav_shopping: "Bevásárlás",
     nav_profil: "Profil",
     nav_training: "Edzés",
+    nav_ir: "IR receptek",
+    ir_intro: "Alacsony szénhidrát- és magas fehérjetartalmú receptek — inzulinrezisztencia esetén ajánlott.",
     logout: "Kijelentkezés",
     loading: "Betöltés…"
   }
@@ -698,7 +702,8 @@ const NAV_ICONS = {
   today: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
   shopping: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`,
   profil: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg>`,
-  reise: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`
+  reise: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`,
+  ir: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/><path d="M8 12h2l1.5-3 2 6L15 12h1"/></svg>`
 };
 
 // ── Automatische Sortierung im Tagesplan: Frühstück → Hauptgericht → Snack → Dessert ──
@@ -812,7 +817,8 @@ let state = {
   dayAddSearch: "",
   dayAddTag: null,
   dayAddKcalBand: null,
-  dayAddStage: "filter"
+  dayAddStage: "filter",
+  irSearch: ""
 };
 
 function render(){
@@ -912,12 +918,13 @@ function renderAppShell(){
     </div>
     <div class="main-tabs">
       <button class="main-tab ${state.mainTab==='recipes'?'active':''}" data-tab="recipes"><span class="main-tab-icon">${NAV_ICONS.recipes}</span>${t("nav_recipes")}</button>
+      <button class="main-tab ${state.mainTab==='ir'?'active':''}" data-tab="ir"><span class="main-tab-icon">${NAV_ICONS.ir}</span>${t("nav_ir")}</button>
       <button class="main-tab ${state.mainTab==='today'?'active':''}" data-tab="today"><span class="main-tab-icon">${NAV_ICONS.today}</span>${t("nav_today")}</button>
       <button class="main-tab ${state.mainTab==='shopping'?'active':''}" data-tab="shopping"><span class="main-tab-icon">${NAV_ICONS.shopping}</span>${t("nav_shopping")}</button>
       <button class="main-tab ${state.mainTab==='profil'?'active':''}" data-tab="profil"><span class="main-tab-icon">${NAV_ICONS.profil}</span>${t("nav_profil")}</button>
       <button class="main-tab ${state.mainTab==='reise'?'active':''}" data-tab="reise"><span class="main-tab-icon">${NAV_ICONS.reise}</span>${t("nav_training")}</button>
     </div>
-    ${state.mainTab==='today' ? renderWeek() : state.mainTab==='shopping' ? renderShoppingList() : state.mainTab==='profil' ? renderProfil() : state.mainTab==='reise' ? renderRise() : renderRecipesTab()}
+    ${state.mainTab==='today' ? renderWeek() : state.mainTab==='shopping' ? renderShoppingList() : state.mainTab==='profil' ? renderProfil() : state.mainTab==='reise' ? renderRise() : state.mainTab==='ir' ? renderIRTab() : renderRecipesTab()}
     ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="fab" id="add-fab" title="Neues Rezept">+</button>` : ""}
     ${state.modalOpen ? renderModal() : ""}
     ${state.planRecipeId ? renderPlanPopup() : ""}
@@ -927,6 +934,50 @@ function renderAppShell(){
     ${state.detailRecipe ? renderDetail() : ""}
     ${state.lymphTimer && state.lymphTimer.open ? renderLymphTimerModal() : ""}
   `;
+}
+
+function renderIRTab(){
+  const irRecipes = state.recipes.filter(r => (r.tags||[]).includes('IR'));
+  const filtered = irRecipes.filter(r => {
+    const title = getRecipeTitle(r) || "";
+    return !state.irSearch || title.toLowerCase().includes(state.irSearch.toLowerCase());
+  });
+  return `
+    <div style="background:var(--ink-on-paper); border-radius:16px; padding:16px 20px; margin-bottom:18px; border:1px solid var(--line);">
+      <p style="color:var(--paper); opacity:0.9; font-size:13.5px; margin:0; line-height:1.5;">${t("ir_intro")}</p>
+    </div>
+    <div class="toolbar">
+      <input class="search-input" id="ir-search-input" placeholder="${currentLang==='hu' ? 'Recept keresése …' : 'Rezept suchen …'}" value="${escapeAttr(state.irSearch)}">
+    </div>
+    ${renderIRGrid(filtered)}
+  `;
+}
+
+function renderIRGrid(list){
+  if(list.length === 0){
+    return `<div class="empty-state"><h3>${currentLang==='hu' ? 'Nincs találat' : 'Keine Rezepte gefunden'}</h3></div>`;
+  }
+  return `<div class="grid">${list.map(r => {
+    const kcalPerServing = (r.kcal != null && r.servings) ? Math.round(r.kcal / r.servings) : null;
+    const proteinPerServing = (r.protein != null && r.servings) ? Math.round(r.protein / r.servings) : null;
+    const carbsPerServing = (r.carbs != null && r.servings) ? Math.round(r.carbs / r.servings) : null;
+    const fatPerServing = (r.fat != null && r.servings) ? Math.round(r.fat / r.servings) : null;
+    const hasMacros = proteinPerServing !== null || carbsPerServing !== null || fatPerServing !== null;
+    return `<div class="card" data-id="${r.id}">
+      <div class="card-hole"></div>
+      ${r.photo_url ? `<img class="card-photo" src="${r.photo_url}" alt="${escapeAttr(getRecipeTitle(r))}">` : `<div class="card-photo empty">${NAV_ICONS.ir}</div>`}
+      ${kcalPerServing !== null ? `<div class="kcal-badge">${kcalPerServing} kcal</div>` : ""}
+      <div class="card-body">
+        <h3 class="recipe-title">${escapeHtml(getRecipeTitle(r))}</h3>
+        ${hasMacros ? `<div class="card-macro-row">
+          ${proteinPerServing !== null ? `<span class="card-macro-chip">E ${proteinPerServing}g</span>` : ""}
+          ${carbsPerServing !== null ? `<span class="card-macro-chip">KH ${carbsPerServing}g</span>` : ""}
+          ${fatPerServing !== null ? `<span class="card-macro-chip">F ${fatPerServing}g</span>` : ""}
+        </div>` : ""}
+        <button type="button" class="today-add-btn" data-recipe-id="${r.id}">+ ${currentLang==='hu' ? 'Tervezett' : 'Geplant'}</button>
+      </div>
+    </div>`;
+  }).join("")}</div>`;
 }
 
 function renderRecipesTab(){
@@ -1815,6 +1866,15 @@ function bindAppEvents(){
       state.search = e.target.value; render();
       document.getElementById("search-input").focus();
       document.getElementById("search-input").selectionStart = document.getElementById("search-input").value.length;
+    });
+  }
+
+  const irSearchInput = document.getElementById("ir-search-input");
+  if(irSearchInput){
+    irSearchInput.addEventListener("input", (e)=>{
+      state.irSearch = e.target.value; render();
+      const el = document.getElementById("ir-search-input");
+      if(el){ el.focus(); el.selectionStart = el.value.length; }
     });
   }
 
