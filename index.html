@@ -666,6 +666,22 @@ async function loadUserLanguage(){
   }
 }
 
+// Liefert den Rezepttitel in der aktuell aktiven Sprache (Fallback: Deutsch, falls keine HU-Übersetzung vorhanden ist)
+function getRecipeTitle(recipe){
+  if(currentLang === "hu" && recipe.title_hu) return recipe.title_hu;
+  return recipe.title;
+}
+// Liefert die Zubereitung in der aktuell aktiven Sprache
+function getRecipeSteps(recipe){
+  if(currentLang === "hu" && recipe.steps_hu) return recipe.steps_hu;
+  return recipe.steps;
+}
+// Liefert die strukturierten Zutaten in der aktuell aktiven Sprache
+function getRecipeIngredientsStructured(recipe){
+  if(currentLang === "hu" && recipe.ingredients_structured_hu && recipe.ingredients_structured_hu.length) return recipe.ingredients_structured_hu;
+  return recipe.ingredients_structured;
+}
+
 function renderLangSwitcher(){
   return `<div class="lang-switcher">
     <button type="button" class="lang-btn ${currentLang==='de'?'active':''}" data-lang="de" title="Deutsch">🇦🇹 DE</button>
@@ -732,7 +748,7 @@ function lymphTotalSeconds(){ return LYMPH_FLOW_EXERCISES.reduce((sum,e)=>sum+e.
 function formatMinutesLabel(totalSeconds){ return `${Math.round(totalSeconds/60)} Min`; }
 
 // ── NUR diese Felder für die Listenansicht laden (spart ~70% Egress) ──
-const LIST_COLUMNS = "id,title,kcal,protein,carbs,fat,tags,photo_url,servings,meal_type,created_at";
+const LIST_COLUMNS = "id,title,title_hu,kcal,protein,carbs,fat,tags,photo_url,servings,meal_type,created_at";
 
 function getKcalBand(kcal, servings){
   if(kcal == null) return null;
@@ -1012,7 +1028,7 @@ function renderWeek(){
               const isBatchEntry = (recipe.servings || 1) > 1;
               return sectionLabelHtml + `<div class="today-entry">
                 <div class="today-entry-info today-entry-clickable" data-recipe-id="${recipe.id}">
-                  <strong>${escapeHtml(recipe.title)}</strong>
+                  <strong>${escapeHtml(getRecipeTitle(recipe))}</strong>
                   <span>${e.servings_logged} Portion${e.servings_logged==1?'':'en'}${kcalForEntry!==null?` \u00b7 ${kcalForEntry} kcal${isBatchEntry?'/Portion':''}`:''}</span>
                 </div>
                 <div class="today-qty-stepper">
@@ -1118,12 +1134,12 @@ function renderSwapPopup(){
   return `<div class="overlay" id="swap-overlay"><div class="modal plan-modal">
     <button class="modal-close" id="swap-close">\u2715</button>
     <h2>\u{1F504} Rezept tauschen</h2>
-    <p style="color:var(--ink-on-paper); opacity:0.75; font-size:14px; margin:0 0 4px;">Aktuell: <strong>${escapeHtml(current.title)}</strong> (${Math.round(currentKcalPerServing)} kcal)</p>
+    <p style="color:var(--ink-on-paper); opacity:0.75; font-size:14px; margin:0 0 4px;">Aktuell: <strong>${escapeHtml(getRecipeTitle(current))}</strong> (${Math.round(currentKcalPerServing)} kcal)</p>
     <p style="color:var(--ink-on-paper); opacity:0.6; font-size:13px; margin:0 0 14px;">Ähnliche Alternativen${currentCategory ? ` (${currentCategory})` : ''}:</p>
     <div class="picker-list">
       ${alternatives.map(r => {
         const kcalPerServing = Math.round(r.kcal/(r.servings||1));
-        return `<button type="button" class="picker-item" data-swap-recipe-id="${r.id}"><span>${escapeHtml(r.title)}</span><span class="picker-kcal">${kcalPerServing} kcal</span></button>`;
+        return `<button type="button" class="picker-item" data-swap-recipe-id="${r.id}"><span>${escapeHtml(getRecipeTitle(r))}</span><span class="picker-kcal">${kcalPerServing} kcal</span></button>`;
       }).join("")}
       ${alternatives.length === 0 ? `<p style="color:var(--ink-on-paper); opacity:0.6;">Keine passenden Alternativen gefunden.</p>` : ""}
     </div>
@@ -1156,7 +1172,7 @@ function renderPlanPopup(){
   const weekDates = getCurrentWeekDates();
   return `<div class="overlay" id="plan-overlay"><div class="modal plan-modal">
     <button class="modal-close" id="plan-close">\u2715</button>
-    <h2>${escapeHtml(recipe.title)}</h2>
+    <h2>${escapeHtml(getRecipeTitle(recipe))}</h2>
     <p style="color:var(--ink-on-paper); opacity:0.75; font-size:14px; margin:0 0 16px;">F\u00fcr welche Tage einplanen?</p>
     <div class="day-pick-row">
       ${WEEKDAY_NAMES.map((name, idx) => `<button type="button" class="day-pick ${state.planSelectedDays.includes(weekDates[idx])?'active':''}" data-date="${weekDates[idx]}">${name}</button>`).join("")}
@@ -1216,7 +1232,7 @@ function renderDayAddPopup(){
     <div class="picker-list">
       ${filtered.map(r => {
         const kcalPerServing = (r.kcal != null && r.servings) ? Math.round(r.kcal / r.servings) : null;
-        return `<button type="button" class="picker-item" data-dayadd-recipe-id="${r.id}"><span>${escapeHtml(r.title)}</span>${kcalPerServing !== null ? `<span class="picker-kcal">${kcalPerServing} kcal</span>` : ""}</button>`;
+        return `<button type="button" class="picker-item" data-dayadd-recipe-id="${r.id}"><span>${escapeHtml(getRecipeTitle(r))}</span>${kcalPerServing !== null ? `<span class="picker-kcal">${kcalPerServing} kcal</span>` : ""}</button>`;
       }).join("")}
       ${filtered.length === 0 ? `<p style="color:var(--ink-on-paper); opacity:0.6;">Keine Rezepte gefunden.</p>` : ""}
     </div>
@@ -1540,10 +1556,10 @@ function renderGrid(){
     const hasMacros = proteinPerServing !== null || carbsPerServing !== null || fatPerServing !== null;
     return `<div class="card" data-id="${r.id}">
       <div class="card-hole"></div>
-      ${r.photo_url ? `<img class="card-photo" src="${r.photo_url}" alt="${escapeAttr(r.title)}">` : `<div class="card-photo empty">${NAV_ICONS.recipes}</div>`}
+      ${r.photo_url ? `<img class="card-photo" src="${r.photo_url}" alt="${escapeAttr(getRecipeTitle(r))}">` : `<div class="card-photo empty">${NAV_ICONS.recipes}</div>`}
       ${kcalPerServing !== null ? `<div class="kcal-badge">${kcalPerServing} kcal</div>` : ""}
       <div class="card-body">
-        <h3 class="recipe-title">${escapeHtml(r.title)}</h3>
+        <h3 class="recipe-title">${escapeHtml(getRecipeTitle(r))}</h3>
         ${hasMacros ? `<div class="card-macro-row">
           ${proteinPerServing !== null ? `<span class="card-macro-chip">E ${proteinPerServing}g</span>` : ""}
           ${carbsPerServing !== null ? `<span class="card-macro-chip">KH ${carbsPerServing}g</span>` : ""}
@@ -1703,15 +1719,16 @@ function renderDetail(){
   if(r._loading){
     return `<div class="overlay" id="detail-overlay"><div class="modal">
       <button class="modal-close" id="detail-close">\u2715</button>
-      <h2>${escapeHtml(r.title)}</h2>
+      <h2>${escapeHtml(getRecipeTitle(r))}</h2>
       <div class="loading">Zutaten werden geladen \u2026</div>
     </div></div>`;
   }
 
-  const hasStructured = r.ingredients_structured && r.ingredients_structured.length > 0;
+  const activeIngredients = getRecipeIngredientsStructured(r);
+  const hasStructured = activeIngredients && activeIngredients.length > 0;
   let ingredientsHtml;
   if(hasStructured){
-    ingredientsHtml = r.ingredients_structured.map((ing, idx) => {
+    ingredientsHtml = activeIngredients.map((ing, idx) => {
       if(ing.amount === null || ing.amount === undefined) return `<li><label class="ing-row"><input type="checkbox" class="ing-select" data-ing-index="${idx}" checked><span>${escapeHtml(ing.name)}</span></label></li>`;
       const scaledAmount = ing.amount * scale;
       const displayAmount = scaledAmount % 1 === 0 ? scaledAmount.toFixed(0) : scaledAmount.toFixed(1);
@@ -1747,8 +1764,8 @@ function renderDetail(){
 
   return `<div class="overlay" id="detail-overlay"><div class="modal">
     <button class="modal-close" id="detail-close">\u2715</button>
-    ${r.photo_url ? `<img class="detail-photo" src="${r.photo_url}" alt="${escapeAttr(r.title)}">` : ""}
-    <h2>${escapeHtml(r.title)}</h2>
+    ${r.photo_url ? `<img class="detail-photo" src="${r.photo_url}" alt="${escapeAttr(getRecipeTitle(r))}">` : ""}
+    <h2>${escapeHtml(getRecipeTitle(r))}</h2>
     <div class="card-tags" style="margin-bottom:10px;">${(r.tags||[]).map(t=>`<span class="tag-badge">${t}</span>`).join("")}</div>
     ${r.servings ? `<div class="servings-stepper"><span>Portionen:</span><button type="button" id="servings-minus" class="stepper-btn">\u2212</button><span class="servings-value">${currentServings}</span><button type="button" id="servings-plus" class="stepper-btn">+</button></div>` : ""}
     ${r.kcal != null ? `<div class="macro-summary">
@@ -1763,7 +1780,7 @@ function renderDetail(){
       ${hasStructured ? `<button type="button" class="btn-outline shopping-add-btn" id="detail-add-shopping">\u{1F6D2} Ausgewählte zur Einkaufsliste</button>` : ""}
       <ul>${ingredientsHtml}</ul>
     </div>
-    <div class="detail-section"><h4>Zubereitung</h4><p class="ztext">${escapeHtml(r.steps||"")}</p></div>
+    <div class="detail-section"><h4>Zubereitung</h4><p class="ztext">${escapeHtml(getRecipeSteps(r)||"")}</p></div>
     <div class="modal-actions">
       ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="btn-outline" id="edit-from-detail">Bearbeiten</button>` : ""}
     </div>
@@ -1842,7 +1859,7 @@ function bindAppEvents(){
       render();
       // Lade die vollständigen Daten (ingredients, steps, ingredients_structured)
       const { data, error } = await sb.from("recipes")
-        .select("id,title,kcal,protein,carbs,fat,tags,photo_url,servings,meal_type,ingredients,steps,ingredients_structured")
+        .select("id,title,title_hu,kcal,protein,carbs,fat,tags,photo_url,servings,meal_type,ingredients,steps,ingredients_structured,steps_hu,ingredients_structured_hu")
         .eq("id", baseRecipe.id)
         .single();
       if(!error && data){
@@ -1902,7 +1919,7 @@ function bindAppEvents(){
       state.detailServings = baseRecipe.servings || 1;
       render();
       const { data, error } = await sb.from("recipes")
-        .select("id,title,kcal,protein,carbs,fat,tags,photo_url,servings,meal_type,ingredients,steps,ingredients_structured")
+        .select("id,title,title_hu,kcal,protein,carbs,fat,tags,photo_url,servings,meal_type,ingredients,steps,ingredients_structured,steps_hu,ingredients_structured_hu")
         .eq("id", baseRecipe.id).single();
       if(!error && data){ state.detailRecipe = data; render(); }
     });
@@ -1961,7 +1978,7 @@ function bindAppEvents(){
       const scale = currentServings / baseServings;
       const selectedIndexes = new Set();
       document.querySelectorAll(".ing-select").forEach(cb => { if(cb.checked) selectedIndexes.add(parseInt(cb.dataset.ingIndex, 10)); });
-      const selectedIngredients = r.ingredients_structured.filter((ing, idx) => selectedIndexes.has(idx));
+      const selectedIngredients = getRecipeIngredientsStructured(r).filter((ing, idx) => selectedIndexes.has(idx));
       if(selectedIngredients.length === 0){ alert("Bitte mindestens eine Zutat auswählen."); return; }
       detailAddShoppingBtn.textContent = "\u23f3 Wird hinzugef\u00fcgt \u2026";
       await addIngredientsToShoppingList(selectedIngredients, scale);
