@@ -61,6 +61,16 @@
   }
   .btn-ghost:hover{ border-color:var(--terracotta); color:var(--terracotta); }
 
+  /* ====== LANG SWITCHER ====== */
+  .lang-switcher{ display:flex; gap:4px; align-items:center; }
+  .lang-btn{
+    background:none; border:1px solid var(--line); color:var(--ink-soft);
+    padding:6px 10px; border-radius:16px; cursor:pointer; font-size:12.5px;
+    font-weight:700; opacity:0.55; transition:all .15s;
+  }
+  .lang-btn.active{ opacity:1; border-color:var(--pine); color:var(--pine); background:rgba(201,153,59,0.14); }
+  .lang-btn:hover{ opacity:1; }
+
   /* ====== BUTTONS ====== */
   .btn{
     background:var(--pine); color:#fff; border:none;
@@ -587,6 +597,85 @@ const FILTER_GROUPS = [
 ];
 const WEEKDAY_NAMES = ["Mo","Di","Mi","Do","Fr","Sa","So"];
 
+/* ============================================================
+   i18n — SPRACHUMSCHALTER (DE / HU)
+   ============================================================
+   - translations: Wörterbuch für alle UI-Texte, die über t() laufen.
+     Ergänze hier laufend weitere Keys, wenn du weitere Texte übersetzt.
+   - currentLang: aktuell aktive Sprache ('de' oder 'hu')
+   - t(key): liefert den Text in der aktuellen Sprache (Fallback: DE, dann der Key selbst)
+   - setLanguage(lang): wechselt Sprache, speichert in Supabase (user_settings) + localStorage, rendert neu
+   - loadUserLanguage(): lädt beim App-Start die gespeicherte Sprachpräferenz aus Supabase
+   ============================================================ */
+const translations = {
+  de: {
+    nav_recipes: "Rezepte",
+    nav_today: "Woche",
+    nav_shopping: "Einkauf",
+    nav_profil: "Profil",
+    nav_training: "Training",
+    logout: "Abmelden",
+    loading: "Lädt …"
+  },
+  hu: {
+    nav_recipes: "Receptek",
+    nav_today: "Hét",
+    nav_shopping: "Bevásárlás",
+    nav_profil: "Profil",
+    nav_training: "Edzés",
+    logout: "Kijelentkezés",
+    loading: "Betöltés…"
+  }
+};
+
+let currentLang = localStorage.getItem("vs_lang") || "de";
+
+function t(key){
+  return (translations[currentLang] && translations[currentLang][key])
+    || (translations.de[key])
+    || key;
+}
+
+async function setLanguage(lang){
+  if(!translations[lang] || lang === currentLang) return;
+  currentLang = lang;
+  localStorage.setItem("vs_lang", lang);
+  document.documentElement.setAttribute("lang", lang);
+
+  if(state.user){
+    const { error } = await sb.from("user_settings").upsert({
+      user_id: state.user.id,
+      preferred_lang: lang,
+      updated_at: new Date().toISOString()
+    });
+    if(error) console.error("Sprachpräferenz konnte nicht gespeichert werden:", error);
+  }
+  render();
+}
+
+async function loadUserLanguage(){
+  if(!state.user) return;
+  const { data, error } = await sb.from("user_settings")
+    .select("preferred_lang")
+    .eq("user_id", state.user.id)
+    .single();
+  if(!error && data && data.preferred_lang){
+    currentLang = data.preferred_lang;
+    localStorage.setItem("vs_lang", currentLang);
+    document.documentElement.setAttribute("lang", currentLang);
+  }
+}
+
+function renderLangSwitcher(){
+  return `<div class="lang-switcher">
+    <button type="button" class="lang-btn ${currentLang==='de'?'active':''}" data-lang="de" title="Deutsch">🇦🇹 DE</button>
+    <button type="button" class="lang-btn ${currentLang==='hu'?'active':''}" data-lang="hu" title="Magyar">🇭🇺 HU</button>
+  </div>`;
+}
+/* ============================================================
+   ENDE i18n-BLOCK
+   ============================================================ */
+
 // ── Premium SVG-Icons (statt Emojis) für die Hauptnavigation ──
 const NAV_ICONS = {
   recipes: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h2a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>`,
@@ -713,7 +802,7 @@ let state = {
 function render(){
   const el = document.getElementById("app");
   if(state.view === "loading"){
-    el.innerHTML = `<div class="loading">L\u00e4dt \u2026</div>`;
+    el.innerHTML = `<div class="loading">${t("loading")}</div>`;
     return;
   }
   if(state.view === "login" || state.view === "register"){
@@ -800,16 +889,17 @@ function renderAppShell(){
     <div class="top">
       <div class="brand"><img class="brand-logo" src="${LOGO_BASE64}" alt="Jumphoria"></div>
       <div class="user-pill">
+        ${renderLangSwitcher()}
         <span>${state.user?.email || ""}</span>
-        <button class="btn-ghost" id="logout-btn">Abmelden</button>
+        <button class="btn-ghost" id="logout-btn">${t("logout")}</button>
       </div>
     </div>
     <div class="main-tabs">
-      <button class="main-tab ${state.mainTab==='recipes'?'active':''}" data-tab="recipes"><span class="main-tab-icon">${NAV_ICONS.recipes}</span>Rezepte</button>
-      <button class="main-tab ${state.mainTab==='today'?'active':''}" data-tab="today"><span class="main-tab-icon">${NAV_ICONS.today}</span>Woche</button>
-      <button class="main-tab ${state.mainTab==='shopping'?'active':''}" data-tab="shopping"><span class="main-tab-icon">${NAV_ICONS.shopping}</span>Einkauf</button>
-      <button class="main-tab ${state.mainTab==='profil'?'active':''}" data-tab="profil"><span class="main-tab-icon">${NAV_ICONS.profil}</span>Profil</button>
-      <button class="main-tab ${state.mainTab==='reise'?'active':''}" data-tab="reise"><span class="main-tab-icon">${NAV_ICONS.reise}</span>Training</button>
+      <button class="main-tab ${state.mainTab==='recipes'?'active':''}" data-tab="recipes"><span class="main-tab-icon">${NAV_ICONS.recipes}</span>${t("nav_recipes")}</button>
+      <button class="main-tab ${state.mainTab==='today'?'active':''}" data-tab="today"><span class="main-tab-icon">${NAV_ICONS.today}</span>${t("nav_today")}</button>
+      <button class="main-tab ${state.mainTab==='shopping'?'active':''}" data-tab="shopping"><span class="main-tab-icon">${NAV_ICONS.shopping}</span>${t("nav_shopping")}</button>
+      <button class="main-tab ${state.mainTab==='profil'?'active':''}" data-tab="profil"><span class="main-tab-icon">${NAV_ICONS.profil}</span>${t("nav_profil")}</button>
+      <button class="main-tab ${state.mainTab==='reise'?'active':''}" data-tab="reise"><span class="main-tab-icon">${NAV_ICONS.reise}</span>${t("nav_training")}</button>
     </div>
     ${state.mainTab==='today' ? renderWeek() : state.mainTab==='shopping' ? renderShoppingList() : state.mainTab==='profil' ? renderProfil() : state.mainTab==='reise' ? renderRise() : renderRecipesTab()}
     ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="fab" id="add-fab" title="Neues Rezept">+</button>` : ""}
@@ -1226,7 +1316,7 @@ function renderProfil(){
           <label style="color:var(--ink); opacity:1;">Ziel</label>
           <div style="display:flex; gap:10px;">
             ${[["abnehmen","⬇️ Abnehmen"],["halten","➡️ Gewicht halten"]].map(([val,label]) =>
-              `<button type="button" class="profil-pick" data-field="ziel" data-val="${val}" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.ziel===val?'var(--terracotta)':'#fff'}; color:${p.ziel===val?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">${label}</button>`
+              `<button type="button" class="profil-pick ${p.ziel===val?'active':''}" data-field="ziel" data-val="${val}" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.ziel===val?'var(--terracotta)':'#fff'}; color:${p.ziel===val?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">${label}</button>`
             ).join("")}
           </div>
         </div>
@@ -1685,6 +1775,10 @@ function bindAppEvents(){
   document.getElementById("logout-btn").addEventListener("click", async ()=>{
     await sb.auth.signOut();
     state.user = null; state.recipes = []; state.view = "login"; render();
+  });
+
+  document.querySelectorAll(".lang-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ setLanguage(btn.dataset.lang); });
   });
 
   document.querySelectorAll(".main-tab").forEach(tab=>{
@@ -2514,6 +2608,7 @@ async function checkSession(){
     if(data && data.session){
       state.user = data.session.user;
       state.view = "app";
+      await loadUserLanguage();
       await loadRecipes();
     debugUserId();
     } else if(error){
@@ -2549,6 +2644,7 @@ sb.auth.onAuthStateChange((_event, session)=>{
   }
 });
 
+document.documentElement.setAttribute("lang", currentLang);
 checkSession();
 render();
 </script>
