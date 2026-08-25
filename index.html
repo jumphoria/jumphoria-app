@@ -568,6 +568,33 @@
   .lymph-finish-icon{ font-size:46px; margin-bottom:10px; }
   .lymph-progress-track{ background:rgba(58,74,48,0.12); border-radius:20px; height:8px; overflow:hidden; margin-bottom:22px; }
   .lymph-progress-fill{ background:var(--pine); height:100%; border-radius:20px; transition:width .4s ease; }
+
+  /* ====== DRUCKANSICHT (Wochenplan-Export) ====== */
+  .print-view-modal{ max-width:800px; background:#fff; }
+  .print-view-toolbar{ display:flex; gap:10px; margin-bottom:20px; }
+  .print-view-content{ color:#2b2b2b; font-family: Georgia, 'Times New Roman', serif; }
+  .print-view-content .print-masthead{ text-align:center; margin-bottom:28px; padding-bottom:16px; border-bottom:2px solid var(--pine); }
+  .print-view-content .print-masthead h1{ color:var(--pine-dark); font-size:24px; margin:0 0 4px; }
+  .print-view-content .print-masthead p{ color:#555; font-size:13px; margin:0; font-family:'Segoe UI', sans-serif; }
+  .print-day{ margin-bottom:24px; page-break-inside:avoid; }
+  .print-day h2{ color:var(--pine-dark); font-size:18px; border-bottom:1px solid var(--line); padding-bottom:6px; margin:0 0 12px; }
+  .print-recipe{ margin-bottom:16px; padding-left:4px; }
+  .print-recipe h3{ color:#2b2b2b; font-size:15px; margin:0 0 6px; }
+  .print-ingredients{ margin:0 0 8px; padding-left:20px; font-family:'Segoe UI', sans-serif; font-size:13px; line-height:1.6; color:#333; }
+  .print-steps{ font-family:'Segoe UI', sans-serif; font-size:13px; line-height:1.6; color:#444; white-space:pre-wrap; margin:0; }
+  .print-shopping{ margin-top:28px; padding-top:16px; border-top:2px solid var(--pine); page-break-before:always; }
+  .print-shopping h2{ color:var(--pine-dark); font-size:18px; margin:0 0 12px; }
+  .print-shopping ul{ columns:2; column-gap:24px; font-family:'Segoe UI', sans-serif; font-size:13.5px; line-height:1.8; color:#333; padding-left:20px; }
+
+  @media print{
+    body > *:not(.print-view-overlay){ display:none !important; }
+    .print-view-overlay{
+      position:absolute !important; inset:0 !important; background:#fff !important;
+      display:block !important; align-items:normal !important; justify-content:normal !important; z-index:9999 !important;
+    }
+    .print-view-modal{ box-shadow:none !important; border-radius:0 !important; height:auto !important; max-width:none !important; padding:0 !important; }
+    .no-print{ display:none !important; }
+  }
 </style>
 </head>
 <body>
@@ -873,7 +900,8 @@ let state = {
   dayAddKcalBand: null,
   dayAddStage: "filter",
   irSearch: "",
-  autoWeekIROnly: false
+  autoWeekIROnly: false,
+  printViewOpen: false
 };
 
 function render(){
@@ -988,7 +1016,110 @@ function renderAppShell(){
     ${state.swapTarget ? renderSwapPopup() : ""}
     ${state.detailRecipe ? renderDetail() : ""}
     ${state.lymphTimer && state.lymphTimer.open ? renderLymphTimerModal() : ""}
+    ${state.printViewOpen ? renderPrintView() : ""}
   `;
+}
+
+function getWeekRecipeFull(recipeId){
+  const base = state.recipes.find(r => r.id === recipeId);
+  const detail = state.weekRecipeDetails && state.weekRecipeDetails[recipeId];
+  if(!base && !detail) return null;
+  return { ...(base||{}), ...(detail||{}) };
+}
+
+// ── Zutaten der gesamten Woche zusammenfassen (für die Einkaufsliste im Druck-Export) ──
+function buildWeekShoppingAggregate(){
+  const map = new Map();
+  (state.weekLog || []).forEach(entry => {
+    const full = getWeekRecipeFull(entry.recipe_id);
+    const ingredients = full ? getRecipeIngredientsStructured(full) : null;
+    if(!ingredients || !ingredients.length) return;
+    const baseServings = full.servings || 1;
+    const factor = entry.servings_logged / baseServings;
+    ingredients.forEach(ing => {
+      if(!ing.name) return;
+      const unit = ing.unit || "";
+      const key = unit.toLowerCase() + "_" + ing.name.toLowerCase();
+      const hasAmount = ing.amount !== null && ing.amount !== undefined;
+      const amount = hasAmount ? ing.amount * factor : null;
+      if(map.has(key)){
+        const existing = map.get(key);
+        if(hasAmount && existing.amount !== null) existing.amount += amount;
+      } else {
+        map.set(key, { name: ing.name, unit, amount: hasAmount ? amount : null });
+      }
+    });
+  });
+  return Array.from(map.values()).sort((a,b) => a.name.localeCompare(b.name));
+}
+
+function renderPrintView(){
+  const weekDates = getCurrentWeekDates();
+  const entries = state.weekLog || [];
+  const shoppingList = buildWeekShoppingAggregate();
+  const isHu = currentLang === 'hu';
+  const rangeLabel = (()=>{
+    const first = new Date(weekDates[0] + "T00:00:00");
+    const last = new Date(weekDates[6] + "T00:00:00");
+    return `${first.getDate()}.${first.getMonth()+1}. – ${last.getDate()}.${last.getMonth()+1}.${last.getFullYear()}`;
+  })();
+
+  const daysHtml = weekDates.map((date, idx) => {
+    const dayEntries = entries.filter(e => e.log_date === date);
+    if(dayEntries.length === 0) return "";
+    const dateObj = new Date(date + "T00:00:00");
+    const dayLabel = WEEKDAY_NAMES[idx] + ", " + dateObj.getDate() + "." + (dateObj.getMonth()+1) + ".";
+    const sorted = [...dayEntries].sort((a,b) => getMealOrderRank(state.recipes.find(r => r.id === a.recipe_id)) - getMealOrderRank(state.recipes.find(r => r.id === b.recipe_id)));
+    const recipesHtml = sorted.map(e => {
+      const full = getWeekRecipeFull(e.recipe_id);
+      if(!full) return "";
+      const baseServings = full.servings || 1;
+      const factor = e.servings_logged / baseServings;
+      const ingredients = getRecipeIngredientsStructured(full) || [];
+      const ingHtml = ingredients.map(ing => {
+        if(!ing.name) return "";
+        if(ing.amount === null || ing.amount === undefined) return `<li>${escapeHtml(ing.name)}</li>`;
+        const amt = ing.amount * factor;
+        const disp = amt % 1 === 0 ? amt.toFixed(0) : amt.toFixed(1);
+        const unitStr = ing.unit || "";
+        const sep = ing.unit ? "" : " ";
+        return `<li>${disp}${unitStr}${sep}${escapeHtml(ing.name)}</li>`;
+      }).join("");
+      return `<div class="print-recipe">
+        <h3>${escapeHtml(getRecipeTitle(full))} ${e.servings_logged > 1 ? `(${e.servings_logged}x)` : ""}</h3>
+        <ul class="print-ingredients">${ingHtml}</ul>
+        <p class="print-steps">${escapeHtml(getRecipeSteps(full) || "")}</p>
+      </div>`;
+    }).join("");
+    return `<div class="print-day"><h2>${dayLabel}</h2>${recipesHtml}</div>`;
+  }).join("");
+
+  const shoppingHtml = shoppingList.map(item => {
+    const disp = item.amount !== null
+      ? (item.amount % 1 === 0 ? item.amount.toFixed(0) : item.amount.toFixed(1)) + (item.unit || "") + " "
+      : "";
+    return `<li>${disp}${escapeHtml(item.name)}</li>`;
+  }).join("");
+
+  return `<div class="overlay print-view-overlay" id="print-view-overlay">
+    <div class="modal print-view-modal">
+      <div class="print-view-toolbar no-print">
+        <button type="button" class="btn" id="print-view-print-btn">🖨️ ${isHu ? 'Nyomtatás / PDF mentése' : 'Drucken / Als PDF speichern'}</button>
+        <button type="button" class="btn-outline" id="print-view-close-btn">${isHu ? 'Bezárás' : 'Schließen'}</button>
+      </div>
+      <div class="print-view-content">
+        <div class="print-masthead">
+          <h1>Jumphoria — ${isHu ? 'Heti étrend' : 'Wochenplan'}</h1>
+          <p>${rangeLabel}</p>
+        </div>
+        ${daysHtml}
+        <div class="print-shopping">
+          <h2>${isHu ? 'Heti bevásárlólista' : 'Einkaufsliste für die Woche'}</h2>
+          <ul>${shoppingHtml}</ul>
+        </div>
+      </div>
+    </div>
+  </div>`;
 }
 
 function renderIRTab(){
@@ -1083,6 +1214,7 @@ function renderWeek(){
   const header = `
     <div style="margin-bottom:16px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
       <button type="button" class="btn" id="auto-week-btn" style="flex:1; min-width:180px;">&#x2728; Woche automatisch planen</button>
+      ${entries.length > 0 ? `<button type="button" class="btn-outline" id="print-view-open-btn">🖨️ ${currentLang==='hu' ? 'Nyomtatási nézet' : 'Druckansicht'}</button>` : ''}
       ${entries.length > 0 ? `<button type="button" class="btn-danger" id="clear-week-btn">Woche leeren</button>` : ''}
     </div>`;
   if(entries.length === 0){
@@ -2189,6 +2321,14 @@ function bindAppEvents(){
     await loadWeekLog();
   });
 
+  const printViewOpenBtn = document.getElementById("print-view-open-btn");
+  if(printViewOpenBtn) printViewOpenBtn.addEventListener("click", ()=>{
+    state.printViewOpen = true;
+    render();
+  });
+
+  if(state.printViewOpen) bindPrintViewEvents();
+
   if(state.autoWeekOpen) bindAutoWeekEvents();
   if(state.modalOpen) bindModalEvents();
 
@@ -2247,6 +2387,16 @@ function bindAppEvents(){
   if(state.dayAddTarget) bindDayAddEvents();
   if(state.swapTarget) bindSwapEvents();
   if(state.lymphTimer && state.lymphTimer.open) bindLymphTimerEvents();
+}
+
+function bindPrintViewEvents(){
+  const overlay = document.getElementById("print-view-overlay");
+  if(!overlay) return;
+  overlay.addEventListener("click", (e)=>{ if(e.target.id==="print-view-overlay"){ state.printViewOpen=false; render(); } });
+  const closeBtn = document.getElementById("print-view-close-btn");
+  if(closeBtn) closeBtn.addEventListener("click", ()=>{ state.printViewOpen=false; render(); });
+  const printBtn = document.getElementById("print-view-print-btn");
+  if(printBtn) printBtn.addEventListener("click", ()=>{ window.print(); });
 }
 
 function bindAutoWeekEvents(){
@@ -2706,7 +2856,7 @@ async function loadWeekLog(){
   const recipeIds = [...new Set(state.weekLog.map(e => e.recipe_id))];
   if(recipeIds.length > 0){
     const { data: detailData, error: detailError } = await sb.from("recipes")
-      .select("id,servings,ingredients_structured")
+      .select("id,servings,ingredients_structured,ingredients_structured_hu,steps,steps_hu")
       .in("id", recipeIds);
     if(!detailError && detailData){
       const map = {};
