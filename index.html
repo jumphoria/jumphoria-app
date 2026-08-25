@@ -693,6 +693,10 @@ async function setLanguage(lang){
   localStorage.setItem("vs_lang", lang);
   document.documentElement.setAttribute("lang", lang);
 
+  if(lang === 'de' && state.mainTab === 'ir'){
+    state.mainTab = 'recipes';
+  }
+
   if(state.user){
     const { error } = await sb.from("user_settings").upsert({
       user_id: state.user.id,
@@ -964,9 +968,9 @@ function renderAppShell(){
         <button class="btn-ghost" id="logout-btn">${t("logout")}</button>
       </div>
     </div>
-    <div class="main-tabs">
+    <div class="main-tabs" style="grid-template-columns:repeat(${currentLang==='hu'?6:5}, 1fr);">
       <button class="main-tab ${state.mainTab==='recipes'?'active':''}" data-tab="recipes"><span class="main-tab-icon">${NAV_ICONS.recipes}</span>${t("nav_recipes")}</button>
-      <button class="main-tab ${state.mainTab==='ir'?'active':''}" data-tab="ir"><span class="main-tab-icon">${NAV_ICONS.ir}</span>${t("nav_ir")}</button>
+      ${currentLang==='hu' ? `<button class="main-tab ${state.mainTab==='ir'?'active':''}" data-tab="ir"><span class="main-tab-icon">${NAV_ICONS.ir}</span>${t("nav_ir")}</button>` : ""}
       <button class="main-tab ${state.mainTab==='today'?'active':''}" data-tab="today"><span class="main-tab-icon">${NAV_ICONS.today}</span>${t("nav_today")}</button>
       <button class="main-tab ${state.mainTab==='shopping'?'active':''}" data-tab="shopping"><span class="main-tab-icon">${NAV_ICONS.shopping}</span>${t("nav_shopping")}</button>
       <button class="main-tab ${state.mainTab==='profil'?'active':''}" data-tab="profil"><span class="main-tab-icon">${NAV_ICONS.profil}</span>${t("nav_profil")}</button>
