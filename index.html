@@ -655,7 +655,35 @@ const translations = {
     geplant: "Geplant",
     filter: "Filter",
     fertig: "Fertig",
-    zuruecksetzen: "Zurücksetzen"
+    zuruecksetzen: "Zurücksetzen",
+    profil_title: "Mein Profil",
+    profil_subtitle: "Berechne deinen persönlichen Kalorienbedarf für dein Jump & Lift Programm.",
+    profil_deine_daten: "Deine Daten",
+    profil_geschlecht: "Geschlecht",
+    weiblich: "♀ Weiblich",
+    maennlich: "♂ Männlich",
+    profil_alter: "Alter (Jahre)",
+    profil_groesse: "Größe (cm)",
+    profil_gewicht: "Gewicht (kg)",
+    profil_aktivitaetslevel: "Aktivitätslevel",
+    akt_wenig: "🛋️ Kaum Sport",
+    akt_leicht: "🚶 1-3× / Woche",
+    akt_mittel: "🏃 3-5× / Woche",
+    akt_viel: "💪 5-7× / Woche",
+    profil_trainingstage: "Trainingstage (für Carb Cycling)",
+    profil_trainingstage_hint: "An diesen Tagen bekommst du in der Wochenplanung mehr Kohlenhydrate, an den anderen etwas weniger – bei gleicher Kalorienmenge.",
+    profil_ziel: "Ziel",
+    ziel_abnehmen: "⬇️ Abnehmen",
+    ziel_halten: "➡️ Gewicht halten",
+    profil_taegliches_ziel: "Dein tägliches Ziel",
+    profil_kcal_capped: "⚠️ Dein Kalorienziel wurde auf deinen Grundumsatz ({bmr} kcal) angehoben. Weniger zu essen wäre auf Dauer ungesund, da dein Körper auch in Ruhe diese Energie für lebenswichtige Funktionen braucht.",
+    use_profil_kcal_btn: "✨ Diese Kalorien für Wochenplanung verwenden",
+    carb_cycling_title: "🔄 Carb Cycling – gleiche kcal, anderes Verhältnis",
+    trainingstag_label: "🏋️ Trainingstag",
+    ruhetag_label: "🌙 Ruhetag",
+    jump_lift_titel: "Jump & Lift Empfehlungen",
+    pre_workout_text: "⚡ Pre Workout (30-60 Min vorher): {kcal} kcal · leichte KH + etwas Eiweiß",
+    post_workout_text: "💪 Post Workout (direkt danach): {kcal} kcal · viel Eiweiß + KH zur Regeneration"
   },
   hu: {
     nav_recipes: "Receptek",
@@ -677,7 +705,35 @@ const translations = {
     geplant: "Tervezve",
     filter: "Szűrő",
     fertig: "Kész",
-    zuruecksetzen: "Visszaállítás"
+    zuruecksetzen: "Visszaállítás",
+    profil_title: "Profilom",
+    profil_subtitle: "Számítsd ki a személyes kalóriaszükségleted a Jump & Lift programodhoz.",
+    profil_deine_daten: "Adataid",
+    profil_geschlecht: "Nem",
+    weiblich: "♀ Nő",
+    maennlich: "♂ Férfi",
+    profil_alter: "Életkor (év)",
+    profil_groesse: "Magasság (cm)",
+    profil_gewicht: "Testsúly (kg)",
+    profil_aktivitaetslevel: "Aktivitási szint",
+    akt_wenig: "🛋️ Alig sportol",
+    akt_leicht: "🚶 Heti 1-3×",
+    akt_mittel: "🏃 Heti 3-5×",
+    akt_viel: "💪 Heti 5-7×",
+    profil_trainingstage: "Edzésnapok (Carb Cyclinghoz)",
+    profil_trainingstage_hint: "Ezeken a napokon a heti tervezésnél több szénhidrátot kapsz, a többin valamivel kevesebbet – ugyanannyi kalória mellett.",
+    profil_ziel: "Cél",
+    ziel_abnehmen: "⬇️ Fogyás",
+    ziel_halten: "➡️ Testsúly tartása",
+    profil_taegliches_ziel: "Napi célod",
+    profil_kcal_capped: "⚠️ A kalóriacélod az alapanyagcseréd szintjére ({bmr} kcal) lett emelve. Ennél kevesebbet enni hosszú távon egészségtelen, mivel a tested nyugalomban is ennyi energiát igényel az életfontosságú funkciókhoz.",
+    use_profil_kcal_btn: "✨ Ezt a kalóriamennyiséget használjuk a heti tervezéshez",
+    carb_cycling_title: "🔄 Carb Cycling – ugyanannyi kcal, más arány",
+    trainingstag_label: "🏋️ Edzésnap",
+    ruhetag_label: "🌙 Pihenőnap",
+    jump_lift_titel: "Jump & Lift ajánlások",
+    pre_workout_text: "⚡ Edzés előtt (30-60 perccel korábban): {kcal} kcal · könnyű szénhidrát + kevés fehérje",
+    post_workout_text: "💪 Edzés után (közvetlenül utána): {kcal} kcal · sok fehérje + szénhidrát a regenerációhoz"
   }
 };
 
@@ -712,6 +768,15 @@ function t(key){
   return (translations[currentLang] && translations[currentLang][key])
     || (translations.de[key])
     || key;
+}
+
+// Wie t(), aber ersetzt {platzhalter} im Text mit Werten aus vars, z.B. tf("pre_workout_text", {kcal: 204})
+function tf(key, vars){
+  let text = t(key);
+  Object.keys(vars || {}).forEach(k => {
+    text = text.replace(new RegExp("\\{" + k + "\\}", "g"), vars[k]);
+  });
+  return text;
 }
 
 async function setLanguage(lang){
@@ -1555,60 +1620,60 @@ function renderProfil(){
 
   return `
     <div style="max-width:480px; margin:0 auto;">
-      <h2 style="font-family:Georgia,serif; color:var(--pine-dark); margin:0 0 6px;">Mein Profil</h2>
-      <p style="color:var(--ink); opacity:0.7; font-size:14px; margin:0 0 24px;">Berechne deinen persönlichen Kalorienbedarf für dein Jump & Lift Programm.</p>
+      <h2 style="font-family:Georgia,serif; color:var(--pine-dark); margin:0 0 6px;">${t("profil_title")}</h2>
+      <p style="color:var(--ink); opacity:0.7; font-size:14px; margin:0 0 24px;">${t("profil_subtitle")}</p>
 
       <div style="background:var(--ink-on-paper); border-radius:16px; padding:20px; border:1px solid var(--line); margin-bottom:16px;">
-        <h4 style="color:var(--pine); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 14px;">Deine Daten</h4>
+        <h4 style="color:var(--pine); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 14px;">${t("profil_deine_daten")}</h4>
 
         <div class="field">
-          <label style="color:var(--ink); opacity:1;">Geschlecht</label>
+          <label style="color:var(--ink); opacity:1;">${t("profil_geschlecht")}</label>
           <div style="display:flex; gap:10px;">
-            <button type="button" class="profil-pick ${p.geschlecht==='w'?'active':''}" data-field="geschlecht" data-val="w" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.geschlecht==='w'?'var(--pine)':'#fff'}; color:${p.geschlecht==='w'?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">♀ Weiblich</button>
-            <button type="button" class="profil-pick ${p.geschlecht==='m'?'active':''}" data-field="geschlecht" data-val="m" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.geschlecht==='m'?'var(--pine)':'#fff'}; color:${p.geschlecht==='m'?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">♂ Männlich</button>
+            <button type="button" class="profil-pick ${p.geschlecht==='w'?'active':''}" data-field="geschlecht" data-val="w" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.geschlecht==='w'?'var(--pine)':'#fff'}; color:${p.geschlecht==='w'?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">${t("weiblich")}</button>
+            <button type="button" class="profil-pick ${p.geschlecht==='m'?'active':''}" data-field="geschlecht" data-val="m" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.geschlecht==='m'?'var(--pine)':'#fff'}; color:${p.geschlecht==='m'?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">${t("maennlich")}</button>
           </div>
         </div>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
           <div class="field">
-            <label style="color:var(--ink); opacity:1;">Alter (Jahre)</label>
+            <label style="color:var(--ink); opacity:1;">${t("profil_alter")}</label>
             <input type="number" class="profil-input" data-field="alter" value="${p.alter}" min="15" max="80" style="width:100%; padding:10px; border-radius:9px; border:1.5px solid var(--line); background:#fff; font-size:14px; color:var(--ink-on-paper);">
           </div>
           <div class="field">
-            <label style="color:var(--ink); opacity:1;">Größe (cm)</label>
+            <label style="color:var(--ink); opacity:1;">${t("profil_groesse")}</label>
             <input type="number" class="profil-input" data-field="groesse" value="${p.groesse}" min="140" max="210" style="width:100%; padding:10px; border-radius:9px; border:1.5px solid var(--line); background:#fff; font-size:14px; color:var(--ink-on-paper);">
           </div>
           <div class="field" style="grid-column:1/-1;">
-            <label style="color:var(--ink); opacity:1;">Gewicht (kg)</label>
+            <label style="color:var(--ink); opacity:1;">${t("profil_gewicht")}</label>
             <input type="number" class="profil-input" data-field="gewicht" value="${p.gewicht}" min="40" max="200" style="width:100%; padding:10px; border-radius:9px; border:1.5px solid var(--line); background:#fff; font-size:14px; color:var(--ink-on-paper);">
           </div>
         </div>
 
         <div class="field">
-          <label style="color:var(--ink); opacity:1;">Aktivitätslevel</label>
+          <label style="color:var(--ink); opacity:1;">${t("profil_aktivitaetslevel")}</label>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            ${[["wenig","🛋️ Kaum Sport"],["leicht","🚶 1-3× / Woche"],["mittel","🏃 3-5× / Woche"],["viel","💪 5-7× / Woche"]].map(([val,label]) =>
-              `<button type="button" class="profil-pick" data-field="aktivitaet" data-val="${val}" style="flex:1; min-width:90px; padding:9px 6px; border-radius:10px; border:1.5px solid var(--line); background:${p.aktivitaet===val?'var(--pine)':'#fff'}; color:${p.aktivitaet===val?'#fff':'var(--ink-on-paper)'}; font-size:12.5px; font-weight:600; cursor:pointer;">${label}</button>`
+            ${[["wenig","akt_wenig"],["leicht","akt_leicht"],["mittel","akt_mittel"],["viel","akt_viel"]].map(([val,labelKey]) =>
+              `<button type="button" class="profil-pick" data-field="aktivitaet" data-val="${val}" style="flex:1; min-width:90px; padding:9px 6px; border-radius:10px; border:1.5px solid var(--line); background:${p.aktivitaet===val?'var(--pine)':'#fff'}; color:${p.aktivitaet===val?'#fff':'var(--ink-on-paper)'}; font-size:12.5px; font-weight:600; cursor:pointer;">${t(labelKey)}</button>`
             ).join("")}
           </div>
         </div>
 
         <div class="field">
-          <label style="color:var(--ink); opacity:1;">Trainingstage (für Carb Cycling)</label>
+          <label style="color:var(--ink); opacity:1;">${t("profil_trainingstage")}</label>
           <div style="display:flex; gap:6px; flex-wrap:wrap;">
             ${WEEKDAY_NAMES.map((name, idx) => {
               const active = (p.trainingstage || [1,3,5]).includes(idx);
               return `<button type="button" class="profil-training-day" data-idx="${idx}" style="flex:1; min-width:38px; padding:9px 4px; border-radius:10px; border:1.5px solid var(--line); background:${active?'var(--terracotta)':'#fff'}; color:${active?'#fff':'var(--ink-on-paper)'}; font-size:12.5px; font-weight:700; cursor:pointer;">${name}</button>`;
             }).join("")}
           </div>
-          <small style="color:var(--ink); opacity:0.55; font-size:11.5px; display:block; margin-top:6px;">An diesen Tagen bekommst du in der Wochenplanung mehr Kohlenhydrate, an den anderen etwas weniger – bei gleicher Kalorienmenge.</small>
+          <small style="color:var(--ink); opacity:0.55; font-size:11.5px; display:block; margin-top:6px;">${t("profil_trainingstage_hint")}</small>
         </div>
 
         <div class="field" style="margin-bottom:0;">
-          <label style="color:var(--ink); opacity:1;">Ziel</label>
+          <label style="color:var(--ink); opacity:1;">${t("profil_ziel")}</label>
           <div style="display:flex; gap:10px;">
-            ${[["abnehmen","⬇️ Abnehmen"],["halten","➡️ Gewicht halten"]].map(([val,label]) =>
-              `<button type="button" class="profil-pick ${p.ziel===val?'active':''}" data-field="ziel" data-val="${val}" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.ziel===val?'var(--terracotta)':'#fff'}; color:${p.ziel===val?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">${label}</button>`
+            ${[["abnehmen","ziel_abnehmen"],["halten","ziel_halten"]].map(([val,labelKey]) =>
+              `<button type="button" class="profil-pick ${p.ziel===val?'active':''}" data-field="ziel" data-val="${val}" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.ziel===val?'var(--terracotta)':'#fff'}; color:${p.ziel===val?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">${t(labelKey)}</button>`
             ).join("")}
           </div>
         </div>
@@ -1616,8 +1681,8 @@ function renderProfil(){
 
       ${kcal ? `
       <div style="background:var(--ink-on-paper); border-radius:16px; padding:22px; margin-bottom:16px;">
-        <h4 style="color:var(--pine); font-size:13px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 16px;">Dein tägliches Ziel</h4>
-        ${state.profilKcalCapped ? `<div style="background:rgba(201,151,58,0.15); border:1px solid var(--pine); border-radius:10px; padding:10px 12px; margin-bottom:14px; font-size:12.5px; color:var(--ink-on-paper); line-height:1.4;">⚠️ Dein Kalorienziel wurde auf deinen Grundumsatz (${state.profilBmr} kcal) angehoben. Weniger zu essen wäre auf Dauer ungesund, da dein Körper auch in Ruhe diese Energie für lebenswichtige Funktionen braucht.</div>` : ""}
+        <h4 style="color:var(--pine); font-size:13px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 16px;">${t("profil_taegliches_ziel")}</h4>
+        ${state.profilKcalCapped ? `<div style="background:rgba(201,151,58,0.15); border:1px solid var(--pine); border-radius:10px; padding:10px 12px; margin-bottom:14px; font-size:12.5px; color:var(--ink-on-paper); line-height:1.4;">${tf("profil_kcal_capped", {bmr: state.profilBmr})}</div>` : ""}
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
           <div style="flex:1; min-width:80px; background:rgba(255,255,255,0.1); border-radius:12px; padding:14px; text-align:center;">
             <div style="font-size:28px; font-weight:700; color:var(--pine); font-family:Georgia,serif;">${kcal}</div>
@@ -1625,41 +1690,41 @@ function renderProfil(){
           </div>
           <div style="flex:1; min-width:70px; background:rgba(255,255,255,0.1); border-radius:12px; padding:14px; text-align:center;">
             <div style="font-size:22px; font-weight:700; color:var(--ink);">${m.protein}g</div>
-            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">Eiweiß</div>
+            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">${t("eiweiss")}</div>
           </div>
           <div style="flex:1; min-width:70px; background:rgba(255,255,255,0.1); border-radius:12px; padding:14px; text-align:center;">
             <div style="font-size:22px; font-weight:700; color:var(--ink);">${m.carbs}g</div>
-            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">KH</div>
+            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">${t("kh")}</div>
           </div>
           <div style="flex:1; min-width:70px; background:rgba(255,255,255,0.1); border-radius:12px; padding:14px; text-align:center;">
             <div style="font-size:22px; font-weight:700; color:var(--ink);">${m.fat}g</div>
-            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">Fett</div>
+            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">${t("fett")}</div>
           </div>
         </div>
-        <button type="button" class="btn btn-block" id="use-profil-kcal" style="background:var(--pine);">✨ Diese Kalorien für Wochenplanung verwenden</button>
+        <button type="button" class="btn btn-block" id="use-profil-kcal" style="background:var(--pine);">${t("use_profil_kcal_btn")}</button>
       </div>
 
       ${state.profilMakrosTraining && state.profilMakrosRuhetag ? `
       <div style="background:var(--paper); border-radius:16px; padding:18px; border:1px solid var(--line); margin-bottom:16px;">
-        <h4 style="color:var(--pine-dark); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 12px;">🔄 Carb Cycling – gleiche kcal, anderes Verhältnis</h4>
+        <h4 style="color:var(--pine-dark); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 12px;">${t("carb_cycling_title")}</h4>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
           <div style="flex:1; min-width:140px; background:var(--terracotta-soft); border-radius:12px; padding:12px;">
-            <div style="font-size:12px; font-weight:700; color:var(--terracotta); text-transform:uppercase; margin-bottom:6px;">🏋️ Trainingstag</div>
-            <div style="font-size:13px; color:var(--ink-on-paper); line-height:1.6;">${state.profilMakrosTraining.protein}g Eiweiß · <strong>${state.profilMakrosTraining.carbs}g KH</strong> · ${state.profilMakrosTraining.fat}g Fett</div>
+            <div style="font-size:12px; font-weight:700; color:var(--terracotta); text-transform:uppercase; margin-bottom:6px;">${t("trainingstag_label")}</div>
+            <div style="font-size:13px; color:var(--ink-on-paper); line-height:1.6;">${state.profilMakrosTraining.protein}g ${t("eiweiss")} · <strong>${state.profilMakrosTraining.carbs}g ${t("kh")}</strong> · ${state.profilMakrosTraining.fat}g ${t("fett")}</div>
           </div>
           <div style="flex:1; min-width:140px; background:var(--cream); border-radius:12px; padding:12px;">
-            <div style="font-size:12px; font-weight:700; color:var(--ink-on-paper); text-transform:uppercase; margin-bottom:6px; opacity:0.75;">🌙 Ruhetag</div>
-            <div style="font-size:13px; color:var(--ink-on-paper); line-height:1.6;">${state.profilMakrosRuhetag.protein}g Eiweiß · <strong>${state.profilMakrosRuhetag.carbs}g KH</strong> · ${state.profilMakrosRuhetag.fat}g Fett</div>
+            <div style="font-size:12px; font-weight:700; color:var(--ink-on-paper); text-transform:uppercase; margin-bottom:6px; opacity:0.75;">${t("ruhetag_label")}</div>
+            <div style="font-size:13px; color:var(--ink-on-paper); line-height:1.6;">${state.profilMakrosRuhetag.protein}g ${t("eiweiss")} · <strong>${state.profilMakrosRuhetag.carbs}g ${t("kh")}</strong> · ${state.profilMakrosRuhetag.fat}g ${t("fett")}</div>
           </div>
         </div>
       </div>
       ` : ''}
 
       <div style="background:var(--paper); border-radius:16px; padding:18px; border:1px solid var(--line);">
-        <h4 style="color:var(--terracotta); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 10px;">Jump & Lift Empfehlungen</h4>
+        <h4 style="color:var(--terracotta); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 10px;">${t("jump_lift_titel")}</h4>
         <div style="font-size:14px; color:var(--ink-on-paper); line-height:1.7; font-size:14px;">
-          <div style="margin-bottom:8px;">⚡ <strong>Pre Workout</strong> (30-60 Min vorher): ${Math.round(kcal * 0.15)} kcal · leichte KH + etwas Eiweiß</div>
-          <div>💪 <strong>Post Workout</strong> (direkt danach): ${Math.round(kcal * 0.25)} kcal · viel Eiweiß + KH zur Regeneration</div>
+          <div style="margin-bottom:8px;">${tf("pre_workout_text", {kcal: Math.round(kcal * 0.15)})}</div>
+          <div>${tf("post_workout_text", {kcal: Math.round(kcal * 0.25)})}</div>
         </div>
       </div>
       ` : ''}
