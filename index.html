@@ -855,9 +855,12 @@ let state = {
   planRecipeId: null,
   planSelectedDays: [],
   autoWeekOpen: false,
-  profil: JSON.parse(localStorage.getItem("jumphoria_profil") || "null") || { geschlecht:"w", alter:30, groesse:165, gewicht:65, aktivitaet:"mittel", ziel:"abnehmen" },
+  profil: JSON.parse(localStorage.getItem("jumphoria_profil") || "null") || { geschlecht:"w", alter:30, groesse:165, gewicht:65, aktivitaet:"mittel", ziel:"abnehmen", trainingstage:[1,3,5] },
   profilKcal: null,
   profilMakros: null,
+  profilMakrosTraining: null,
+  profilMakrosRuhetag: null,
+  autoWeekCarbCycling: false,
   error: "",
   serviceDown: false,
   riseTodayWorkoutIds: [],
@@ -1253,14 +1256,20 @@ function renderSwapPopup(){
 function renderAutoWeekPopup(){
   const profilKcal = state.profilKcal;
   const irLabel = currentLang==='hu' ? 'Csak IR receptekből' : 'Nur aus IR-Rezepten';
-  const irCheckbox = `<label style="display:flex; align-items:center; gap:8px; margin-bottom:16px; font-size:13.5px; color:var(--ink-on-paper); opacity:0.85; cursor:pointer;">
+  const irCheckbox = `<label style="display:flex; align-items:center; gap:8px; margin-bottom:12px; font-size:13.5px; color:var(--ink-on-paper); opacity:0.85; cursor:pointer;">
     <input type="checkbox" id="autoweek-ir-only" ${state.autoWeekIROnly ? 'checked' : ''} style="width:16px; height:16px;">
     ${irLabel}
   </label>`;
+  const carbCyclingLabel = currentLang==='hu' ? 'Carb Cycling (edzésnapokon több SZH)' : 'Carb Cycling (an Trainingstagen mehr KH)';
+  const carbCyclingCheckbox = (state.profilMakrosTraining && state.profilMakrosRuhetag) ? `<label style="display:flex; align-items:center; gap:8px; margin-bottom:16px; font-size:13.5px; color:var(--ink-on-paper); opacity:0.85; cursor:pointer;">
+    <input type="checkbox" id="autoweek-carb-cycling" ${state.autoWeekCarbCycling ? 'checked' : ''} style="width:16px; height:16px;">
+    🔄 ${carbCyclingLabel}
+  </label>` : '';
   return `<div class="overlay" id="autoweek-overlay"><div class="modal plan-modal">
     <button class="modal-close" id="autoweek-close">✕</button>
     <h2>✨ Woche automatisch planen</h2>
     ${irCheckbox}
+    ${carbCyclingCheckbox}
     ${profilKcal ? `
       <p style="color:var(--ink-on-paper); opacity:0.75; font-size:14px; margin:0 0 16px;">Dein Profil empfiehlt:</p>
       <div style="background:var(--pine); color:#fff; border-radius:14px; padding:20px; margin-bottom:18px; text-align:center;">
@@ -1389,6 +1398,20 @@ function calcProfil(){
   state.profilMakros = { protein, carbs, fat };
   state.profilKcalCapped = kcalWasCapped;
   state.profilBmr = bmrRounded;
+
+  // ── Carb Cycling: Trainingstag (mehr KH) vs. Ruhetag (weniger KH) ──
+  // Kalorien und Eiweiß bleiben an beiden Tagtypen gleich (Muskelerhalt),
+  // nur das Verhältnis KH/Fett verschiebt sich. Fett gleicht die Kalorienbilanz aus.
+  if(!p.trainingstage) p.trainingstage = [1,3,5]; // Fallback für alte Profile: Di/Do/Sa
+  const carbShift = Math.max(20, Math.round(p.gewicht * 0.75));
+  const carbsTraining = carbs + carbShift;
+  const fatTraining = Math.max(20, Math.round((kcal - protein * 4 - carbsTraining * 4) / 9));
+  const carbsRuhetag = Math.max(40, carbs - carbShift);
+  const fatRuhetag = Math.round((kcal - protein * 4 - carbsRuhetag * 4) / 9);
+
+  state.profilMakrosTraining = { protein, carbs: carbsTraining, fat: fatTraining };
+  state.profilMakrosRuhetag = { protein, carbs: carbsRuhetag, fat: fatRuhetag };
+
   localStorage.setItem("jumphoria_profil", JSON.stringify(p));
 }
 
@@ -1438,6 +1461,17 @@ function renderProfil(){
           </div>
         </div>
 
+        <div class="field">
+          <label style="color:var(--ink); opacity:1;">Trainingstage (für Carb Cycling)</label>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            ${WEEKDAY_NAMES.map((name, idx) => {
+              const active = (p.trainingstage || [1,3,5]).includes(idx);
+              return `<button type="button" class="profil-training-day" data-idx="${idx}" style="flex:1; min-width:38px; padding:9px 4px; border-radius:10px; border:1.5px solid var(--line); background:${active?'var(--terracotta)':'#fff'}; color:${active?'#fff':'var(--ink-on-paper)'}; font-size:12.5px; font-weight:700; cursor:pointer;">${name}</button>`;
+            }).join("")}
+          </div>
+          <small style="color:var(--ink); opacity:0.55; font-size:11.5px; display:block; margin-top:6px;">An diesen Tagen bekommst du in der Wochenplanung mehr Kohlenhydrate, an den anderen etwas weniger – bei gleicher Kalorienmenge.</small>
+        </div>
+
         <div class="field" style="margin-bottom:0;">
           <label style="color:var(--ink); opacity:1;">Ziel</label>
           <div style="display:flex; gap:10px;">
@@ -1472,6 +1506,22 @@ function renderProfil(){
         </div>
         <button type="button" class="btn btn-block" id="use-profil-kcal" style="background:var(--pine);">✨ Diese Kalorien für Wochenplanung verwenden</button>
       </div>
+
+      ${state.profilMakrosTraining && state.profilMakrosRuhetag ? `
+      <div style="background:var(--paper); border-radius:16px; padding:18px; border:1px solid var(--line); margin-bottom:16px;">
+        <h4 style="color:var(--pine-dark); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 12px;">🔄 Carb Cycling – gleiche kcal, anderes Verhältnis</h4>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:140px; background:var(--terracotta-soft); border-radius:12px; padding:12px;">
+            <div style="font-size:12px; font-weight:700; color:var(--terracotta); text-transform:uppercase; margin-bottom:6px;">🏋️ Trainingstag</div>
+            <div style="font-size:13px; color:var(--ink-on-paper); line-height:1.6;">${state.profilMakrosTraining.protein}g Eiweiß · <strong>${state.profilMakrosTraining.carbs}g KH</strong> · ${state.profilMakrosTraining.fat}g Fett</div>
+          </div>
+          <div style="flex:1; min-width:140px; background:var(--cream); border-radius:12px; padding:12px;">
+            <div style="font-size:12px; font-weight:700; color:var(--ink-on-paper); text-transform:uppercase; margin-bottom:6px; opacity:0.75;">🌙 Ruhetag</div>
+            <div style="font-size:13px; color:var(--ink-on-paper); line-height:1.6;">${state.profilMakrosRuhetag.protein}g Eiweiß · <strong>${state.profilMakrosRuhetag.carbs}g KH</strong> · ${state.profilMakrosRuhetag.fat}g Fett</div>
+          </div>
+        </div>
+      </div>
+      ` : ''}
 
       <div style="background:var(--paper); border-radius:16px; padding:18px; border:1px solid var(--line);">
         <h4 style="color:var(--terracotta); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 10px;">Jump & Lift Empfehlungen</h4>
@@ -2157,6 +2207,19 @@ function bindAppEvents(){
       render();
     });
   });
+  document.querySelectorAll(".profil-training-day").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const idx = parseInt(btn.dataset.idx, 10);
+      if(!state.profil.trainingstage) state.profil.trainingstage = [1,3,5];
+      if(state.profil.trainingstage.includes(idx)){
+        state.profil.trainingstage = state.profil.trainingstage.filter(d => d !== idx);
+      } else {
+        state.profil.trainingstage.push(idx);
+      }
+      calcProfil();
+      render();
+    });
+  });
   const useProfilBtn = document.getElementById("use-profil-kcal");
   if(useProfilBtn){
     useProfilBtn.addEventListener("click", ()=>{
@@ -2204,6 +2267,11 @@ function bindAutoWeekEvents(){
     state.autoWeekIROnly = irOnlyCheckbox.checked;
   });
 
+  const carbCyclingCheckbox = document.getElementById("autoweek-carb-cycling");
+  if(carbCyclingCheckbox) carbCyclingCheckbox.addEventListener("change", ()=>{
+    state.autoWeekCarbCycling = carbCyclingCheckbox.checked;
+  });
+
   document.querySelectorAll("[data-kcal]").forEach(btn=>{
     btn.addEventListener("click", async ()=>{
       const targetKcal = parseInt(btn.dataset.kcal);
@@ -2221,34 +2289,47 @@ function bindAutoWeekEvents(){
       // aber wenig Fett enthalten (z.B. Magerquark-lastige Gerichte).
       const totalFatTarget = (state.profilMakros && state.profilMakros.fat) ? state.profilMakros.fat : null;
 
-      // Kombinierter Abstand: relative Kalorien-Distanz + gewichtete relative Fett-Distanz.
-      // Rezepte ohne Fettangabe werden nur nach Kalorien bewertet (kein Fett-Malus).
-      function combinedScore(r, kcalTarget, fatTarget){
+      // ── Carb Cycling: an Trainingstagen mehr KH / weniger Fett, an Ruhetagen umgekehrt (gleiche kcal) ──
+      const carbCyclingOn = state.autoWeekCarbCycling && state.profilMakrosTraining && state.profilMakrosRuhetag;
+      const trainingstage = state.profil.trainingstage || [1,3,5];
+      const totalCarbTargetTraining = carbCyclingOn ? state.profilMakrosTraining.carbs : null;
+      const totalCarbTargetRuhetag = carbCyclingOn ? state.profilMakrosRuhetag.carbs : null;
+      const totalFatTargetTraining = carbCyclingOn ? state.profilMakrosTraining.fat : totalFatTarget;
+      const totalFatTargetRuhetag = carbCyclingOn ? state.profilMakrosRuhetag.fat : totalFatTarget;
+
+      // Kombinierter Abstand: relative Kalorien-Distanz + gewichtete relative Fett-Distanz + optional KH-Distanz.
+      // Rezepte ohne Fett-/KH-Angabe werden dafür nicht bestraft (kein Malus).
+      function combinedScore(r, kcalTarget, fatTarget, carbTarget){
         const kcalPerServing = r.kcal / (r.servings || 1);
-        const kcalScore = Math.abs(kcalPerServing - kcalTarget) / Math.max(kcalTarget, 1);
-        if(fatTarget == null || r.fat == null) return kcalScore;
-        const fatPerServing = r.fat / (r.servings || 1);
-        const fatScore = Math.abs(fatPerServing - fatTarget) / Math.max(fatTarget, 1);
-        return kcalScore + fatScore * 1.3; // Fett etwas stärker gewichtet, um dem Fettmangel gezielt entgegenzuwirken
+        let score = Math.abs(kcalPerServing - kcalTarget) / Math.max(kcalTarget, 1);
+        if(fatTarget != null && r.fat != null){
+          const fatPerServing = r.fat / (r.servings || 1);
+          score += (Math.abs(fatPerServing - fatTarget) / Math.max(fatTarget, 1)) * 1.3;
+        }
+        if(carbTarget != null && r.carbs != null){
+          const carbPerServing = r.carbs / (r.servings || 1);
+          score += (Math.abs(carbPerServing - carbTarget) / Math.max(carbTarget, 1)) * 1.1;
+        }
+        return score;
       }
 
-      // Kalorienbasierte (+ fettbewusste) Auswahl: pro Slot das Rezept wählen, dessen Makro-Profil
+      // Kalorienbasierte (+ fett-/KH-bewusste) Auswahl: pro Slot das Rezept wählen, dessen Makro-Profil
       // am nächsten am Slot-Ziel liegt (statt komplett zufällig).
       // Damit sich Rezepte über die Woche abwechseln, werden bereits
       // verwendete Rezepte erst nach Ausschöpfen des Pools wiederholt.
-      function pickClosest(pool, kcalTarget, fatTarget, usedCounts){
+      function pickClosest(pool, kcalTarget, fatTarget, usedCounts, carbTarget){
         if(pool.length === 0) return null;
         // Sortiere nach: zuerst wie oft schon verwendet (weniger zuerst), dann kombinierter Distanz
         const sorted = [...pool].sort((a,b)=>{
           const usedA = usedCounts.get(a.id) || 0;
           const usedB = usedCounts.get(b.id) || 0;
           if(usedA !== usedB) return usedA - usedB;
-          return combinedScore(a, kcalTarget, fatTarget) - combinedScore(b, kcalTarget, fatTarget);
+          return combinedScore(a, kcalTarget, fatTarget, carbTarget) - combinedScore(b, kcalTarget, fatTarget, carbTarget);
         });
         // Unter den am wenigsten benutzten Rezepten: die 3 nächstliegenden nehmen und leicht zufällig wählen (Abwechslung)
         const leastUsed = usedCounts.get(sorted[0].id) || 0;
         const candidates = sorted.filter(r => (usedCounts.get(r.id)||0) === leastUsed)
-          .sort((a,b)=>combinedScore(a, kcalTarget, fatTarget) - combinedScore(b, kcalTarget, fatTarget))
+          .sort((a,b)=>combinedScore(a, kcalTarget, fatTarget, carbTarget) - combinedScore(b, kcalTarget, fatTarget, carbTarget))
           .slice(0, 3);
         const chosen = candidates[Math.floor(Math.random()*candidates.length)];
         usedCounts.set(chosen.id, (usedCounts.get(chosen.id)||0) + 1);
@@ -2264,43 +2345,74 @@ function bindAutoWeekEvents(){
       const kcalFrueh = Math.round(targetKcal * 0.25);
       const kcalMittag = Math.round(targetKcal * 0.35);
       const kcalAbend = Math.round(targetKcal * 0.30);
-      // Fettziel im selben Verhältnis aufteilen (falls ein Profil-Fettziel vorhanden ist)
-      const fatFrueh = totalFatTarget != null ? Math.round(totalFatTarget * 0.25) : null;
-      const fatHauptAvg = totalFatTarget != null ? Math.round(totalFatTarget * 0.325) : null; // (35%+30%)/2
-      const fatSnack = totalFatTarget != null ? Math.round(totalFatTarget * 0.10) : null;
-
-      // Meal-Prep-Prinzip: nur 3 Hauptgerichte für die GANZE Woche fix wählen,
-      // die sich bei Mittag/Abend abwechseln. Kein tägliches Neukochen mehr.
-      const MAIN_DISH_COUNT = 3;
       const avgHauptTarget = Math.round((kcalMittag + kcalAbend) / 2);
+
+      // Fett-/KH-Ziel im selben Verhältnis aufteilen wie die Kalorien (25% Frühstück, 32,5% Hauptgericht Ø, 10% Snack)
+      function splitTarget(total){ return total == null ? null : { frueh: Math.round(total*0.25), haupt: Math.round(total*0.325), snack: Math.round(total*0.10) }; }
+      const fatSplitBase = splitTarget(totalFatTarget);
+      const fatSplitTraining = splitTarget(totalFatTargetTraining);
+      const fatSplitRuhetag = splitTarget(totalFatTargetRuhetag);
+      const carbSplitTraining = splitTarget(totalCarbTargetTraining);
+      const carbSplitRuhetag = splitTarget(totalCarbTargetRuhetag);
+
       const hauptSourcePool = hauptPool.length ? hauptPool : fallback;
-      const mainDishes = [...hauptSourcePool]
-        .sort((a,b)=>combinedScore(a, avgHauptTarget, fatHauptAvg) - combinedScore(b, avgHauptTarget, fatHauptAvg))
-        .slice(0, Math.min(MAIN_DISH_COUNT, hauptSourcePool.length));
-      let mainSlotCounter = 0;
+
+      // Meal-Prep-Prinzip: fixe Hauptgerichte für die Woche wählen, die sich bei Mittag/Abend abwechseln.
+      // Bei aktivem Carb Cycling: zwei getrennte kleine Sets (höher-KH für Trainingstage, niedriger-KH für Ruhetage),
+      // sonst wie bisher ein gemeinsames Set für die ganze Woche.
+      const MAIN_DISH_COUNT = 3;
+      let mainDishesTraining, mainDishesRuhetag;
+      if(carbCyclingOn){
+        mainDishesTraining = [...hauptSourcePool]
+          .sort((a,b)=>combinedScore(a, avgHauptTarget, fatSplitTraining?.haupt, carbSplitTraining?.haupt) - combinedScore(b, avgHauptTarget, fatSplitTraining?.haupt, carbSplitTraining?.haupt))
+          .slice(0, Math.min(MAIN_DISH_COUNT, hauptSourcePool.length));
+        mainDishesRuhetag = [...hauptSourcePool]
+          .sort((a,b)=>combinedScore(a, avgHauptTarget, fatSplitRuhetag?.haupt, carbSplitRuhetag?.haupt) - combinedScore(b, avgHauptTarget, fatSplitRuhetag?.haupt, carbSplitRuhetag?.haupt))
+          .slice(0, Math.min(MAIN_DISH_COUNT, hauptSourcePool.length));
+      } else {
+        const mainDishes = [...hauptSourcePool]
+          .sort((a,b)=>combinedScore(a, avgHauptTarget, fatSplitBase?.haupt, null) - combinedScore(b, avgHauptTarget, fatSplitBase?.haupt, null))
+          .slice(0, Math.min(MAIN_DISH_COUNT, hauptSourcePool.length));
+        mainDishesTraining = mainDishes;
+        mainDishesRuhetag = mainDishes;
+      }
+      let mainSlotCounterTraining = 0;
+      let mainSlotCounterRuhetag = 0;
 
       const usedFrueh = new Map();
       const usedSnack = new Map();
 
       const rows = [];
-      weekDates.forEach((date) => {
+      weekDates.forEach((date, dayIdx) => {
         let tagesKcal = 0;
+        const isTrainingDay = carbCyclingOn && trainingstage.includes(dayIdx);
+        const fatFrueh = isTrainingDay ? fatSplitTraining?.frueh : (carbCyclingOn ? fatSplitRuhetag?.frueh : fatSplitBase?.frueh);
+        const fatSnack = isTrainingDay ? fatSplitTraining?.snack : (carbCyclingOn ? fatSplitRuhetag?.snack : fatSplitBase?.snack);
+        const carbFrueh = isTrainingDay ? carbSplitTraining?.frueh : carbSplitRuhetag?.frueh;
+        const carbSnack = isTrainingDay ? carbSplitTraining?.snack : carbSplitRuhetag?.snack;
+        const mainDishes = isTrainingDay ? mainDishesTraining : mainDishesRuhetag;
 
-        const frueh = pickClosest(fruehstueckPool.length ? fruehstueckPool : fallback, kcalFrueh, fatFrueh, usedFrueh);
+        const frueh = pickClosest(fruehstueckPool.length ? fruehstueckPool : fallback, kcalFrueh, fatFrueh, usedFrueh, carbFrueh);
         if(frueh){ rows.push({ user_id: state.user.id, recipe_id: frueh.id, log_date: date, servings_logged: 1 }); tagesKcal += frueh.kcal / (frueh.servings || 1); }
 
         if(mainDishes.length > 0){
-          const mittag = mainDishes[mainSlotCounter % mainDishes.length]; mainSlotCounter++;
-          rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: 1 }); tagesKcal += mittag.kcal / (mittag.servings || 1);
-
-          const abend = mainDishes[mainSlotCounter % mainDishes.length]; mainSlotCounter++;
-          rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: 1 }); tagesKcal += abend.kcal / (abend.servings || 1);
+          if(isTrainingDay){
+            const mittag = mainDishes[mainSlotCounterTraining % mainDishes.length]; mainSlotCounterTraining++;
+            rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: 1 }); tagesKcal += mittag.kcal / (mittag.servings || 1);
+            const abend = mainDishes[mainSlotCounterTraining % mainDishes.length]; mainSlotCounterTraining++;
+            rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: 1 }); tagesKcal += abend.kcal / (abend.servings || 1);
+          } else {
+            const mittag = mainDishes[mainSlotCounterRuhetag % mainDishes.length]; mainSlotCounterRuhetag++;
+            rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: 1 }); tagesKcal += mittag.kcal / (mittag.servings || 1);
+            const abend = mainDishes[mainSlotCounterRuhetag % mainDishes.length]; mainSlotCounterRuhetag++;
+            rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: 1 }); tagesKcal += abend.kcal / (abend.servings || 1);
+          }
         }
 
         // Snack ergänzen, um die Lücke zum Tagesziel zu schließen
         const restKcal = targetKcal - tagesKcal;
         if(restKcal >= 50 && snackPool.length > 0){
-          const snack = pickClosest(snackPool, restKcal, fatSnack, usedSnack);
+          const snack = pickClosest(snackPool, restKcal, fatSnack, usedSnack, carbSnack);
           if(snack) rows.push({ user_id: state.user.id, recipe_id: snack.id, log_date: date, servings_logged: 1 });
         }
       });
