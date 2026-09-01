@@ -159,7 +159,11 @@
   }
   .today-entry-info{ display:flex; flex-direction:column; gap:3px; }
   .today-entry-info.today-entry-clickable{ cursor:pointer; }
-  .today-entry-info.today-entry-clickable:hover strong{ color:var(--pine-dark); text-decoration:underline; }
+  .today-entry-info.today-entry-clickable strong{
+    color:var(--terracotta); text-decoration:underline; text-decoration-color:rgba(217,123,94,0.4);
+    text-underline-offset:2px;
+  }
+  .today-entry-info.today-entry-clickable:active strong{ color:var(--pine-dark); }
   .today-entry-info strong{ color:var(--ink-on-paper); font-size:15px; }
   .today-entry-info span{ color:var(--ink-on-paper); opacity:0.7; font-size:13px; }
   .today-remove{
@@ -2454,7 +2458,7 @@ function renderDetail(){
         const nudelFaktor = getNudelKochFaktor(ing.name);
         if(nudelFaktor){
           const estCookedGrams = Math.round(scaledAmount * nudelFaktor);
-          gramHint = ` <span class="ing-estimate">(~${estCookedGrams}g gekocht)</span>`;
+          gramHint = ` <span class="ing-estimate">(~${estCookedGrams}g ${t("gekocht").toLowerCase()})</span>`;
         }
       }
 
