@@ -1393,7 +1393,7 @@ function renderWeek(){
                   <span class="today-qty-value">${e.servings_logged}</span>
                   <button type="button" class="stepper-btn today-qty-plus" data-log-id="${e.id}" data-current="${e.servings_logged}" title="Mehr Portionen">+</button>
                 </div>
-                <button type="button" class="today-shopping-add" data-log-id="${e.id}" data-recipe-id="${recipe.id}" title="Zutaten zur Einkaufsliste">\u{1F6D2}</button>
+                <button type="button" class="today-shopping-add" data-log-id="${e.id}" data-recipe-id="${recipe.id}" title="${currentLang==='hu' ? 'Hozzávalók a bevásárlólistához' : 'Zutaten zur Einkaufsliste'}">\u{1F6D2}</button>
                 <button type="button" class="today-swap" data-log-id="${e.id}" data-recipe-id="${recipe.id}" title="Rezept tauschen">\u{1F504}</button>
                 <button type="button" class="today-remove" data-log-id="${e.id}">\u2715</button>
               </div>`;
@@ -1452,13 +1452,14 @@ async function addIngredientsToShoppingList(ingredientsStructured, factor){
 
 function renderShoppingList(){
   const items = state.shoppingItems || [];
+  const isHu = currentLang === 'hu';
   if(items.length === 0){
-    return `<div class="empty-state"><h3>Einkaufsliste ist leer</h3><p>Öffne ein Rezept oder einen geplanten Eintrag in der Woche und tippe auf \u{1F6D2}, um seine Zutaten hier hinzuzuf\u00fcgen.</p></div>`;
+    return `<div class="empty-state"><h3>${isHu ? 'A bevásárlólista üres' : 'Einkaufsliste ist leer'}</h3><p>${isHu ? 'Nyiss meg egy receptet vagy egy tervezett bejegyzést a Héten, és koppints a 🛒-ra, hogy hozzáadd a hozzávalókat.' : 'Öffne ein Rezept oder einen geplanten Eintrag in der Woche und tippe auf 🛒, um seine Zutaten hier hinzuzufügen.'}</p></div>`;
   }
   const sorted = [...items].sort((a,b) => a.name.localeCompare(b.name));
   return `<div class="shopping-list">
     <div style="text-align:right; margin-bottom:10px;">
-      <button type="button" class="btn-outline" id="shopping-clear-all" style="font-size:12.5px; padding:6px 12px;">\u{1F5D1} Liste leeren</button>
+      <button type="button" class="btn-outline" id="shopping-clear-all" style="font-size:12.5px; padding:6px 12px;">\u{1F5D1} ${isHu ? 'Lista törlése' : 'Liste leeren'}</button>
     </div>
     ${sorted.map(item => {
       const checked = !!item.checked;
@@ -1471,7 +1472,7 @@ function renderShoppingList(){
           <span class="shopping-check-icon">${checked?'\u2713':''}</span>
           <span class="shopping-text">${displayAmount}${escapeHtml(item.name)}</span>
         </label>
-        <button type="button" class="today-remove" data-shopping-id="${item.id}" title="Entfernen">\u2715</button>
+        <button type="button" class="today-remove" data-shopping-id="${item.id}" title="${isHu ? 'Eltávolítás' : 'Entfernen'}">\u2715</button>
       </div>`;
     }).join("")}
   </div>`;
@@ -2657,7 +2658,7 @@ function bindAppEvents(){
 
   const clearAllBtn = document.getElementById("shopping-clear-all");
   if(clearAllBtn) clearAllBtn.addEventListener("click", async ()=>{
-    if(!confirm("Wirklich die gesamte Einkaufsliste leeren?")) return;
+    if(!confirm(currentLang==='hu' ? 'Biztosan törlöd a teljes bevásárlólistát?' : "Wirklich die gesamte Einkaufsliste leeren?")) return;
     const { error } = await sb.from("shopping_list_items").delete().neq("id", "00000000-0000-0000-0000-000000000000");
     if(error){ alert("Fehler: " + error.message); return; }
     await loadShoppingItems();
@@ -2671,7 +2672,7 @@ function bindAppEvents(){
       const detail = state.weekRecipeDetails && state.weekRecipeDetails[btn.dataset.recipeId];
       const recipe = state.recipes.find(r => r.id === btn.dataset.recipeId);
       const activeIng = detail ? getRecipeIngredientsStructured(detail) : null;
-      if(!entry || !detail || !activeIng){ alert("Zutaten werden noch geladen, bitte kurz warten."); return; }
+      if(!entry || !detail || !activeIng){ alert(currentLang==='hu' ? 'A hozzávalók még töltődnek, kérlek várj egy kicsit.' : "Zutaten werden noch geladen, bitte kurz warten."); return; }
       const baseServings = detail.servings || (recipe && recipe.servings) || 1;
       const factor = entry.servings_logged / baseServings;
       btn.textContent = "\u23f3";
@@ -2690,11 +2691,11 @@ function bindAppEvents(){
       const selectedIndexes = new Set();
       document.querySelectorAll(".ing-select").forEach(cb => { if(cb.checked) selectedIndexes.add(parseInt(cb.dataset.ingIndex, 10)); });
       const selectedIngredients = getRecipeIngredientsStructured(r).filter((ing, idx) => selectedIndexes.has(idx));
-      if(selectedIngredients.length === 0){ alert("Bitte mindestens eine Zutat auswählen."); return; }
-      detailAddShoppingBtn.textContent = "\u23f3 Wird hinzugef\u00fcgt \u2026";
+      if(selectedIngredients.length === 0){ alert(currentLang==='hu' ? 'Válassz ki legalább egy hozzávalót.' : "Bitte mindestens eine Zutat auswählen."); return; }
+      detailAddShoppingBtn.textContent = currentLang==='hu' ? "\u23f3 Hozzáadás \u2026" : "\u23f3 Wird hinzugef\u00fcgt \u2026";
       await addIngredientsToShoppingList(selectedIngredients, scale);
-      detailAddShoppingBtn.textContent = "\u2705 Hinzugef\u00fcgt!";
-      setTimeout(()=>{ detailAddShoppingBtn.textContent = "\u{1F6D2} Ausgewählte zur Einkaufsliste"; }, 1800);
+      detailAddShoppingBtn.textContent = currentLang==='hu' ? "\u2705 Hozzáadva!" : "\u2705 Hinzugef\u00fcgt!";
+      setTimeout(()=>{ detailAddShoppingBtn.textContent = currentLang==='hu' ? "\u{1F6D2} Kiválasztottak a bevásárlólistához" : "\u{1F6D2} Ausgewählte zur Einkaufsliste"; }, 1800);
     });
   }
 
