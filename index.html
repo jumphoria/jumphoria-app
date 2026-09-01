@@ -869,9 +869,6 @@ function formatMinutesLabel(totalSeconds){ return `${Math.round(totalSeconds/60)
 const WALK_INTERVAL_WORKOUT_ID = "walk_interval";
 const WALK_PHASE_SECONDS = 180; // 3 Minuten pro Tempo-Block
 const WALK_DURATION_OPTIONS = [20, 30, 40]; // Minuten
-// EP-Werte: 1 EP pro Gehminute, feste Werte für die anderen Workouts
-const EP_VALUES = { jumpLift: 15, lymph: 10, challengeDay: 5, challengeBonus: 100 };
-
 // ── 21-Tage Transformations-Challenge ──
 const CHALLENGE_LENGTH = 21;
 const CHALLENGE_DAY_PATTERN = ["training","walk","training","walk","training","walk","rest"];
@@ -941,9 +938,8 @@ let state = {
   error: "",
   serviceDown: false,
   riseTodayWorkoutIds: [],
-  totalEP: 0,
   // Intervall-Gehen-Timer
-  walkTimer: { open: false, stage: "select", durationMinutes: 20, phase: "fast", phaseSecondsLeft: WALK_PHASE_SECONDS, elapsedSeconds: 0, totalSeconds: 0, running: false, finished: false, epAwarded: 0 },
+  walkTimer: { open: false, stage: "select", durationMinutes: 20, phase: "fast", phaseSecondsLeft: WALK_PHASE_SECONDS, elapsedSeconds: 0, totalSeconds: 0, running: false, finished: false },
   // 21-Tage-Challenge
   challenge: { loaded: false, startDate: null, completedDays: [], bonusAwarded: false },
   challengeOpen: false,
@@ -1599,7 +1595,7 @@ function renderChallengeHero(){
     return `<div class="challenge-hero">
       <p class="challenge-hero-eyebrow">${isHu ? 'ÚJ · 21 NAPOS PROGRAM' : 'NEU · 21-TAGE-PROGRAMM'}</p>
       <h3>${isHu ? 'Transzformációs Challenge' : 'Transformations-Challenge'}</h3>
-      <p>${isHu ? 'Edzés, gyaloglás és pihenés okos váltakozásban — 21 nap alatt érzed meg a különbséget, nem a mérlegen, hanem magadban.' : 'Training, Gehen und Erholung im klugen Wechsel — in 21 Tagen spürst du den Unterschied, nicht auf der Waage, sondern in dir.'}</p>
+      <p>${isHu ? '21 nap alatt karcsúbb, erősebb testet érsz el — okos edzés-gyaloglás-pihenés váltakozással, fenntartható tempóban.' : 'In 21 Tagen erreichst du einen schlankeren, stärkeren Körper — mit klugem Wechsel aus Training, Gehen und Erholung, in einem nachhaltigen Tempo.'}</p>
       <button type="button" class="challenge-hero-btn" id="challenge-start-btn">${isHu ? 'Csatlakozom' : 'Ich mache mit'}</button>
     </div>`;
   }
@@ -1609,7 +1605,7 @@ function renderChallengeHero(){
   return `<div class="challenge-hero">
     <p class="challenge-hero-eyebrow">${isHu ? `${dayNum}. NAP / ${CHALLENGE_LENGTH}` : `TAG ${dayNum} / ${CHALLENGE_LENGTH}`}</p>
     <h3>${isHu ? 'Transzformációs Challenge' : 'Transformations-Challenge'}</h3>
-    <p>${isHu ? 'Kövesd nyomon a napjaidat, és gyűjtsd az EP-t minden teljesített napért.' : 'Verfolge deine Tage und sammle EP für jeden geschafften Tag.'}</p>
+    <p>${isHu ? 'Kövesd nyomon a napjaidat, és tartsd a ritmust a 21 nap alatt.' : 'Verfolge deine Tage und bleib im Rhythmus über die 21 Tage.'}</p>
     <div class="challenge-progress-row">
       <div class="challenge-ring" style="--pct:${pct};"><div class="challenge-ring-inner">${doneCount}/${CHALLENGE_LENGTH}</div></div>
       <button type="button" class="challenge-hero-btn" id="challenge-open-btn">${isHu ? 'Megnyitás' : 'Öffnen'}</button>
@@ -1661,7 +1657,7 @@ function renderChallengePopup(){
       <span>${CHALLENGE_DAY_ICONS.walk} ${challengeDayLabel('walk')}</span>
       <span>${CHALLENGE_DAY_ICONS.rest} ${challengeDayLabel('rest')}</span>
     </div>
-    <p style="color:var(--ink-on-paper); opacity:0.55; font-size:12px; margin:0;">${isHu ? `Minden nap: +${EP_VALUES.challengeDay} EP. Mind a 21 nap: +${EP_VALUES.challengeBonus} bónusz EP.` : `Jeder Tag: +${EP_VALUES.challengeDay} EP. Alle 21 Tage: +${EP_VALUES.challengeBonus} Bonus-EP.`}</p>
+    <p style="color:var(--ink-on-paper); opacity:0.55; font-size:12px; margin:0;">${isHu ? 'Minden nap számít — kövesd a ritmust, és 21 nap múlva már máshogy fogod érezni magad.' : 'Jeder Tag zählt — bleib im Rhythmus, und in 21 Tagen fühlst du dich schon anders.'}</p>
   </div></div>`;
 }
 
@@ -1684,20 +1680,13 @@ function renderRise(){
   const walkDoneToday = state.riseTodayWorkoutIds.includes(WALK_INTERVAL_WORKOUT_ID);
   const walkLabel = currentLang==='hu' ? 'Gyaloglás intervallum' : 'Intervall-Gehen';
   const walkMeta = currentLang==='hu' ? 'Tempóváltás' : 'Tempo-Wechsel';
-  const epLabel = currentLang==='hu' ? 'EP összesen' : 'EP gesamt';
 
   return `
     <div style="max-width:520px; margin:0 auto;">
       ${renderChallengeHero()}
-      <div class="training-intro" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-        <div>
-          <h3>${currentLang==='hu' ? 'Edzésvideóid' : 'Deine Workout-Videos'}</h3>
-          <p>${currentLang==='hu' ? 'Minden edzés egy helyen — koppints egy edzésre az indításhoz.' : 'Alle Trainings-Videos an einem Ort – tippe auf ein Training, um zu starten.'}</p>
-        </div>
-        <div style="background:rgba(201,153,59,0.18); border:1px solid var(--pine); border-radius:12px; padding:8px 14px; text-align:center; flex-shrink:0;">
-          <div style="font-size:20px; font-weight:700; color:var(--pine); font-family:Georgia,serif;">${state.totalEP}</div>
-          <div style="font-size:10px; color:var(--paper); opacity:0.8; text-transform:uppercase; letter-spacing:.04em;">${epLabel}</div>
-        </div>
+      <div class="training-intro">
+        <h3>${currentLang==='hu' ? 'Edzésvideóid' : 'Deine Workout-Videos'}</h3>
+        <p>${currentLang==='hu' ? 'Minden edzés egy helyen — koppints egy edzésre az indításhoz.' : 'Alle Trainings-Videos an einem Ort – tippe auf ein Training, um zu starten.'}</p>
       </div>
 
       <div class="workout-grid">
@@ -1705,7 +1694,7 @@ function renderRise(){
           ${renderWorkoutCoverInner("Morgenroutine", LYMPH_FLOW_IMAGE)}
           <div class="workout-card-overlay">
             <div class="workout-card-title">Morgenroutine</div>
-            <div class="workout-card-meta">${formatMinutesLabel(lymphTotalSeconds())} \u00b7 Lymphfluss \u00b7 +${EP_VALUES.lymph} EP</div>
+            <div class="workout-card-meta">${formatMinutesLabel(lymphTotalSeconds())} \u00b7 Lymphfluss</div>
           </div>
           ${lymphDoneToday ? `<div class="workout-card-done-badge">\u2713</div>` : ""}
         </div>
@@ -1713,7 +1702,7 @@ function renderRise(){
           ${renderWorkoutCoverInner(walkLabel, "")}
           <div class="workout-card-overlay">
             <div class="workout-card-title">${walkLabel}</div>
-            <div class="workout-card-meta">20-40 Min \u00b7 ${walkMeta} \u00b7 +EP</div>
+            <div class="workout-card-meta">20-40 Min \u00b7 ${walkMeta}</div>
           </div>
           ${walkDoneToday ? `<div class="workout-card-done-badge">\u2713</div>` : ""}
         </div>
@@ -1723,7 +1712,7 @@ function renderRise(){
             ${renderWorkoutCoverInner(w.title, w.image)}
             <div class="workout-card-overlay">
               <div class="workout-card-title">${escapeHtml(w.title)}</div>
-              <div class="workout-card-meta">${w.duration} \u00b7 +${EP_VALUES.jumpLift} EP</div>
+              <div class="workout-card-meta">${w.duration}</div>
             </div>
             ${doneToday ? `<div class="workout-card-done-badge">\u2713</div>` : ""}
           </div>`;
@@ -1789,7 +1778,7 @@ function advanceLymphExercise(){
     t.running = false;
     t.finished = true;
     render();
-    completeWorkout(LYMPH_FLOW_WORKOUT_ID, EP_VALUES.lymph);
+    completeWorkout(LYMPH_FLOW_WORKOUT_ID);
   }
 }
 
@@ -1858,7 +1847,7 @@ function bindLymphTimerEvents(){
 let walkTickerHandle = null;
 
 function openWalkPicker(){
-  state.walkTimer = { open: true, stage: "select", durationMinutes: 20, phase: "fast", phaseSecondsLeft: WALK_PHASE_SECONDS, elapsedSeconds: 0, totalSeconds: 0, running: false, finished: false, epAwarded: 0 };
+  state.walkTimer = { open: true, stage: "select", durationMinutes: 20, phase: "fast", phaseSecondsLeft: WALK_PHASE_SECONDS, elapsedSeconds: 0, totalSeconds: 0, running: false, finished: false };
   render();
 }
 
@@ -1868,7 +1857,7 @@ function startWalkTimer(minutes){
     open: true, stage: "running", durationMinutes: minutes,
     phase: "fast", phaseSecondsLeft: Math.min(WALK_PHASE_SECONDS, minutes*60),
     elapsedSeconds: 0, totalSeconds: minutes*60,
-    running: true, finished: false, epAwarded: 0
+    running: true, finished: false
   };
   render();
   startWalkTicker();
@@ -1918,24 +1907,21 @@ async function finishWalkTimer(){
   t.running = false;
   t.finished = true;
   render();
-  const ep = await (async()=>{
-    if(!state.user) return 0;
+  if(state.user){
     const todayStr = new Date().toISOString().slice(0,10);
-    const { error } = await sb.from("workout_log").insert({ user_id: state.user.id, workout_id: WALK_INTERVAL_WORKOUT_ID, log_date: todayStr, duration_minutes: t.durationMinutes, ep_awarded: t.durationMinutes });
+    const { error } = await sb.from("workout_log").insert({ user_id: state.user.id, workout_id: WALK_INTERVAL_WORKOUT_ID, log_date: todayStr, duration_minutes: t.durationMinutes });
     if(error){
       if(error.code !== "23505") console.error(error);
-      return 0;
+    } else {
+      state.riseTodayWorkoutIds.push(WALK_INTERVAL_WORKOUT_ID);
     }
-    state.riseTodayWorkoutIds.push(WALK_INTERVAL_WORKOUT_ID);
-    return await awardEP(t.durationMinutes);
-  })();
-  state.walkTimer.epAwarded = ep;
+  }
   render();
 }
 
 function closeWalkTimer(){
   clearInterval(walkTickerHandle);
-  state.walkTimer = { open: false, stage: "select", durationMinutes: 20, phase: "fast", phaseSecondsLeft: WALK_PHASE_SECONDS, elapsedSeconds: 0, totalSeconds: 0, running: false, finished: false, epAwarded: 0 };
+  state.walkTimer = { open: false, stage: "select", durationMinutes: 20, phase: "fast", phaseSecondsLeft: WALK_PHASE_SECONDS, elapsedSeconds: 0, totalSeconds: 0, running: false, finished: false };
   render();
 }
 
@@ -1980,7 +1966,7 @@ function renderWalkTimerModal(){
     <button class="modal-close" id="walk-timer-close">\u2715</button>
     <div class="lymph-finish-icon">\ud83d\udeb6</div>
     <h2>${isHu ? 'Szép munka!' : 'Gut gemacht!'}</h2>
-    <p class="lymph-cue">${isHu ? `${t.durationMinutes} perces gyaloglás intervallum kész.` : `${t.durationMinutes} Minuten Intervall-Gehen geschafft.`}${t.epAwarded ? (isHu ? ` +${t.epAwarded} EP jóváírva.` : ` +${t.epAwarded} EP gutgeschrieben.`) : ''}</p>
+    <p class="lymph-cue">${isHu ? `${t.durationMinutes} perces gyaloglás intervallum kész.` : `${t.durationMinutes} Minuten Intervall-Gehen geschafft.`}</p>
     <button type="button" class="btn" id="walk-finish-close">${isHu ? 'Bezárás' : 'Schließen'}</button>
   </div></div>`;
 }
@@ -2551,7 +2537,7 @@ function bindAppEvents(){
       const id = card.dataset.workoutId;
       const url = card.dataset.workoutUrl;
       if(url) window.open(url, "_blank", "noopener");
-      if(!state.riseTodayWorkoutIds.includes(id)) completeWorkout(id, EP_VALUES.jumpLift);
+      if(!state.riseTodayWorkoutIds.includes(id)) completeWorkout(id);
     });
   });
   if(state.detailRecipe) bindDetailEvents();
@@ -3006,12 +2992,6 @@ async function loadTodayWorkouts(){
   if(!workoutError) state.riseTodayWorkoutIds = (workoutRows||[]).map(w => w.workout_id);
 }
 
-async function loadUserEP(){
-  if(!state.user) return;
-  const { data, error } = await sb.from("user_rise").select("total_ep").eq("user_id", state.user.id).single();
-  if(!error && data) state.totalEP = data.total_ep || 0;
-}
-
 async function loadChallenge(){
   if(!state.user) return;
   const { data, error } = await sb.from("challenge_state").select("*").eq("user_id", state.user.id).maybeSingle();
@@ -3055,36 +3035,24 @@ async function toggleChallengeDay(dayNumber){
   const { error } = await sb.from("challenge_state").update({ completed_days: newCompleted, updated_at: new Date().toISOString() }).eq("user_id", state.user.id);
   if(error){ console.error(error); return; }
 
-  if(!isCompleted){
-    await awardEP(EP_VALUES.challengeDay);
-    if(newCompleted.length >= CHALLENGE_LENGTH && !state.challenge.bonusAwarded){
-      await awardEP(EP_VALUES.challengeBonus);
-      state.challenge.bonusAwarded = true;
-      await sb.from("challenge_state").update({ bonus_awarded: true }).eq("user_id", state.user.id);
-      render();
-    }
+  if(!isCompleted && newCompleted.length >= CHALLENGE_LENGTH && !state.challenge.bonusAwarded){
+    state.challenge.bonusAwarded = true;
+    await sb.from("challenge_state").update({ bonus_awarded: true }).eq("user_id", state.user.id);
+    render();
+    alert(currentLang==='hu' ? '🎉 Gratulálunk, mind a 21 napot teljesítetted!' : '🎉 Herzlichen Glückwunsch, alle 21 Tage geschafft!');
   }
 }
 
-async function awardEP(amount){
-  if(!state.user || !amount) return 0;
-  const { data, error } = await sb.rpc("award_ep", { p_user_id: state.user.id, p_amount: amount });
-  if(error){ console.error(error); return 0; }
-  state.totalEP = data;
-  return amount;
-}
-
-async function completeWorkout(workoutId, epAmount){
+async function completeWorkout(workoutId){
   if(!state.user) return;
   const todayStr = new Date().toISOString().slice(0,10);
-  const { error } = await sb.from("workout_log").insert({ user_id: state.user.id, workout_id: workoutId, log_date: todayStr, ep_awarded: epAmount || 0 });
+  const { error } = await sb.from("workout_log").insert({ user_id: state.user.id, workout_id: workoutId, log_date: todayStr });
   if(error){
     // Unique-Constraint-Verletzung = heute schon eingetragen, kein Fehler, einfach ignorieren
     if(error.code !== "23505") console.error(error);
     return;
   }
   state.riseTodayWorkoutIds.push(workoutId);
-  if(epAmount) await awardEP(epAmount);
   render();
 }
 
@@ -3217,7 +3185,6 @@ async function checkSession(){
       state.user = data.session.user;
       state.view = "app";
       await loadUserLanguage();
-      await loadUserEP();
       await loadRecipes();
     debugUserId();
     } else if(error){
