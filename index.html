@@ -518,6 +518,22 @@
   .today-macro-track{ background:rgba(58,74,48,0.1); border-radius:20px; height:7px; overflow:hidden; }
   .today-macro-fill{ height:100%; border-radius:20px; background:var(--pine); transition:width .3s ease; }
   .today-macro-fill.is-over{ background:var(--terracotta); }
+  .side-pick-item{
+    display:flex; justify-content:space-between; align-items:center; width:100%;
+    background:#fff; border:1.5px solid var(--line); border-radius:10px; padding:13px 14px;
+    cursor:pointer; font-family:inherit; color:var(--ink-on-paper); font-size:14.5px; margin-bottom:8px;
+  }
+  .side-pick-item:hover{ border-color:var(--pine); }
+  .side-gram-row{ display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; }
+  .side-gram-btn{
+    flex:1; min-width:60px; padding:11px 6px; border-radius:10px; border:1.5px solid var(--line);
+    background:#fff; color:var(--ink-on-paper); font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;
+  }
+  .side-gram-btn.active{ background:var(--pine); border-color:var(--pine); color:#fff; }
+  .side-extra-entry{
+    background:var(--cream); border-radius:12px; padding:10px 14px;
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; font-size:13.5px;
+  }
 
   /* ====== TÄGLICHER FITNESS-MYTHOS ====== */
   .myth-card{
@@ -697,6 +713,17 @@ function trFilterGroupLabel(group){
   if(currentLang === "hu" && FILTER_GROUP_LABELS_HU[group.labelKey]) return FILTER_GROUP_LABELS_HU[group.labelKey];
   return group.label;
 }
+// ── Köret gyors hozzáadása (Beilagen-Schnellzugriff) — Nährwerte pro 100g (roh/trocken) ──
+const QUICK_SIDES = [
+  { key: "reis",     name_de: "Reis (roh)",         name_hu: "Rizs (nyers)",           kcal: 360, protein: 7,  carbs: 79, fat: 0.6 },
+  { key: "kartoffel",name_de: "Kartoffel (roh)",    name_hu: "Krumpli (nyers)",        kcal: 77,  protein: 2,  carbs: 17, fat: 0.1 },
+  { key: "nudeln",   name_de: "Nudeln (trocken)",   name_hu: "Tészta (száraz)",        kcal: 350, protein: 12, carbs: 71, fat: 1.5 },
+  { key: "pommes",   name_de: "Pommes (TK)",        name_hu: "Hasábburgonya (fagyasztott)", kcal: 185, protein: 3,  carbs: 27, fat: 7 },
+  { key: "haferflocken", name_de: "Haferflocken",   name_hu: "Zabpehely",              kcal: 370, protein: 13, carbs: 60, fat: 7 },
+  { key: "vollkornbrot", name_de: "Vollkornbrot",   name_hu: "Teljes kiőrlésű kenyér",  kcal: 250, protein: 9,  carbs: 41, fat: 3.5 }
+];
+function quickSideName(side){ return currentLang === "hu" ? side.name_hu : side.name_de; }
+
 const WEEKDAY_NAMES = ["Mo","Di","Mi","Do","Fr","Sa","So"];
 
 /* ============================================================
@@ -979,6 +1006,11 @@ let state = {
   weekRecipeDetails: {},
   swapTarget: null,
   shoppingItems: [],
+  weekExtras: [],
+  sideAddTarget: null,
+  sideAddStage: "pick",
+  sideAddSelected: null,
+  sideAddGrams: 30,
   planRecipeId: null,
   planSelectedDays: [],
   autoWeekOpen: false,
@@ -1114,6 +1146,7 @@ function renderAppShell(){
     ${state.modalOpen ? renderModal() : ""}
     ${state.planRecipeId ? renderPlanPopup() : ""}
     ${state.dayAddTarget ? renderDayAddPopup() : ""}
+    ${state.sideAddTarget ? renderSideAddPopup() : ""}
     ${state.autoWeekOpen ? renderAutoWeekPopup() : ""}
     ${state.swapTarget ? renderSwapPopup() : ""}
     ${state.challengeOpen ? renderChallengePopup() : ""}
@@ -1236,6 +1269,13 @@ function renderTodayNutriCard(){
     if(recipe.carbs != null) carbsSum += recipe.carbs * factor;
     if(recipe.fat != null) fatSum += recipe.fat * factor;
   });
+  const todayExtras = (state.weekExtras || []).filter(x => x.log_date === todayStr);
+  todayExtras.forEach(x => {
+    kcalSum += Number(x.kcal) || 0;
+    proteinSum += Number(x.protein) || 0;
+    carbsSum += Number(x.carbs) || 0;
+    fatSum += Number(x.fat) || 0;
+  });
   kcalSum = Math.round(kcalSum); proteinSum = Math.round(proteinSum); carbsSum = Math.round(carbsSum); fatSum = Math.round(fatSum);
 
   if(!state.profilKcal){
@@ -1270,7 +1310,7 @@ function renderTodayNutriCard(){
           <span>${remaining < 0 ? (isHu ? 'túllépve' : 'über Ziel') : (isHu ? 'marad' : 'übrig')}</span>
         </div>
       </div>
-      <div class="today-nutri-side"><strong>${entries.length}</strong><span>${isHu ? 'Bejegyzés' : 'Einträge'}</span></div>
+      <div class="today-nutri-side"><strong>${entries.length + todayExtras.length}</strong><span>${isHu ? 'Bejegyzés' : 'Einträge'}</span></div>
     </div>
     ${macroBar(isHu ? 'Szénhidrát' : 'Kohlenhydrate', carbsSum, targetMakros.carbs)}
     ${macroBar(isHu ? 'Fehérje' : 'Eiweiß', proteinSum, targetMakros.protein)}
@@ -1302,6 +1342,13 @@ function renderWeek(){
       if(recipe.carbs != null) carbsSum += recipe.carbs * factor;
       if(recipe.fat != null) fatSum += recipe.fat * factor;
     });
+    const dayExtras = (state.weekExtras || []).filter(x => x.log_date === date);
+    dayExtras.forEach(x => {
+      kcalSum += Number(x.kcal) || 0;
+      proteinSum += Number(x.protein) || 0;
+      carbsSum += Number(x.carbs) || 0;
+      fatSum += Number(x.fat) || 0;
+    });
     const dateObj = new Date(date + "T00:00:00");
     const dayLabel = WEEKDAY_NAMES[idx] + ", " + dateObj.getDate() + "." + (dateObj.getMonth()+1) + ".";
     const isToday = date === new Date().toISOString().slice(0,10);
@@ -1310,11 +1357,12 @@ function renderWeek(){
         <div class="week-day-header">
           <h4>${dayLabel}${isToday?' \u2022 heute':''}</h4>
           <div style="display:flex; align-items:center; gap:8px;">
-            ${dayEntries.length > 0 ? `<div class="week-day-macros"><span class="week-day-kcal">${Math.round(kcalSum)} kcal</span><span class="week-day-macro-detail">E ${Math.round(proteinSum)}g \u00b7 KH ${Math.round(carbsSum)}g \u00b7 F ${Math.round(fatSum)}g</span></div>` : ""}
+            ${(dayEntries.length > 0 || dayExtras.length > 0) ? `<div class="week-day-macros"><span class="week-day-kcal">${Math.round(kcalSum)} kcal</span><span class="week-day-macro-detail">E ${Math.round(proteinSum)}g \u00b7 KH ${Math.round(carbsSum)}g \u00b7 F ${Math.round(fatSum)}g</span></div>` : ""}
             <button type="button" class="btn-outline day-add-btn" data-date="${date}" style="font-size:12px; padding:5px 10px; white-space:nowrap;">+ Rezept</button>
+            <button type="button" class="btn-outline side-add-btn" data-date="${date}" style="font-size:12px; padding:5px 10px; white-space:nowrap;">+ ${currentLang==='hu' ? 'Köret' : 'Beilage'}</button>
           </div>
         </div>
-        ${dayEntries.length === 0 ? `<p class="week-day-empty">Nichts geplant</p>` : `
+        ${(dayEntries.length === 0 && dayExtras.length === 0) ? `<p class="week-day-empty">Nichts geplant</p>` : `
           <div class="today-list">
             ${(() => {
               const sortedEntries = [...dayEntries].sort((a,b) => {
@@ -1351,6 +1399,15 @@ function renderWeek(){
               </div>`;
               }).join("");
             })()}
+            ${dayExtras.length > 0 ? `<div class="meal-section-label">${currentLang==='hu' ? 'Köret' : 'Beilage'}</div>` : ""}
+            ${dayExtras.map(x => {
+              const side = QUICK_SIDES.find(s => s.key === x.side_key);
+              const name = side ? quickSideName(side) : x.side_key;
+              return `<div class="side-extra-entry">
+                <span><strong>${escapeHtml(name)}</strong> \u00b7 ${x.amount_g}g \u00b7 ${Math.round(x.kcal)} kcal</span>
+                <button type="button" class="today-remove extra-remove" data-extra-id="${x.id}">\u2715</button>
+              </div>`;
+            }).join("")}
           </div>`}
       </div>`;
   }).join("")}</div>`;
@@ -2533,7 +2590,7 @@ function bindAppEvents(){
     });
   });
 
-  document.querySelectorAll(".today-remove").forEach(btn=>{
+  document.querySelectorAll(".today-remove:not(.extra-remove)").forEach(btn=>{
     btn.addEventListener("click", async ()=>{
       const logId = btn.dataset.logId;
       const { error } = await sb.from("daily_log").delete().eq("id", logId);
@@ -2663,6 +2720,20 @@ function bindAppEvents(){
     });
   });
 
+  document.querySelectorAll(".side-add-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      state.sideAddTarget = btn.dataset.date;
+      state.sideAddStage = "pick";
+      state.sideAddSelected = null;
+      state.sideAddGrams = 30;
+      render();
+    });
+  });
+
+  document.querySelectorAll(".extra-remove").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ removeSideExtra(btn.dataset.extraId); });
+  });
+
   const clearWeekBtn = document.getElementById("clear-week-btn");
   if(clearWeekBtn) clearWeekBtn.addEventListener("click", async ()=>{
     if(!confirm("Alle Einträge dieser Woche löschen?")) return;
@@ -2728,6 +2799,7 @@ function bindAppEvents(){
   if(state.detailRecipe) bindDetailEvents();
   if(state.planRecipeId) bindPlanPopupEvents();
   if(state.dayAddTarget) bindDayAddEvents();
+  if(state.sideAddTarget) bindSideAddEvents();
   if(state.swapTarget) bindSwapEvents();
   if(state.lymphTimer && state.lymphTimer.open) bindLymphTimerEvents();
   if(state.walkTimer && state.walkTimer.open) bindWalkTimerEvents();
@@ -2925,6 +2997,123 @@ function bindPlanPopupEvents(){
     if(error){ alert("Fehler: " + error.message); confirmBtn.disabled=false; confirmBtn.textContent="Hinzuf\u00fcgen"; return; }
     state.planRecipeId = null;
     await loadWeekLog();
+  });
+}
+
+async function addSideExtra(date, side, grams){
+  if(!state.user) return;
+  const factor = grams / 100;
+  const payload = {
+    user_id: state.user.id, log_date: date, side_key: side.key, amount_g: grams,
+    kcal: Math.round(side.kcal * factor), protein: Math.round(side.protein * factor * 10) / 10,
+    carbs: Math.round(side.carbs * factor * 10) / 10, fat: Math.round(side.fat * factor * 10) / 10
+  };
+  const { error } = await sb.from("daily_extras").insert(payload);
+  if(error){ alert("Fehler: " + error.message); return; }
+  await loadWeekLog();
+}
+
+async function removeSideExtra(id){
+  const { error } = await sb.from("daily_extras").delete().eq("id", id);
+  if(error){ alert("Fehler: " + error.message); return; }
+  await loadWeekLog();
+}
+
+function closeSideAddPopup(){
+  state.sideAddTarget = null;
+  state.sideAddStage = "pick";
+  state.sideAddSelected = null;
+  state.sideAddGrams = 30;
+  render();
+}
+
+function renderSideAddPopup(){
+  const date = state.sideAddTarget;
+  if(!date) return "";
+  const isHu = currentLang === 'hu';
+  const dateObj = new Date(date + "T00:00:00");
+  const dayIdxInWeek = getCurrentWeekDates().indexOf(date);
+  const dayName = dayIdxInWeek >= 0 ? WEEKDAY_NAMES[dayIdxInWeek] : "";
+  const label = `${dayName}, ${dateObj.getDate()}.${dateObj.getMonth()+1}.`;
+
+  if(state.sideAddStage === "pick"){
+    return `<div class="overlay" id="sideadd-overlay"><div class="modal plan-modal">
+      <button class="modal-close" id="sideadd-close">\u2715</button>
+      <h2>${isHu ? 'Köret hozzáadása' : 'Beilage hinzufügen'} \u2013 ${label}</h2>
+      <div>
+        ${QUICK_SIDES.map(s => `<button type="button" class="side-pick-item" data-side-key="${s.key}">
+          <span>${quickSideName(s)}</span><span style="color:var(--pine-dark); font-size:12px; font-weight:700;">${s.kcal} kcal/100g</span>
+        </button>`).join("")}
+      </div>
+    </div></div>`;
+  }
+
+  const side = QUICK_SIDES.find(s => s.key === state.sideAddSelected);
+  const grams = state.sideAddGrams;
+  const factor = grams / 100;
+  const previewKcal = Math.round(side.kcal * factor);
+  const previewCarbs = Math.round(side.carbs * factor * 10) / 10;
+  const gramOptions = [30, 50, 75, 100, 150];
+  return `<div class="overlay" id="sideadd-overlay"><div class="modal plan-modal">
+    <button class="modal-close" id="sideadd-close">\u2715</button>
+    <h2>${quickSideName(side)}</h2>
+    <p style="color:var(--ink-on-paper); opacity:0.7; font-size:13.5px; margin:0 0 4px;">${label}</p>
+    <div class="side-gram-row">
+      ${gramOptions.map(g => `<button type="button" class="side-gram-btn ${grams===g?'active':''}" data-grams="${g}">${g}g</button>`).join("")}
+    </div>
+    <div class="field">
+      <label>${isHu ? 'Egyéni mennyiség (g)' : 'Eigene Menge (g)'}</label>
+      <input type="number" id="sideadd-custom-grams" min="1" step="1" value="${grams}" style="max-width:120px;">
+    </div>
+    <div style="background:var(--ink-on-paper); border-radius:14px; padding:16px; margin:14px 0; text-align:center; color:#fff;">
+      <div style="font-size:24px; font-weight:700; font-family:Georgia,serif;">${previewKcal} kcal</div>
+      <div style="font-size:12px; opacity:0.8;">${grams}g \u00b7 ${previewCarbs}g ${isHu ? 'SZH' : 'KH'}</div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-outline" id="sideadd-back">${isHu ? 'Vissza' : 'Zurück'}</button>
+      <button type="button" class="btn" id="sideadd-confirm">${isHu ? 'Hozzáadás' : 'Hinzufügen'}</button>
+    </div>
+  </div></div>`;
+}
+
+function bindSideAddEvents(){
+  const overlay = document.getElementById("sideadd-overlay");
+  if(!overlay) return;
+  overlay.addEventListener("click", (e)=>{ if(e.target.id==="sideadd-overlay") closeSideAddPopup(); });
+  const closeBtn = document.getElementById("sideadd-close");
+  if(closeBtn) closeBtn.addEventListener("click", closeSideAddPopup);
+
+  if(state.sideAddStage === "pick"){
+    document.querySelectorAll(".side-pick-item").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        state.sideAddSelected = btn.dataset.sideKey;
+        state.sideAddStage = "grams";
+        state.sideAddGrams = 30;
+        render();
+      });
+    });
+    return;
+  }
+
+  const backBtn = document.getElementById("sideadd-back");
+  if(backBtn) backBtn.addEventListener("click", ()=>{ state.sideAddStage = "pick"; render(); });
+
+  document.querySelectorAll(".side-gram-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ state.sideAddGrams = parseInt(btn.dataset.grams, 10); render(); });
+  });
+  const customInput = document.getElementById("sideadd-custom-grams");
+  if(customInput) customInput.addEventListener("input", ()=>{
+    const val = parseInt(customInput.value, 10);
+    if(!isNaN(val) && val > 0) state.sideAddGrams = val;
+  });
+
+  const confirmBtn = document.getElementById("sideadd-confirm");
+  if(confirmBtn) confirmBtn.addEventListener("click", async ()=>{
+    const side = QUICK_SIDES.find(s => s.key === state.sideAddSelected);
+    const date = state.sideAddTarget;
+    confirmBtn.disabled = true;
+    await addSideExtra(date, side, state.sideAddGrams);
+    closeSideAddPopup();
   });
 }
 
@@ -3170,6 +3359,13 @@ async function loadWeekLog(){
     .order("id", { ascending: true });
   if(error){ console.error(error); return; }
   state.weekLog = data || [];
+
+  const { data: extrasData, error: extrasError } = await sb.from("daily_extras")
+    .select("*")
+    .gte("log_date", weekDates[0])
+    .lte("log_date", weekDates[6])
+    .order("created_at", { ascending: true });
+  if(!extrasError) state.weekExtras = extrasData || [];
 
   // Vollständige Zutaten (ingredients_structured) für alle Rezepte in der Woche nachladen,
   // da state.recipes (Listenansicht) diese aus Performance-Gründen nicht enthält.
