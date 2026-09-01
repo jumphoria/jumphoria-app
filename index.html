@@ -499,6 +499,62 @@
   }
 .ing-estimate{ color:#999; font-size:0.9em; font-style:italic; }
 
+  /* ====== 21-TAGE-CHALLENGE ====== */
+  .challenge-hero{
+    position:relative; overflow:hidden; border-radius:20px; padding:22px 22px 24px;
+    margin-bottom:18px; background:linear-gradient(135deg, var(--pine) 0%, var(--terracotta) 100%);
+    box-shadow:var(--shadow); color:#fff;
+  }
+  .challenge-hero::before{
+    content:""; position:absolute; top:-40px; right:-40px; width:140px; height:140px;
+    border-radius:50%; background:rgba(255,255,255,0.12);
+  }
+  .challenge-hero-eyebrow{ font-size:11px; text-transform:uppercase; letter-spacing:.08em; font-weight:700; opacity:0.9; margin:0 0 6px; }
+  .challenge-hero h3{ font-family:Georgia,serif; font-size:21px; margin:0 0 8px; color:#fff; }
+  .challenge-hero p{ font-size:13.5px; line-height:1.5; opacity:0.95; margin:0 0 16px; max-width:340px; }
+  .challenge-progress-row{ display:flex; align-items:center; gap:14px; }
+  .challenge-ring{
+    position:relative; width:58px; height:58px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    background:conic-gradient(#fff calc(var(--pct) * 1%), rgba(255,255,255,0.28) 0);
+  }
+  .challenge-ring-inner{
+    width:46px; height:46px; border-radius:50%; background:var(--pine);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-family:Georgia,serif; font-weight:700; font-size:13px; color:#fff; line-height:1.1;
+  }
+  .challenge-hero-btn{
+    background:#fff; color:var(--pine-dark); border:none; padding:12px 20px; border-radius:12px;
+    font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap;
+  }
+  .challenge-day-grid{
+    display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; margin:18px 0;
+  }
+  .challenge-day{
+    aspect-ratio:1; border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:2px; cursor:pointer; border:1.5px solid var(--line); background:var(--paper); position:relative;
+    transition:transform .15s ease;
+  }
+  .challenge-day:active{ transform:scale(0.94); }
+  .challenge-day-num{ font-size:10px; font-weight:700; color:var(--ink-on-paper); opacity:0.55; }
+  .challenge-day-icon{ font-size:17px; }
+  .challenge-day.is-today{ border-color:var(--pine); border-width:2px; }
+  .challenge-day.is-done{ background:var(--pine); }
+  .challenge-day.is-done .challenge-day-num{ color:#fff; opacity:0.85; }
+  .challenge-day.is-rest{ background:var(--cream); }
+  .challenge-day-check{
+    position:absolute; top:-5px; right:-5px; width:18px; height:18px; border-radius:50%;
+    background:var(--terracotta); color:#fff; font-size:10px; display:flex; align-items:center; justify-content:center;
+    font-weight:700; box-shadow:0 1px 4px rgba(0,0,0,0.2);
+  }
+  .challenge-legend{ display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--ink-on-paper); opacity:0.75; margin-bottom:16px; }
+  .challenge-legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .challenge-today-card{
+    background:var(--ink-on-paper); border-radius:16px; padding:18px 20px; color:var(--paper); margin-bottom:6px;
+  }
+  .challenge-today-card h4{ color:var(--pine); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 8px; }
+  .challenge-today-card p{ font-size:14.5px; margin:0 0 14px; opacity:0.95; line-height:1.5; }
+
   /* ====== TRAINING (Video-Datenbank) ====== */
   .training-intro{
     background:var(--ink-on-paper); border-radius:18px; padding:20px 22px;
@@ -809,6 +865,24 @@ const LYMPH_FLOW_EXERCISES = [
 function lymphTotalSeconds(){ return LYMPH_FLOW_EXERCISES.reduce((sum,e)=>sum+e.seconds,0); }
 function formatMinutesLabel(totalSeconds){ return `${Math.round(totalSeconds/60)} Min`; }
 
+// ── Intervall-Gehen (Tempo-Wechsel-Timer) ──
+const WALK_INTERVAL_WORKOUT_ID = "walk_interval";
+const WALK_PHASE_SECONDS = 180; // 3 Minuten pro Tempo-Block
+const WALK_DURATION_OPTIONS = [20, 30, 40]; // Minuten
+// EP-Werte: 1 EP pro Gehminute, feste Werte für die anderen Workouts
+const EP_VALUES = { jumpLift: 15, lymph: 10, challengeDay: 5, challengeBonus: 100 };
+
+// ── 21-Tage Transformations-Challenge ──
+const CHALLENGE_LENGTH = 21;
+const CHALLENGE_DAY_PATTERN = ["training","walk","training","walk","training","walk","rest"];
+function getChallengeDayType(dayNumber){ return CHALLENGE_DAY_PATTERN[(dayNumber - 1) % 7]; }
+const CHALLENGE_DAY_LABELS = {
+  de: { training: "Training", walk: "Gehen", rest: "Ruhetag" },
+  hu: { training: "Edzés", walk: "Gyaloglás", rest: "Pihenő" }
+};
+const CHALLENGE_DAY_ICONS = { training: "\ud83c\udfcb\ufe0f", walk: "\ud83d\udeb6", rest: "\ud83c\udf3f" };
+function challengeDayLabel(type){ return CHALLENGE_DAY_LABELS[currentLang === "hu" ? "hu" : "de"][type]; }
+
 // ── NUR diese Felder für die Listenansicht laden (spart ~70% Egress) ──
 const LIST_COLUMNS = "id,title,title_hu,kcal,protein,carbs,fat,tags,photo_url,servings,meal_type,created_at";
 
@@ -867,6 +941,12 @@ let state = {
   error: "",
   serviceDown: false,
   riseTodayWorkoutIds: [],
+  totalEP: 0,
+  // Intervall-Gehen-Timer
+  walkTimer: { open: false, stage: "select", durationMinutes: 20, phase: "fast", phaseSecondsLeft: WALK_PHASE_SECONDS, elapsedSeconds: 0, totalSeconds: 0, running: false, finished: false, epAwarded: 0 },
+  // 21-Tage-Challenge
+  challenge: { loaded: false, startDate: null, completedDays: [], bonusAwarded: false },
+  challengeOpen: false,
   // Lymphfluss-Timer (Morgenroutine)
   lymphTimer: { open: false, currentIndex: 0, secondsLeft: 0, running: false, finished: false },
   // Rezept direkt zu einem Tag im Wochenplan hinzufügen
@@ -989,8 +1069,10 @@ function renderAppShell(){
     ${state.dayAddTarget ? renderDayAddPopup() : ""}
     ${state.autoWeekOpen ? renderAutoWeekPopup() : ""}
     ${state.swapTarget ? renderSwapPopup() : ""}
+    ${state.challengeOpen ? renderChallengePopup() : ""}
     ${state.detailRecipe ? renderDetail() : ""}
     ${state.lymphTimer && state.lymphTimer.open ? renderLymphTimerModal() : ""}
+    ${state.walkTimer && state.walkTimer.open ? renderWalkTimerModal() : ""}
   `;
 }
 
@@ -1510,14 +1592,112 @@ function renderWorkoutCoverInner(title, image){
   return `<div class="workout-card-noimg">${escapeHtml(title)}</div>`;
 }
 
+function renderChallengeHero(){
+  const isHu = currentLang === 'hu';
+  const started = !!state.challenge.startDate;
+  if(!started){
+    return `<div class="challenge-hero">
+      <p class="challenge-hero-eyebrow">${isHu ? 'ÚJ · 21 NAPOS PROGRAM' : 'NEU · 21-TAGE-PROGRAMM'}</p>
+      <h3>${isHu ? 'Transzformációs Challenge' : 'Transformations-Challenge'}</h3>
+      <p>${isHu ? 'Edzés, gyaloglás és pihenés okos váltakozásban — 21 nap alatt érzed meg a különbséget, nem a mérlegen, hanem magadban.' : 'Training, Gehen und Erholung im klugen Wechsel — in 21 Tagen spürst du den Unterschied, nicht auf der Waage, sondern in dir.'}</p>
+      <button type="button" class="challenge-hero-btn" id="challenge-start-btn">${isHu ? 'Csatlakozom' : 'Ich mache mit'}</button>
+    </div>`;
+  }
+  const dayNum = currentChallengeDayNumber();
+  const doneCount = state.challenge.completedDays.length;
+  const pct = Math.round((doneCount / CHALLENGE_LENGTH) * 100);
+  return `<div class="challenge-hero">
+    <p class="challenge-hero-eyebrow">${isHu ? `${dayNum}. NAP / ${CHALLENGE_LENGTH}` : `TAG ${dayNum} / ${CHALLENGE_LENGTH}`}</p>
+    <h3>${isHu ? 'Transzformációs Challenge' : 'Transformations-Challenge'}</h3>
+    <p>${isHu ? 'Kövesd nyomon a napjaidat, és gyűjtsd az EP-t minden teljesített napért.' : 'Verfolge deine Tage und sammle EP für jeden geschafften Tag.'}</p>
+    <div class="challenge-progress-row">
+      <div class="challenge-ring" style="--pct:${pct};"><div class="challenge-ring-inner">${doneCount}/${CHALLENGE_LENGTH}</div></div>
+      <button type="button" class="challenge-hero-btn" id="challenge-open-btn">${isHu ? 'Megnyitás' : 'Öffnen'}</button>
+    </div>
+  </div>`;
+}
+
+function renderChallengePopup(){
+  const isHu = currentLang === 'hu';
+  const todayNum = currentChallengeDayNumber();
+  const todayType = getChallengeDayType(todayNum);
+  const doneCount = state.challenge.completedDays.length;
+
+  const todayTip = {
+    training: isHu ? 'Jump & Lift vagy talaj-edzés + súlyzós blokk.' : 'Jump & Lift oder Boden-Training + Hantel-Block.',
+    walk: isHu ? 'Tempóváltós gyaloglás — nyisd meg az Intervall-Gehen kártyát.' : 'Tempo-Wechsel-Gehen — öffne die Intervall-Gehen-Karte.',
+    rest: isHu ? 'Pihenőnap — nyújtás, séta, vagy csak lazítás.' : 'Ruhetag — Dehnen, Spaziergang, oder einfach entspannen.'
+  }[todayType];
+
+  return `<div class="overlay" id="challenge-overlay"><div class="modal">
+    <button class="modal-close" id="challenge-close">\u2715</button>
+    <h2>${isHu ? 'Transzformációs Challenge' : 'Transformations-Challenge'}</h2>
+
+    <div class="challenge-today-card">
+      <h4>${isHu ? `${todayNum}. nap ma` : `Heute ist Tag ${todayNum}`}</h4>
+      <p>${CHALLENGE_DAY_ICONS[todayType]} <strong>${challengeDayLabel(todayType)}</strong> — ${todayTip}</p>
+      <button type="button" class="btn ${state.challenge.completedDays.includes(todayNum) ? 'btn-outline' : ''}" id="challenge-toggle-today" data-day="${todayNum}" style="width:100%;">
+        ${state.challenge.completedDays.includes(todayNum) ? (isHu ? '\u2713 Kész — visszavonás' : '\u2713 Erledigt — zurücknehmen') : (isHu ? 'Megjelölöm késznek' : 'Als erledigt markieren')}
+      </button>
+    </div>
+
+    <p style="color:var(--ink-on-paper); opacity:0.7; font-size:13px; margin:18px 0 0;">${isHu ? `${doneCount} / ${CHALLENGE_LENGTH} nap kész` : `${doneCount} / ${CHALLENGE_LENGTH} Tage geschafft`}</p>
+    <div class="challenge-day-grid">
+      ${Array.from({length: CHALLENGE_LENGTH}, (_, i) => i + 1).map(day => {
+        const type = getChallengeDayType(day);
+        const isDone = state.challenge.completedDays.includes(day);
+        const isToday = day === todayNum;
+        const isFuture = day > todayNum;
+        return `<div class="challenge-day ${isDone ? 'is-done' : ''} ${isToday ? 'is-today' : ''} ${type==='rest' ? 'is-rest' : ''}"
+          data-day="${day}" data-clickable="${isFuture ? 'false' : 'true'}" style="${isFuture ? 'opacity:0.4;' : ''}">
+          <span class="challenge-day-icon">${CHALLENGE_DAY_ICONS[type]}</span>
+          <span class="challenge-day-num">${day}</span>
+          ${isDone ? `<span class="challenge-day-check">\u2713</span>` : ""}
+        </div>`;
+      }).join("")}
+    </div>
+    <div class="challenge-legend">
+      <span>${CHALLENGE_DAY_ICONS.training} ${challengeDayLabel('training')}</span>
+      <span>${CHALLENGE_DAY_ICONS.walk} ${challengeDayLabel('walk')}</span>
+      <span>${CHALLENGE_DAY_ICONS.rest} ${challengeDayLabel('rest')}</span>
+    </div>
+    <p style="color:var(--ink-on-paper); opacity:0.55; font-size:12px; margin:0;">${isHu ? `Minden nap: +${EP_VALUES.challengeDay} EP. Mind a 21 nap: +${EP_VALUES.challengeBonus} bónusz EP.` : `Jeder Tag: +${EP_VALUES.challengeDay} EP. Alle 21 Tage: +${EP_VALUES.challengeBonus} Bonus-EP.`}</p>
+  </div></div>`;
+}
+
+function bindChallengePopupEvents(){
+  const overlay = document.getElementById("challenge-overlay");
+  if(!overlay) return;
+  overlay.addEventListener("click", (e)=>{ if(e.target.id==="challenge-overlay"){ state.challengeOpen=false; render(); } });
+  document.getElementById("challenge-close").addEventListener("click", ()=>{ state.challengeOpen=false; render(); });
+  const toggleTodayBtn = document.getElementById("challenge-toggle-today");
+  if(toggleTodayBtn) toggleTodayBtn.addEventListener("click", ()=>{ toggleChallengeDay(parseInt(toggleTodayBtn.dataset.day, 10)); });
+  document.querySelectorAll(".challenge-day").forEach(el=>{
+    if(el.dataset.clickable === "true"){
+      el.addEventListener("click", ()=>{ toggleChallengeDay(parseInt(el.dataset.day, 10)); });
+    }
+  });
+}
+
 function renderRise(){
   const lymphDoneToday = state.riseTodayWorkoutIds.includes(LYMPH_FLOW_WORKOUT_ID);
+  const walkDoneToday = state.riseTodayWorkoutIds.includes(WALK_INTERVAL_WORKOUT_ID);
+  const walkLabel = currentLang==='hu' ? 'Gyaloglás intervallum' : 'Intervall-Gehen';
+  const walkMeta = currentLang==='hu' ? 'Tempóváltás' : 'Tempo-Wechsel';
+  const epLabel = currentLang==='hu' ? 'EP összesen' : 'EP gesamt';
 
   return `
     <div style="max-width:520px; margin:0 auto;">
-      <div class="training-intro">
-        <h3>Deine Workout-Videos</h3>
-        <p>Alle Trainings-Videos an einem Ort \u2013 tippe auf ein Training, um zu starten.</p>
+      ${renderChallengeHero()}
+      <div class="training-intro" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+        <div>
+          <h3>${currentLang==='hu' ? 'Edzésvideóid' : 'Deine Workout-Videos'}</h3>
+          <p>${currentLang==='hu' ? 'Minden edzés egy helyen — koppints egy edzésre az indításhoz.' : 'Alle Trainings-Videos an einem Ort – tippe auf ein Training, um zu starten.'}</p>
+        </div>
+        <div style="background:rgba(201,153,59,0.18); border:1px solid var(--pine); border-radius:12px; padding:8px 14px; text-align:center; flex-shrink:0;">
+          <div style="font-size:20px; font-weight:700; color:var(--pine); font-family:Georgia,serif;">${state.totalEP}</div>
+          <div style="font-size:10px; color:var(--paper); opacity:0.8; text-transform:uppercase; letter-spacing:.04em;">${epLabel}</div>
+        </div>
       </div>
 
       <div class="workout-grid">
@@ -1525,9 +1705,17 @@ function renderRise(){
           ${renderWorkoutCoverInner("Morgenroutine", LYMPH_FLOW_IMAGE)}
           <div class="workout-card-overlay">
             <div class="workout-card-title">Morgenroutine</div>
-            <div class="workout-card-meta">${formatMinutesLabel(lymphTotalSeconds())} \u00b7 Lymphfluss</div>
+            <div class="workout-card-meta">${formatMinutesLabel(lymphTotalSeconds())} \u00b7 Lymphfluss \u00b7 +${EP_VALUES.lymph} EP</div>
           </div>
           ${lymphDoneToday ? `<div class="workout-card-done-badge">\u2713</div>` : ""}
+        </div>
+        <div class="workout-card" id="walk-card" data-walk="1">
+          ${renderWorkoutCoverInner(walkLabel, "")}
+          <div class="workout-card-overlay">
+            <div class="workout-card-title">${walkLabel}</div>
+            <div class="workout-card-meta">20-40 Min \u00b7 ${walkMeta} \u00b7 +EP</div>
+          </div>
+          ${walkDoneToday ? `<div class="workout-card-done-badge">\u2713</div>` : ""}
         </div>
         ${JUMP_LIFT_WORKOUTS.map(w => {
           const doneToday = state.riseTodayWorkoutIds.includes(w.id);
@@ -1535,7 +1723,7 @@ function renderRise(){
             ${renderWorkoutCoverInner(w.title, w.image)}
             <div class="workout-card-overlay">
               <div class="workout-card-title">${escapeHtml(w.title)}</div>
-              <div class="workout-card-meta">${w.duration}</div>
+              <div class="workout-card-meta">${w.duration} \u00b7 +${EP_VALUES.jumpLift} EP</div>
             </div>
             ${doneToday ? `<div class="workout-card-done-badge">\u2713</div>` : ""}
           </div>`;
@@ -1601,7 +1789,7 @@ function advanceLymphExercise(){
     t.running = false;
     t.finished = true;
     render();
-    completeWorkout(LYMPH_FLOW_WORKOUT_ID);
+    completeWorkout(LYMPH_FLOW_WORKOUT_ID, EP_VALUES.lymph);
   }
 }
 
@@ -1664,6 +1852,154 @@ function bindLymphTimerEvents(){
   if(pauseBtn) pauseBtn.addEventListener("click", ()=>{ state.lymphTimer.running = !state.lymphTimer.running; render(); });
   const skipBtn = document.getElementById("lymph-skip-btn");
   if(skipBtn) skipBtn.addEventListener("click", ()=>{ advanceLymphExercise(); });
+}
+
+/* ---------- INTERVALL-GEHEN-TIMER ---------- */
+let walkTickerHandle = null;
+
+function openWalkPicker(){
+  state.walkTimer = { open: true, stage: "select", durationMinutes: 20, phase: "fast", phaseSecondsLeft: WALK_PHASE_SECONDS, elapsedSeconds: 0, totalSeconds: 0, running: false, finished: false, epAwarded: 0 };
+  render();
+}
+
+function startWalkTimer(minutes){
+  clearInterval(walkTickerHandle);
+  state.walkTimer = {
+    open: true, stage: "running", durationMinutes: minutes,
+    phase: "fast", phaseSecondsLeft: Math.min(WALK_PHASE_SECONDS, minutes*60),
+    elapsedSeconds: 0, totalSeconds: minutes*60,
+    running: true, finished: false, epAwarded: 0
+  };
+  render();
+  startWalkTicker();
+}
+
+function startWalkTicker(){
+  clearInterval(walkTickerHandle);
+  walkTickerHandle = setInterval(()=>{
+    const t = state.walkTimer;
+    if(!t || !t.open || !t.running) return;
+    t.elapsedSeconds += 1;
+    t.phaseSecondsLeft -= 1;
+    if(t.elapsedSeconds >= t.totalSeconds){
+      finishWalkTimer();
+      return;
+    }
+    if(t.phaseSecondsLeft <= 0){
+      t.phase = t.phase === "fast" ? "slow" : "fast";
+      t.phaseSecondsLeft = Math.min(WALK_PHASE_SECONDS, t.totalSeconds - t.elapsedSeconds);
+      if(navigator.vibrate) navigator.vibrate([200,100,200]);
+      render();
+    } else {
+      updateWalkTimerDOM();
+    }
+  }, 1000);
+}
+
+function updateWalkTimerDOM(){
+  const t = state.walkTimer;
+  if(!t || !t.open || t.finished) return;
+  const el = document.getElementById("walk-countdown");
+  if(!el) return;
+  const mins = Math.floor(t.phaseSecondsLeft / 60);
+  const secs = t.phaseSecondsLeft % 60;
+  el.textContent = `${mins}:${secs.toString().padStart(2,'0')}`;
+  const totalEl = document.getElementById("walk-total-remaining");
+  if(totalEl){
+    const remain = t.totalSeconds - t.elapsedSeconds;
+    const rMins = Math.floor(remain/60), rSecs = remain%60;
+    totalEl.textContent = `${rMins}:${rSecs.toString().padStart(2,'0')}`;
+  }
+}
+
+async function finishWalkTimer(){
+  clearInterval(walkTickerHandle);
+  const t = state.walkTimer;
+  t.running = false;
+  t.finished = true;
+  render();
+  const ep = await (async()=>{
+    if(!state.user) return 0;
+    const todayStr = new Date().toISOString().slice(0,10);
+    const { error } = await sb.from("workout_log").insert({ user_id: state.user.id, workout_id: WALK_INTERVAL_WORKOUT_ID, log_date: todayStr, duration_minutes: t.durationMinutes, ep_awarded: t.durationMinutes });
+    if(error){
+      if(error.code !== "23505") console.error(error);
+      return 0;
+    }
+    state.riseTodayWorkoutIds.push(WALK_INTERVAL_WORKOUT_ID);
+    return await awardEP(t.durationMinutes);
+  })();
+  state.walkTimer.epAwarded = ep;
+  render();
+}
+
+function closeWalkTimer(){
+  clearInterval(walkTickerHandle);
+  state.walkTimer = { open: false, stage: "select", durationMinutes: 20, phase: "fast", phaseSecondsLeft: WALK_PHASE_SECONDS, elapsedSeconds: 0, totalSeconds: 0, running: false, finished: false, epAwarded: 0 };
+  render();
+}
+
+function renderWalkTimerModal(){
+  const t = state.walkTimer;
+  const isHu = currentLang === 'hu';
+
+  if(t.stage === "select"){
+    return `<div class="overlay" id="walk-timer-overlay"><div class="modal lymph-modal">
+      <button class="modal-close" id="walk-timer-close">\u2715</button>
+      <p class="lymph-eyebrow">${isHu ? 'Gyaloglás intervallum' : 'Intervall-Gehen'}</p>
+      <h2 class="lymph-exercise-name">${isHu ? 'Válassz időtartamot' : 'Dauer wählen'}</h2>
+      <p class="lymph-cue">${isHu ? '3 perc gyors tempó, 3 perc laza tempó, felváltva a végéig.' : '3 Minuten schnelles Tempo, 3 Minuten lockeres Tempo, im Wechsel bis zum Ende.'}</p>
+      <div class="day-pick-row" style="margin:20px 0;">
+        ${WALK_DURATION_OPTIONS.map(m => `<button type="button" class="btn-outline walk-duration-btn" data-minutes="${m}" style="flex:1; padding:16px 8px; font-size:15px;">${m} ${isHu ? 'perc' : 'Min'}</button>`).join("")}
+      </div>
+    </div></div>`;
+  }
+
+  if(t.stage === "running" && !t.finished){
+    const phaseLabel = t.phase === "fast" ? (isHu ? '\u26a1 Gyors tempó' : '\u26a1 Schnelles Tempo') : (isHu ? '\ud83d\udc23 Laza tempó' : '\ud83d\udc23 Lockeres Tempo');
+    const mins = Math.floor(t.phaseSecondsLeft / 60), secs = t.phaseSecondsLeft % 60;
+    const remain = t.totalSeconds - t.elapsedSeconds;
+    const rMins = Math.floor(remain/60), rSecs = remain%60;
+    const progressPct = Math.round((t.elapsedSeconds / t.totalSeconds) * 100);
+    return `<div class="overlay" id="walk-timer-overlay"><div class="modal lymph-modal">
+      <button class="modal-close" id="walk-timer-close">\u2715</button>
+      <p class="lymph-eyebrow">${isHu ? 'Gyaloglás intervallum' : 'Intervall-Gehen'} \u00b7 ${t.durationMinutes} ${isHu ? 'perc' : 'Min'}</p>
+      <h2 class="lymph-exercise-name">${phaseLabel}</h2>
+      <div class="lymph-countdown" id="walk-countdown">${mins}:${secs.toString().padStart(2,'0')}</div>
+      <div class="lymph-progress-track"><div class="lymph-progress-fill" style="width:${progressPct}%;"></div></div>
+      <p class="lymph-next">${isHu ? 'Összesen hátra' : 'Insgesamt verbleibend'}: <span id="walk-total-remaining">${rMins}:${rSecs.toString().padStart(2,'0')}</span></p>
+      <div class="lymph-controls">
+        <button type="button" class="btn-outline" id="walk-pause-btn">${t.running ? '\u23F8 ' + (isHu?'Szünet':'Pause') : '\u25B6 ' + (isHu?'Tovább':'Weiter')}</button>
+        <button type="button" class="btn-outline" id="walk-stop-btn">${isHu ? 'Befejezés' : 'Beenden'}</button>
+      </div>
+    </div></div>`;
+  }
+
+  // finished
+  return `<div class="overlay" id="walk-timer-overlay"><div class="modal lymph-modal">
+    <button class="modal-close" id="walk-timer-close">\u2715</button>
+    <div class="lymph-finish-icon">\ud83d\udeb6</div>
+    <h2>${isHu ? 'Szép munka!' : 'Gut gemacht!'}</h2>
+    <p class="lymph-cue">${isHu ? `${t.durationMinutes} perces gyaloglás intervallum kész.` : `${t.durationMinutes} Minuten Intervall-Gehen geschafft.`}${t.epAwarded ? (isHu ? ` +${t.epAwarded} EP jóváírva.` : ` +${t.epAwarded} EP gutgeschrieben.`) : ''}</p>
+    <button type="button" class="btn" id="walk-finish-close">${isHu ? 'Bezárás' : 'Schließen'}</button>
+  </div></div>`;
+}
+
+function bindWalkTimerEvents(){
+  const overlay = document.getElementById("walk-timer-overlay");
+  if(!overlay) return;
+  overlay.addEventListener("click", (e)=>{ if(e.target.id==="walk-timer-overlay") closeWalkTimer(); });
+  const closeBtn = document.getElementById("walk-timer-close");
+  if(closeBtn) closeBtn.addEventListener("click", closeWalkTimer);
+  const finishCloseBtn = document.getElementById("walk-finish-close");
+  if(finishCloseBtn) finishCloseBtn.addEventListener("click", closeWalkTimer);
+  document.querySelectorAll(".walk-duration-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ startWalkTimer(parseInt(btn.dataset.minutes, 10)); });
+  });
+  const pauseBtn = document.getElementById("walk-pause-btn");
+  if(pauseBtn) pauseBtn.addEventListener("click", ()=>{ state.walkTimer.running = !state.walkTimer.running; render(); });
+  const stopBtn = document.getElementById("walk-stop-btn");
+  if(stopBtn) stopBtn.addEventListener("click", ()=>{ closeWalkTimer(); });
 }
 
 function renderGrid(){
@@ -1941,7 +2277,7 @@ function bindAppEvents(){
       if(state.mainTab === "today") loadWeekLog();
       if(state.mainTab === "shopping"){ loadShoppingItems(); }
       if(state.mainTab === "profil") calcProfil();
-      if(state.mainTab === "reise"){ loadTodayWorkouts().then(render); }
+      if(state.mainTab === "reise"){ Promise.all([loadTodayWorkouts(), loadChallenge()]).then(render); }
       render();
     });
   });
@@ -2200,12 +2536,22 @@ function bindAppEvents(){
     if(!state.riseTodayWorkoutIds.includes(LYMPH_FLOW_WORKOUT_ID)) openLymphTimer();
   });
 
+  const walkCard = document.getElementById("walk-card");
+  if(walkCard) walkCard.addEventListener("click", ()=>{
+    if(!state.riseTodayWorkoutIds.includes(WALK_INTERVAL_WORKOUT_ID)) openWalkPicker();
+  });
+
+  const challengeStartBtn = document.getElementById("challenge-start-btn");
+  if(challengeStartBtn) challengeStartBtn.addEventListener("click", ()=>{ startChallengeNow(); });
+  const challengeOpenBtn = document.getElementById("challenge-open-btn");
+  if(challengeOpenBtn) challengeOpenBtn.addEventListener("click", ()=>{ state.challengeOpen = true; render(); });
+
   document.querySelectorAll(".workout-card[data-workout-id]").forEach(card=>{
     card.addEventListener("click", ()=>{
       const id = card.dataset.workoutId;
       const url = card.dataset.workoutUrl;
       if(url) window.open(url, "_blank", "noopener");
-      if(!state.riseTodayWorkoutIds.includes(id)) completeWorkout(id);
+      if(!state.riseTodayWorkoutIds.includes(id)) completeWorkout(id, EP_VALUES.jumpLift);
     });
   });
   if(state.detailRecipe) bindDetailEvents();
@@ -2213,6 +2559,8 @@ function bindAppEvents(){
   if(state.dayAddTarget) bindDayAddEvents();
   if(state.swapTarget) bindSwapEvents();
   if(state.lymphTimer && state.lymphTimer.open) bindLymphTimerEvents();
+  if(state.walkTimer && state.walkTimer.open) bindWalkTimerEvents();
+  if(state.challengeOpen) bindChallengePopupEvents();
 }
 
 function bindAutoWeekEvents(){
@@ -2658,16 +3006,85 @@ async function loadTodayWorkouts(){
   if(!workoutError) state.riseTodayWorkoutIds = (workoutRows||[]).map(w => w.workout_id);
 }
 
-async function completeWorkout(workoutId){
+async function loadUserEP(){
+  if(!state.user) return;
+  const { data, error } = await sb.from("user_rise").select("total_ep").eq("user_id", state.user.id).single();
+  if(!error && data) state.totalEP = data.total_ep || 0;
+}
+
+async function loadChallenge(){
+  if(!state.user) return;
+  const { data, error } = await sb.from("challenge_state").select("*").eq("user_id", state.user.id).maybeSingle();
+  if(!error && data){
+    state.challenge = { loaded: true, startDate: data.start_date, completedDays: data.completed_days || [], bonusAwarded: data.bonus_awarded };
+  } else {
+    state.challenge = { loaded: true, startDate: null, completedDays: [], bonusAwarded: false };
+  }
+}
+
+function currentChallengeDayNumber(){
+  if(!state.challenge.startDate) return null;
+  const start = new Date(state.challenge.startDate + "T00:00:00");
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diffDays = Math.floor((today - start) / (1000*60*60*24)) + 1;
+  return Math.min(Math.max(diffDays, 1), CHALLENGE_LENGTH);
+}
+
+async function startChallengeNow(){
   if(!state.user) return;
   const todayStr = new Date().toISOString().slice(0,10);
-  const { error } = await sb.from("workout_log").insert({ user_id: state.user.id, workout_id: workoutId, log_date: todayStr });
+  const { error } = await sb.from("challenge_state").upsert({ user_id: state.user.id, start_date: todayStr, completed_days: [], bonus_awarded: false, updated_at: new Date().toISOString() });
+  if(error){ alert("Fehler: " + error.message); return; }
+  state.challenge = { loaded: true, startDate: todayStr, completedDays: [], bonusAwarded: false };
+  state.challengeOpen = true;
+  render();
+}
+
+async function toggleChallengeDay(dayNumber){
+  if(!state.user) return;
+  const isCompleted = state.challenge.completedDays.includes(dayNumber);
+  let newCompleted;
+  if(isCompleted){
+    newCompleted = state.challenge.completedDays.filter(d => d !== dayNumber);
+  } else {
+    newCompleted = [...state.challenge.completedDays, dayNumber];
+  }
+  state.challenge.completedDays = newCompleted;
+  render();
+
+  const { error } = await sb.from("challenge_state").update({ completed_days: newCompleted, updated_at: new Date().toISOString() }).eq("user_id", state.user.id);
+  if(error){ console.error(error); return; }
+
+  if(!isCompleted){
+    await awardEP(EP_VALUES.challengeDay);
+    if(newCompleted.length >= CHALLENGE_LENGTH && !state.challenge.bonusAwarded){
+      await awardEP(EP_VALUES.challengeBonus);
+      state.challenge.bonusAwarded = true;
+      await sb.from("challenge_state").update({ bonus_awarded: true }).eq("user_id", state.user.id);
+      render();
+    }
+  }
+}
+
+async function awardEP(amount){
+  if(!state.user || !amount) return 0;
+  const { data, error } = await sb.rpc("award_ep", { p_user_id: state.user.id, p_amount: amount });
+  if(error){ console.error(error); return 0; }
+  state.totalEP = data;
+  return amount;
+}
+
+async function completeWorkout(workoutId, epAmount){
+  if(!state.user) return;
+  const todayStr = new Date().toISOString().slice(0,10);
+  const { error } = await sb.from("workout_log").insert({ user_id: state.user.id, workout_id: workoutId, log_date: todayStr, ep_awarded: epAmount || 0 });
   if(error){
     // Unique-Constraint-Verletzung = heute schon eingetragen, kein Fehler, einfach ignorieren
     if(error.code !== "23505") console.error(error);
     return;
   }
   state.riseTodayWorkoutIds.push(workoutId);
+  if(epAmount) await awardEP(epAmount);
   render();
 }
 
@@ -2800,6 +3217,7 @@ async function checkSession(){
       state.user = data.session.user;
       state.view = "app";
       await loadUserLanguage();
+      await loadUserEP();
       await loadRecipes();
     debugUserId();
     } else if(error){
