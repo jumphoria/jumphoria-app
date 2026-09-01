@@ -584,7 +584,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const LOGO_BASE64 = "https://primary.jwwb.nl/public/k/f/d/temp-mmnnzteyzhbsctkmkimw/image-high-d8ai6i.png";
 const ADMIN_USER_ID = "55eaffe1-6a42-42ec-8888-708f31210c4c";
 // Registrierung vorübergehend geschlossen: auf false setzen, sobald die App öffentlich starten soll
-const REGISTRATION_CLOSED = true;
+const REGISTRATION_CLOSED = false;
 // Debug: zeigt die eingeloggte User-ID in der Konsole
 function debugUserId(){ if(state.user) console.log("Eingeloggt als:", state.user.id, "| Admin?", state.user.id === ADMIN_USER_ID); }
 const ALL_TAGS = ["Vegan","Vegetarisch","Frühstück","Hauptgericht","Snack","Dessert","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein","Meal Prep","Schnell","Airfryer","Pre Workout","Post Workout","IR"];
@@ -2099,11 +2099,12 @@ function bindAppEvents(){
       const entry = (state.weekLog||[]).find(x => x.id === logId);
       const detail = state.weekRecipeDetails && state.weekRecipeDetails[btn.dataset.recipeId];
       const recipe = state.recipes.find(r => r.id === btn.dataset.recipeId);
-      if(!entry || !detail || !detail.ingredients_structured){ alert("Zutaten werden noch geladen, bitte kurz warten."); return; }
+      const activeIng = detail ? getRecipeIngredientsStructured(detail) : null;
+      if(!entry || !detail || !activeIng){ alert("Zutaten werden noch geladen, bitte kurz warten."); return; }
       const baseServings = detail.servings || (recipe && recipe.servings) || 1;
       const factor = entry.servings_logged / baseServings;
       btn.textContent = "\u23f3";
-      await addIngredientsToShoppingList(detail.ingredients_structured, factor);
+      await addIngredientsToShoppingList(activeIng, factor);
       btn.textContent = "\u{1F6D2}";
     });
   });
@@ -2127,7 +2128,7 @@ function bindAppEvents(){
   }
 
   const autoWeekBtn = document.getElementById("auto-week-btn");
-  if(autoWeekBtn) autoWeekBtn.addEventListener("click", ()=>{ state.autoWeekOpen = true; render(); });
+  if(autoWeekBtn) autoWeekBtn.addEventListener("click", ()=>{ state.autoWeekIROnly = false; state.autoWeekOpen = true; render(); });
 
   const irAutoWeekBtn = document.getElementById("ir-auto-week-btn");
   if(irAutoWeekBtn) irAutoWeekBtn.addEventListener("click", ()=>{
@@ -2181,6 +2182,7 @@ function bindAppEvents(){
   if(useProfilBtn){
     useProfilBtn.addEventListener("click", ()=>{
       state.mainTab = "today";
+      state.autoWeekIROnly = false;
       state.autoWeekOpen = true;
       render();
     });
@@ -2614,7 +2616,7 @@ async function loadWeekLog(){
   const recipeIds = [...new Set(state.weekLog.map(e => e.recipe_id))];
   if(recipeIds.length > 0){
     const { data: detailData, error: detailError } = await sb.from("recipes")
-      .select("id,servings,ingredients_structured")
+      .select("id,servings,ingredients_structured,ingredients_structured_hu")
       .in("id", recipeIds);
     if(!detailError && detailData){
       const map = {};
