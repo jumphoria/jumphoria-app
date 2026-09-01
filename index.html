@@ -568,33 +568,6 @@
   .lymph-finish-icon{ font-size:46px; margin-bottom:10px; }
   .lymph-progress-track{ background:rgba(58,74,48,0.12); border-radius:20px; height:8px; overflow:hidden; margin-bottom:22px; }
   .lymph-progress-fill{ background:var(--pine); height:100%; border-radius:20px; transition:width .4s ease; }
-
-  /* ====== DRUCKANSICHT (Wochenplan-Export) ====== */
-  .print-view-modal{ max-width:800px; background:#fff; }
-  .print-view-toolbar{ display:flex; gap:10px; margin-bottom:20px; }
-  .print-view-content{ color:#2b2b2b; font-family: Georgia, 'Times New Roman', serif; }
-  .print-view-content .print-masthead{ text-align:center; margin-bottom:28px; padding-bottom:16px; border-bottom:2px solid var(--pine); }
-  .print-view-content .print-masthead h1{ color:var(--pine-dark); font-size:24px; margin:0 0 4px; }
-  .print-view-content .print-masthead p{ color:#555; font-size:13px; margin:0; font-family:'Segoe UI', sans-serif; }
-  .print-day{ margin-bottom:24px; page-break-inside:avoid; }
-  .print-day h2{ color:var(--pine-dark); font-size:18px; border-bottom:1px solid var(--line); padding-bottom:6px; margin:0 0 12px; }
-  .print-recipe{ margin-bottom:16px; padding-left:4px; }
-  .print-recipe h3{ color:#2b2b2b; font-size:15px; margin:0 0 6px; }
-  .print-ingredients{ margin:0 0 8px; padding-left:20px; font-family:'Segoe UI', sans-serif; font-size:13px; line-height:1.6; color:#333; }
-  .print-steps{ font-family:'Segoe UI', sans-serif; font-size:13px; line-height:1.6; color:#444; white-space:pre-wrap; margin:0; }
-  .print-shopping{ margin-top:28px; padding-top:16px; border-top:2px solid var(--pine); page-break-before:always; }
-  .print-shopping h2{ color:var(--pine-dark); font-size:18px; margin:0 0 12px; }
-  .print-shopping ul{ columns:2; column-gap:24px; font-family:'Segoe UI', sans-serif; font-size:13.5px; line-height:1.8; color:#333; padding-left:20px; }
-
-  @media print{
-    body > *:not(.print-view-overlay){ display:none !important; }
-    .print-view-overlay{
-      position:absolute !important; inset:0 !important; background:#fff !important;
-      display:block !important; align-items:normal !important; justify-content:normal !important; z-index:9999 !important;
-    }
-    .print-view-modal{ box-shadow:none !important; border-radius:0 !important; height:auto !important; max-width:none !important; padding:0 !important; }
-    .no-print{ display:none !important; }
-  }
 </style>
 </head>
 <body>
@@ -655,35 +628,7 @@ const translations = {
     geplant: "Geplant",
     filter: "Filter",
     fertig: "Fertig",
-    zuruecksetzen: "Zurücksetzen",
-    profil_title: "Mein Profil",
-    profil_subtitle: "Berechne deinen persönlichen Kalorienbedarf für dein Jump & Lift Programm.",
-    profil_deine_daten: "Deine Daten",
-    profil_geschlecht: "Geschlecht",
-    weiblich: "♀ Weiblich",
-    maennlich: "♂ Männlich",
-    profil_alter: "Alter (Jahre)",
-    profil_groesse: "Größe (cm)",
-    profil_gewicht: "Gewicht (kg)",
-    profil_aktivitaetslevel: "Aktivitätslevel",
-    akt_wenig: "🛋️ Kaum Sport",
-    akt_leicht: "🚶 1-3× / Woche",
-    akt_mittel: "🏃 3-5× / Woche",
-    akt_viel: "💪 5-7× / Woche",
-    profil_trainingstage: "Trainingstage (für Carb Cycling)",
-    profil_trainingstage_hint: "An diesen Tagen bekommst du in der Wochenplanung mehr Kohlenhydrate, an den anderen etwas weniger – bei gleicher Kalorienmenge.",
-    profil_ziel: "Ziel",
-    ziel_abnehmen: "⬇️ Abnehmen",
-    ziel_halten: "➡️ Gewicht halten",
-    profil_taegliches_ziel: "Dein tägliches Ziel",
-    profil_kcal_capped: "⚠️ Dein Kalorienziel wurde auf deinen Grundumsatz ({bmr} kcal) angehoben. Weniger zu essen wäre auf Dauer ungesund, da dein Körper auch in Ruhe diese Energie für lebenswichtige Funktionen braucht.",
-    use_profil_kcal_btn: "✨ Diese Kalorien für Wochenplanung verwenden",
-    carb_cycling_title: "🔄 Carb Cycling – gleiche kcal, anderes Verhältnis",
-    trainingstag_label: "🏋️ Trainingstag",
-    ruhetag_label: "🌙 Ruhetag",
-    jump_lift_titel: "Jump & Lift Empfehlungen",
-    pre_workout_text: "⚡ Pre Workout (30-60 Min vorher): {kcal} kcal · leichte KH + etwas Eiweiß",
-    post_workout_text: "💪 Post Workout (direkt danach): {kcal} kcal · viel Eiweiß + KH zur Regeneration"
+    zuruecksetzen: "Zurücksetzen"
   },
   hu: {
     nav_recipes: "Receptek",
@@ -705,35 +650,7 @@ const translations = {
     geplant: "Tervezve",
     filter: "Szűrő",
     fertig: "Kész",
-    zuruecksetzen: "Visszaállítás",
-    profil_title: "Profilom",
-    profil_subtitle: "Számítsd ki a személyes kalóriaszükségleted a Jump & Lift programodhoz.",
-    profil_deine_daten: "Adataid",
-    profil_geschlecht: "Nem",
-    weiblich: "♀ Nő",
-    maennlich: "♂ Férfi",
-    profil_alter: "Életkor (év)",
-    profil_groesse: "Magasság (cm)",
-    profil_gewicht: "Testsúly (kg)",
-    profil_aktivitaetslevel: "Aktivitási szint",
-    akt_wenig: "🛋️ Alig sportol",
-    akt_leicht: "🚶 Heti 1-3×",
-    akt_mittel: "🏃 Heti 3-5×",
-    akt_viel: "💪 Heti 5-7×",
-    profil_trainingstage: "Edzésnapok (Carb Cyclinghoz)",
-    profil_trainingstage_hint: "Ezeken a napokon a heti tervezésnél több szénhidrátot kapsz, a többin valamivel kevesebbet – ugyanannyi kalória mellett.",
-    profil_ziel: "Cél",
-    ziel_abnehmen: "⬇️ Fogyás",
-    ziel_halten: "➡️ Testsúly tartása",
-    profil_taegliches_ziel: "Napi célod",
-    profil_kcal_capped: "⚠️ A kalóriacélod az alapanyagcseréd szintjére ({bmr} kcal) lett emelve. Ennél kevesebbet enni hosszú távon egészségtelen, mivel a tested nyugalomban is ennyi energiát igényel az életfontosságú funkciókhoz.",
-    use_profil_kcal_btn: "✨ Ezt a kalóriamennyiséget használjuk a heti tervezéshez",
-    carb_cycling_title: "🔄 Carb Cycling – ugyanannyi kcal, más arány",
-    trainingstag_label: "🏋️ Edzésnap",
-    ruhetag_label: "🌙 Pihenőnap",
-    jump_lift_titel: "Jump & Lift ajánlások",
-    pre_workout_text: "⚡ Edzés előtt (30-60 perccel korábban): {kcal} kcal · könnyű szénhidrát + kevés fehérje",
-    post_workout_text: "💪 Edzés után (közvetlenül utána): {kcal} kcal · sok fehérje + szénhidrát a regenerációhoz"
+    zuruecksetzen: "Visszaállítás"
   }
 };
 
@@ -770,24 +687,11 @@ function t(key){
     || key;
 }
 
-// Wie t(), aber ersetzt {platzhalter} im Text mit Werten aus vars, z.B. tf("pre_workout_text", {kcal: 204})
-function tf(key, vars){
-  let text = t(key);
-  Object.keys(vars || {}).forEach(k => {
-    text = text.replace(new RegExp("\\{" + k + "\\}", "g"), vars[k]);
-  });
-  return text;
-}
-
 async function setLanguage(lang){
   if(!translations[lang] || lang === currentLang) return;
   currentLang = lang;
   localStorage.setItem("vs_lang", lang);
   document.documentElement.setAttribute("lang", lang);
-
-  if(lang === 'de' && state.mainTab === 'ir'){
-    state.mainTab = 'recipes';
-  }
 
   if(state.user){
     const { error } = await sb.from("user_settings").upsert({
@@ -947,12 +851,9 @@ let state = {
   planRecipeId: null,
   planSelectedDays: [],
   autoWeekOpen: false,
-  profil: JSON.parse(localStorage.getItem("jumphoria_profil") || "null") || { geschlecht:"w", alter:30, groesse:165, gewicht:65, aktivitaet:"mittel", ziel:"abnehmen", trainingstage:[1,3,5] },
+  profil: JSON.parse(localStorage.getItem("jumphoria_profil") || "null") || { geschlecht:"w", alter:30, groesse:165, gewicht:65, aktivitaet:"mittel", ziel:"abnehmen" },
   profilKcal: null,
   profilMakros: null,
-  profilMakrosTraining: null,
-  profilMakrosRuhetag: null,
-  autoWeekCarbCycling: false,
   error: "",
   serviceDown: false,
   riseTodayWorkoutIds: [],
@@ -965,8 +866,7 @@ let state = {
   dayAddKcalBand: null,
   dayAddStage: "filter",
   irSearch: "",
-  autoWeekIROnly: false,
-  printViewOpen: false
+  autoWeekIROnly: false
 };
 
 function render(){
@@ -1064,9 +964,9 @@ function renderAppShell(){
         <button class="btn-ghost" id="logout-btn">${t("logout")}</button>
       </div>
     </div>
-    <div class="main-tabs" style="grid-template-columns:repeat(${currentLang==='hu'?6:5}, 1fr);">
+    <div class="main-tabs">
       <button class="main-tab ${state.mainTab==='recipes'?'active':''}" data-tab="recipes"><span class="main-tab-icon">${NAV_ICONS.recipes}</span>${t("nav_recipes")}</button>
-      ${currentLang==='hu' ? `<button class="main-tab ${state.mainTab==='ir'?'active':''}" data-tab="ir"><span class="main-tab-icon">${NAV_ICONS.ir}</span>${t("nav_ir")}</button>` : ""}
+      <button class="main-tab ${state.mainTab==='ir'?'active':''}" data-tab="ir"><span class="main-tab-icon">${NAV_ICONS.ir}</span>${t("nav_ir")}</button>
       <button class="main-tab ${state.mainTab==='today'?'active':''}" data-tab="today"><span class="main-tab-icon">${NAV_ICONS.today}</span>${t("nav_today")}</button>
       <button class="main-tab ${state.mainTab==='shopping'?'active':''}" data-tab="shopping"><span class="main-tab-icon">${NAV_ICONS.shopping}</span>${t("nav_shopping")}</button>
       <button class="main-tab ${state.mainTab==='profil'?'active':''}" data-tab="profil"><span class="main-tab-icon">${NAV_ICONS.profil}</span>${t("nav_profil")}</button>
@@ -1081,110 +981,7 @@ function renderAppShell(){
     ${state.swapTarget ? renderSwapPopup() : ""}
     ${state.detailRecipe ? renderDetail() : ""}
     ${state.lymphTimer && state.lymphTimer.open ? renderLymphTimerModal() : ""}
-    ${state.printViewOpen ? renderPrintView() : ""}
   `;
-}
-
-function getWeekRecipeFull(recipeId){
-  const base = state.recipes.find(r => r.id === recipeId);
-  const detail = state.weekRecipeDetails && state.weekRecipeDetails[recipeId];
-  if(!base && !detail) return null;
-  return { ...(base||{}), ...(detail||{}) };
-}
-
-// ── Zutaten der gesamten Woche zusammenfassen (für die Einkaufsliste im Druck-Export) ──
-function buildWeekShoppingAggregate(){
-  const map = new Map();
-  (state.weekLog || []).forEach(entry => {
-    const full = getWeekRecipeFull(entry.recipe_id);
-    const ingredients = full ? getRecipeIngredientsStructured(full) : null;
-    if(!ingredients || !ingredients.length) return;
-    const baseServings = full.servings || 1;
-    const factor = entry.servings_logged / baseServings;
-    ingredients.forEach(ing => {
-      if(!ing.name) return;
-      const unit = ing.unit || "";
-      const key = unit.toLowerCase() + "_" + ing.name.toLowerCase();
-      const hasAmount = ing.amount !== null && ing.amount !== undefined;
-      const amount = hasAmount ? ing.amount * factor : null;
-      if(map.has(key)){
-        const existing = map.get(key);
-        if(hasAmount && existing.amount !== null) existing.amount += amount;
-      } else {
-        map.set(key, { name: ing.name, unit, amount: hasAmount ? amount : null });
-      }
-    });
-  });
-  return Array.from(map.values()).sort((a,b) => a.name.localeCompare(b.name));
-}
-
-function renderPrintView(){
-  const weekDates = getCurrentWeekDates();
-  const entries = state.weekLog || [];
-  const shoppingList = buildWeekShoppingAggregate();
-  const isHu = currentLang === 'hu';
-  const rangeLabel = (()=>{
-    const first = new Date(weekDates[0] + "T00:00:00");
-    const last = new Date(weekDates[6] + "T00:00:00");
-    return `${first.getDate()}.${first.getMonth()+1}. – ${last.getDate()}.${last.getMonth()+1}.${last.getFullYear()}`;
-  })();
-
-  const daysHtml = weekDates.map((date, idx) => {
-    const dayEntries = entries.filter(e => e.log_date === date);
-    if(dayEntries.length === 0) return "";
-    const dateObj = new Date(date + "T00:00:00");
-    const dayLabel = WEEKDAY_NAMES[idx] + ", " + dateObj.getDate() + "." + (dateObj.getMonth()+1) + ".";
-    const sorted = [...dayEntries].sort((a,b) => getMealOrderRank(state.recipes.find(r => r.id === a.recipe_id)) - getMealOrderRank(state.recipes.find(r => r.id === b.recipe_id)));
-    const recipesHtml = sorted.map(e => {
-      const full = getWeekRecipeFull(e.recipe_id);
-      if(!full) return "";
-      const baseServings = full.servings || 1;
-      const factor = e.servings_logged / baseServings;
-      const ingredients = getRecipeIngredientsStructured(full) || [];
-      const ingHtml = ingredients.map(ing => {
-        if(!ing.name) return "";
-        if(ing.amount === null || ing.amount === undefined) return `<li>${escapeHtml(ing.name)}</li>`;
-        const amt = ing.amount * factor;
-        const disp = amt % 1 === 0 ? amt.toFixed(0) : amt.toFixed(1);
-        const unitStr = ing.unit || "";
-        const sep = ing.unit ? "" : " ";
-        return `<li>${disp}${unitStr}${sep}${escapeHtml(ing.name)}</li>`;
-      }).join("");
-      return `<div class="print-recipe">
-        <h3>${escapeHtml(getRecipeTitle(full))} ${e.servings_logged > 1 ? `(${e.servings_logged}x)` : ""}</h3>
-        <ul class="print-ingredients">${ingHtml}</ul>
-        <p class="print-steps">${escapeHtml(getRecipeSteps(full) || "")}</p>
-      </div>`;
-    }).join("");
-    return `<div class="print-day"><h2>${dayLabel}</h2>${recipesHtml}</div>`;
-  }).join("");
-
-  const shoppingHtml = shoppingList.map(item => {
-    const disp = item.amount !== null
-      ? (item.amount % 1 === 0 ? item.amount.toFixed(0) : item.amount.toFixed(1)) + (item.unit || "") + " "
-      : "";
-    return `<li>${disp}${escapeHtml(item.name)}</li>`;
-  }).join("");
-
-  return `<div class="overlay print-view-overlay" id="print-view-overlay">
-    <div class="modal print-view-modal">
-      <div class="print-view-toolbar no-print">
-        <button type="button" class="btn" id="print-view-print-btn">🖨️ ${isHu ? 'Nyomtatás / PDF mentése' : 'Drucken / Als PDF speichern'}</button>
-        <button type="button" class="btn-outline" id="print-view-close-btn">${isHu ? 'Bezárás' : 'Schließen'}</button>
-      </div>
-      <div class="print-view-content">
-        <div class="print-masthead">
-          <h1>Jumphoria — ${isHu ? 'Heti étrend' : 'Wochenplan'}</h1>
-          <p>${rangeLabel}</p>
-        </div>
-        ${daysHtml}
-        <div class="print-shopping">
-          <h2>${isHu ? 'Heti bevásárlólista' : 'Einkaufsliste für die Woche'}</h2>
-          <ul>${shoppingHtml}</ul>
-        </div>
-      </div>
-    </div>
-  </div>`;
 }
 
 function renderIRTab(){
@@ -1193,6 +990,18 @@ function renderIRTab(){
     const title = getRecipeTitle(r) || "";
     return !state.irSearch || title.toLowerCase().includes(state.irSearch.toLowerCase());
   });
+  // Aufteilung nach Kohlenhydraten pro Portion: <15g = leicht (Frühstück/Snack),
+  // >=15g = Hauptmahlzeit mit bewusster CH-Quelle (Mittag/Abend)
+  const lightList = filtered.filter(r => {
+    const carbsPerServing = (r.carbs != null && r.servings) ? r.carbs / r.servings : 0;
+    return carbsPerServing < 15;
+  });
+  const mainList = filtered.filter(r => {
+    const carbsPerServing = (r.carbs != null && r.servings) ? r.carbs / r.servings : 0;
+    return carbsPerServing >= 15;
+  });
+  const lightLabel = currentLang==='hu' ? 'Könnyű – reggeli / snack' : 'Leicht – Frühstück / Snack';
+  const mainLabel = currentLang==='hu' ? 'Főétkezés – ebéd / vacsora (tudatos szénhidráttal)' : 'Hauptmahlzeit – Mittag / Abend (mit bewusster CH-Quelle)';
   return `
     <div style="background:var(--ink-on-paper); border-radius:16px; padding:16px 20px; margin-bottom:18px; border:1px solid var(--line);">
       <p style="color:var(--paper); opacity:0.9; font-size:13.5px; margin:0 0 12px; line-height:1.5;">${t("ir_intro")}</p>
@@ -1201,7 +1010,10 @@ function renderIRTab(){
     <div class="toolbar">
       <input class="search-input" id="ir-search-input" placeholder="${currentLang==='hu' ? 'Recept keresése …' : 'Rezept suchen …'}" value="${escapeAttr(state.irSearch)}">
     </div>
-    ${renderIRGrid(filtered)}
+    <h4 class="filter-group-label" style="margin:6px 0 10px 2px;">${lightLabel}</h4>
+    ${renderIRGrid(lightList)}
+    <h4 class="filter-group-label" style="margin:22px 0 10px 2px;">${mainLabel}</h4>
+    ${renderIRGrid(mainList)}
   `;
 }
 
@@ -1279,7 +1091,6 @@ function renderWeek(){
   const header = `
     <div style="margin-bottom:16px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
       <button type="button" class="btn" id="auto-week-btn" style="flex:1; min-width:180px;">&#x2728; Woche automatisch planen</button>
-      ${entries.length > 0 ? `<button type="button" class="btn-outline" id="print-view-open-btn">🖨️ ${currentLang==='hu' ? 'Nyomtatási nézet' : 'Druckansicht'}</button>` : ''}
       ${entries.length > 0 ? `<button type="button" class="btn-danger" id="clear-week-btn">Woche leeren</button>` : ''}
     </div>`;
   if(entries.length === 0){
@@ -1453,20 +1264,14 @@ function renderSwapPopup(){
 function renderAutoWeekPopup(){
   const profilKcal = state.profilKcal;
   const irLabel = currentLang==='hu' ? 'Csak IR receptekből' : 'Nur aus IR-Rezepten';
-  const irCheckbox = `<label style="display:flex; align-items:center; gap:8px; margin-bottom:12px; font-size:13.5px; color:var(--ink-on-paper); opacity:0.85; cursor:pointer;">
+  const irCheckbox = `<label style="display:flex; align-items:center; gap:8px; margin-bottom:16px; font-size:13.5px; color:var(--ink-on-paper); opacity:0.85; cursor:pointer;">
     <input type="checkbox" id="autoweek-ir-only" ${state.autoWeekIROnly ? 'checked' : ''} style="width:16px; height:16px;">
     ${irLabel}
   </label>`;
-  const carbCyclingLabel = currentLang==='hu' ? 'Carb Cycling (edzésnapokon több SZH)' : 'Carb Cycling (an Trainingstagen mehr KH)';
-  const carbCyclingCheckbox = (state.profilMakrosTraining && state.profilMakrosRuhetag) ? `<label style="display:flex; align-items:center; gap:8px; margin-bottom:16px; font-size:13.5px; color:var(--ink-on-paper); opacity:0.85; cursor:pointer;">
-    <input type="checkbox" id="autoweek-carb-cycling" ${state.autoWeekCarbCycling ? 'checked' : ''} style="width:16px; height:16px;">
-    🔄 ${carbCyclingLabel}
-  </label>` : '';
   return `<div class="overlay" id="autoweek-overlay"><div class="modal plan-modal">
     <button class="modal-close" id="autoweek-close">✕</button>
     <h2>✨ Woche automatisch planen</h2>
     ${irCheckbox}
-    ${carbCyclingCheckbox}
     ${profilKcal ? `
       <p style="color:var(--ink-on-paper); opacity:0.75; font-size:14px; margin:0 0 16px;">Dein Profil empfiehlt:</p>
       <div style="background:var(--pine); color:#fff; border-radius:14px; padding:20px; margin-bottom:18px; text-align:center;">
@@ -1595,20 +1400,6 @@ function calcProfil(){
   state.profilMakros = { protein, carbs, fat };
   state.profilKcalCapped = kcalWasCapped;
   state.profilBmr = bmrRounded;
-
-  // ── Carb Cycling: Trainingstag (mehr KH) vs. Ruhetag (weniger KH) ──
-  // Kalorien und Eiweiß bleiben an beiden Tagtypen gleich (Muskelerhalt),
-  // nur das Verhältnis KH/Fett verschiebt sich. Fett gleicht die Kalorienbilanz aus.
-  if(!p.trainingstage) p.trainingstage = [1,3,5]; // Fallback für alte Profile: Di/Do/Sa
-  const carbShift = Math.max(20, Math.round(p.gewicht * 0.75));
-  const carbsTraining = carbs + carbShift;
-  const fatTraining = Math.max(20, Math.round((kcal - protein * 4 - carbsTraining * 4) / 9));
-  const carbsRuhetag = Math.max(40, carbs - carbShift);
-  const fatRuhetag = Math.round((kcal - protein * 4 - carbsRuhetag * 4) / 9);
-
-  state.profilMakrosTraining = { protein, carbs: carbsTraining, fat: fatTraining };
-  state.profilMakrosRuhetag = { protein, carbs: carbsRuhetag, fat: fatRuhetag };
-
   localStorage.setItem("jumphoria_profil", JSON.stringify(p));
 }
 
@@ -1620,60 +1411,49 @@ function renderProfil(){
 
   return `
     <div style="max-width:480px; margin:0 auto;">
-      <h2 style="font-family:Georgia,serif; color:var(--pine-dark); margin:0 0 6px;">${t("profil_title")}</h2>
-      <p style="color:var(--ink); opacity:0.7; font-size:14px; margin:0 0 24px;">${t("profil_subtitle")}</p>
+      <h2 style="font-family:Georgia,serif; color:var(--pine-dark); margin:0 0 6px;">Mein Profil</h2>
+      <p style="color:var(--ink); opacity:0.7; font-size:14px; margin:0 0 24px;">Berechne deinen persönlichen Kalorienbedarf für dein Jump & Lift Programm.</p>
 
       <div style="background:var(--ink-on-paper); border-radius:16px; padding:20px; border:1px solid var(--line); margin-bottom:16px;">
-        <h4 style="color:var(--pine); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 14px;">${t("profil_deine_daten")}</h4>
+        <h4 style="color:var(--pine); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 14px;">Deine Daten</h4>
 
         <div class="field">
-          <label style="color:var(--ink); opacity:1;">${t("profil_geschlecht")}</label>
+          <label style="color:var(--ink); opacity:1;">Geschlecht</label>
           <div style="display:flex; gap:10px;">
-            <button type="button" class="profil-pick ${p.geschlecht==='w'?'active':''}" data-field="geschlecht" data-val="w" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.geschlecht==='w'?'var(--pine)':'#fff'}; color:${p.geschlecht==='w'?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">${t("weiblich")}</button>
-            <button type="button" class="profil-pick ${p.geschlecht==='m'?'active':''}" data-field="geschlecht" data-val="m" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.geschlecht==='m'?'var(--pine)':'#fff'}; color:${p.geschlecht==='m'?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">${t("maennlich")}</button>
+            <button type="button" class="profil-pick ${p.geschlecht==='w'?'active':''}" data-field="geschlecht" data-val="w" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.geschlecht==='w'?'var(--pine)':'#fff'}; color:${p.geschlecht==='w'?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">♀ Weiblich</button>
+            <button type="button" class="profil-pick ${p.geschlecht==='m'?'active':''}" data-field="geschlecht" data-val="m" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.geschlecht==='m'?'var(--pine)':'#fff'}; color:${p.geschlecht==='m'?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">♂ Männlich</button>
           </div>
         </div>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
           <div class="field">
-            <label style="color:var(--ink); opacity:1;">${t("profil_alter")}</label>
+            <label style="color:var(--ink); opacity:1;">Alter (Jahre)</label>
             <input type="number" class="profil-input" data-field="alter" value="${p.alter}" min="15" max="80" style="width:100%; padding:10px; border-radius:9px; border:1.5px solid var(--line); background:#fff; font-size:14px; color:var(--ink-on-paper);">
           </div>
           <div class="field">
-            <label style="color:var(--ink); opacity:1;">${t("profil_groesse")}</label>
+            <label style="color:var(--ink); opacity:1;">Größe (cm)</label>
             <input type="number" class="profil-input" data-field="groesse" value="${p.groesse}" min="140" max="210" style="width:100%; padding:10px; border-radius:9px; border:1.5px solid var(--line); background:#fff; font-size:14px; color:var(--ink-on-paper);">
           </div>
           <div class="field" style="grid-column:1/-1;">
-            <label style="color:var(--ink); opacity:1;">${t("profil_gewicht")}</label>
+            <label style="color:var(--ink); opacity:1;">Gewicht (kg)</label>
             <input type="number" class="profil-input" data-field="gewicht" value="${p.gewicht}" min="40" max="200" style="width:100%; padding:10px; border-radius:9px; border:1.5px solid var(--line); background:#fff; font-size:14px; color:var(--ink-on-paper);">
           </div>
         </div>
 
         <div class="field">
-          <label style="color:var(--ink); opacity:1;">${t("profil_aktivitaetslevel")}</label>
+          <label style="color:var(--ink); opacity:1;">Aktivitätslevel</label>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            ${[["wenig","akt_wenig"],["leicht","akt_leicht"],["mittel","akt_mittel"],["viel","akt_viel"]].map(([val,labelKey]) =>
-              `<button type="button" class="profil-pick" data-field="aktivitaet" data-val="${val}" style="flex:1; min-width:90px; padding:9px 6px; border-radius:10px; border:1.5px solid var(--line); background:${p.aktivitaet===val?'var(--pine)':'#fff'}; color:${p.aktivitaet===val?'#fff':'var(--ink-on-paper)'}; font-size:12.5px; font-weight:600; cursor:pointer;">${t(labelKey)}</button>`
+            ${[["wenig","🛋️ Kaum Sport"],["leicht","🚶 1-3× / Woche"],["mittel","🏃 3-5× / Woche"],["viel","💪 5-7× / Woche"]].map(([val,label]) =>
+              `<button type="button" class="profil-pick" data-field="aktivitaet" data-val="${val}" style="flex:1; min-width:90px; padding:9px 6px; border-radius:10px; border:1.5px solid var(--line); background:${p.aktivitaet===val?'var(--pine)':'#fff'}; color:${p.aktivitaet===val?'#fff':'var(--ink-on-paper)'}; font-size:12.5px; font-weight:600; cursor:pointer;">${label}</button>`
             ).join("")}
           </div>
         </div>
 
-        <div class="field">
-          <label style="color:var(--ink); opacity:1;">${t("profil_trainingstage")}</label>
-          <div style="display:flex; gap:6px; flex-wrap:wrap;">
-            ${WEEKDAY_NAMES.map((name, idx) => {
-              const active = (p.trainingstage || [1,3,5]).includes(idx);
-              return `<button type="button" class="profil-training-day" data-idx="${idx}" style="flex:1; min-width:38px; padding:9px 4px; border-radius:10px; border:1.5px solid var(--line); background:${active?'var(--terracotta)':'#fff'}; color:${active?'#fff':'var(--ink-on-paper)'}; font-size:12.5px; font-weight:700; cursor:pointer;">${name}</button>`;
-            }).join("")}
-          </div>
-          <small style="color:var(--ink); opacity:0.55; font-size:11.5px; display:block; margin-top:6px;">${t("profil_trainingstage_hint")}</small>
-        </div>
-
         <div class="field" style="margin-bottom:0;">
-          <label style="color:var(--ink); opacity:1;">${t("profil_ziel")}</label>
+          <label style="color:var(--ink); opacity:1;">Ziel</label>
           <div style="display:flex; gap:10px;">
-            ${[["abnehmen","ziel_abnehmen"],["halten","ziel_halten"]].map(([val,labelKey]) =>
-              `<button type="button" class="profil-pick ${p.ziel===val?'active':''}" data-field="ziel" data-val="${val}" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.ziel===val?'var(--terracotta)':'#fff'}; color:${p.ziel===val?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">${t(labelKey)}</button>`
+            ${[["abnehmen","⬇️ Abnehmen"],["halten","➡️ Gewicht halten"]].map(([val,label]) =>
+              `<button type="button" class="profil-pick ${p.ziel===val?'active':''}" data-field="ziel" data-val="${val}" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.ziel===val?'var(--terracotta)':'#fff'}; color:${p.ziel===val?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">${label}</button>`
             ).join("")}
           </div>
         </div>
@@ -1681,8 +1461,8 @@ function renderProfil(){
 
       ${kcal ? `
       <div style="background:var(--ink-on-paper); border-radius:16px; padding:22px; margin-bottom:16px;">
-        <h4 style="color:var(--pine); font-size:13px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 16px;">${t("profil_taegliches_ziel")}</h4>
-        ${state.profilKcalCapped ? `<div style="background:rgba(201,151,58,0.15); border:1px solid var(--pine); border-radius:10px; padding:10px 12px; margin-bottom:14px; font-size:12.5px; color:var(--ink-on-paper); line-height:1.4;">${tf("profil_kcal_capped", {bmr: state.profilBmr})}</div>` : ""}
+        <h4 style="color:var(--pine); font-size:13px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 16px;">Dein tägliches Ziel</h4>
+        ${state.profilKcalCapped ? `<div style="background:rgba(201,151,58,0.15); border:1px solid var(--pine); border-radius:10px; padding:10px 12px; margin-bottom:14px; font-size:12.5px; color:var(--ink-on-paper); line-height:1.4;">⚠️ Dein Kalorienziel wurde auf deinen Grundumsatz (${state.profilBmr} kcal) angehoben. Weniger zu essen wäre auf Dauer ungesund, da dein Körper auch in Ruhe diese Energie für lebenswichtige Funktionen braucht.</div>` : ""}
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
           <div style="flex:1; min-width:80px; background:rgba(255,255,255,0.1); border-radius:12px; padding:14px; text-align:center;">
             <div style="font-size:28px; font-weight:700; color:var(--pine); font-family:Georgia,serif;">${kcal}</div>
@@ -1690,41 +1470,25 @@ function renderProfil(){
           </div>
           <div style="flex:1; min-width:70px; background:rgba(255,255,255,0.1); border-radius:12px; padding:14px; text-align:center;">
             <div style="font-size:22px; font-weight:700; color:var(--ink);">${m.protein}g</div>
-            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">${t("eiweiss")}</div>
+            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">Eiweiß</div>
           </div>
           <div style="flex:1; min-width:70px; background:rgba(255,255,255,0.1); border-radius:12px; padding:14px; text-align:center;">
             <div style="font-size:22px; font-weight:700; color:var(--ink);">${m.carbs}g</div>
-            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">${t("kh")}</div>
+            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">KH</div>
           </div>
           <div style="flex:1; min-width:70px; background:rgba(255,255,255,0.1); border-radius:12px; padding:14px; text-align:center;">
             <div style="font-size:22px; font-weight:700; color:var(--ink);">${m.fat}g</div>
-            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">${t("fett")}</div>
+            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">Fett</div>
           </div>
         </div>
-        <button type="button" class="btn btn-block" id="use-profil-kcal" style="background:var(--pine);">${t("use_profil_kcal_btn")}</button>
+        <button type="button" class="btn btn-block" id="use-profil-kcal" style="background:var(--pine);">✨ Diese Kalorien für Wochenplanung verwenden</button>
       </div>
-
-      ${state.profilMakrosTraining && state.profilMakrosRuhetag ? `
-      <div style="background:var(--paper); border-radius:16px; padding:18px; border:1px solid var(--line); margin-bottom:16px;">
-        <h4 style="color:var(--pine-dark); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 12px;">${t("carb_cycling_title")}</h4>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <div style="flex:1; min-width:140px; background:var(--terracotta-soft); border-radius:12px; padding:12px;">
-            <div style="font-size:12px; font-weight:700; color:var(--terracotta); text-transform:uppercase; margin-bottom:6px;">${t("trainingstag_label")}</div>
-            <div style="font-size:13px; color:var(--ink-on-paper); line-height:1.6;">${state.profilMakrosTraining.protein}g ${t("eiweiss")} · <strong>${state.profilMakrosTraining.carbs}g ${t("kh")}</strong> · ${state.profilMakrosTraining.fat}g ${t("fett")}</div>
-          </div>
-          <div style="flex:1; min-width:140px; background:var(--cream); border-radius:12px; padding:12px;">
-            <div style="font-size:12px; font-weight:700; color:var(--ink-on-paper); text-transform:uppercase; margin-bottom:6px; opacity:0.75;">${t("ruhetag_label")}</div>
-            <div style="font-size:13px; color:var(--ink-on-paper); line-height:1.6;">${state.profilMakrosRuhetag.protein}g ${t("eiweiss")} · <strong>${state.profilMakrosRuhetag.carbs}g ${t("kh")}</strong> · ${state.profilMakrosRuhetag.fat}g ${t("fett")}</div>
-          </div>
-        </div>
-      </div>
-      ` : ''}
 
       <div style="background:var(--paper); border-radius:16px; padding:18px; border:1px solid var(--line);">
-        <h4 style="color:var(--terracotta); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 10px;">${t("jump_lift_titel")}</h4>
+        <h4 style="color:var(--terracotta); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 10px;">Jump & Lift Empfehlungen</h4>
         <div style="font-size:14px; color:var(--ink-on-paper); line-height:1.7; font-size:14px;">
-          <div style="margin-bottom:8px;">${tf("pre_workout_text", {kcal: Math.round(kcal * 0.15)})}</div>
-          <div>${tf("post_workout_text", {kcal: Math.round(kcal * 0.25)})}</div>
+          <div style="margin-bottom:8px;">⚡ <strong>Pre Workout</strong> (30-60 Min vorher): ${Math.round(kcal * 0.15)} kcal · leichte KH + etwas Eiweiß</div>
+          <div>💪 <strong>Post Workout</strong> (direkt danach): ${Math.round(kcal * 0.25)} kcal · viel Eiweiß + KH zur Regeneration</div>
         </div>
       </div>
       ` : ''}
@@ -2066,6 +1830,15 @@ function estimateCookedWeight(recipe, servings){
   return total;
 }
 
+// Formatiert Portionsangaben mit halben Schritten (z.B. 1.5 -> "1½", 0.5 -> "½")
+function formatServings(n){
+  const whole = Math.floor(n);
+  const frac = n - whole;
+  if(Math.abs(frac) < 0.01) return String(whole);
+  if(whole === 0) return "½";
+  return whole + "½";
+}
+
 function renderDetail(){
   const r = state.detailRecipe;
   const baseServings = r.servings || 1;
@@ -2090,7 +1863,7 @@ function renderDetail(){
       const scaledAmount = ing.amount * scale;
       const displayAmount = scaledAmount % 1 === 0 ? scaledAmount.toFixed(0) : scaledAmount.toFixed(1);
       const unitStr = ing.unit ? ing.unit : '';
-      const separator = ing.unit ? '' : ' ';
+      const separator = ' ';
 
       // Bei Stück-Angaben (kein unit) Gramm-Schätzung aus STUECK_GEWICHTE ergänzen
       let gramHint = '';
@@ -2124,7 +1897,7 @@ function renderDetail(){
     ${r.photo_url ? `<img class="detail-photo" src="${r.photo_url}" alt="${escapeAttr(getRecipeTitle(r))}">` : ""}
     <h2>${escapeHtml(getRecipeTitle(r))}</h2>
     <div class="card-tags" style="margin-bottom:10px;">${(r.tags||[]).map(t=>`<span class="tag-badge">${trTag(t)}</span>`).join("")}</div>
-    ${r.servings ? `<div class="servings-stepper"><span>${t("portionen")}:</span><button type="button" id="servings-minus" class="stepper-btn">\u2212</button><span class="servings-value">${currentServings}</span><button type="button" id="servings-plus" class="stepper-btn">+</button></div>` : ""}
+    ${r.servings ? `<div class="servings-stepper"><span>${t("portionen")}:</span><button type="button" id="servings-minus" class="stepper-btn">\u2212</button><span class="servings-value">${formatServings(currentServings)}</span><button type="button" id="servings-plus" class="stepper-btn">+</button></div>` : ""}
     ${r.kcal != null ? `<div class="macro-summary">
       <div class="macro-pill"><strong>${Math.round(r.kcal*scale)}</strong><span>kcal</span></div>
       ${r.protein != null ? `<div class="macro-pill"><strong>${Math.round(r.protein*scale)}g</strong><span>${t("eiweiss")}</span></div>` : ""}
@@ -2386,14 +2159,6 @@ function bindAppEvents(){
     await loadWeekLog();
   });
 
-  const printViewOpenBtn = document.getElementById("print-view-open-btn");
-  if(printViewOpenBtn) printViewOpenBtn.addEventListener("click", ()=>{
-    state.printViewOpen = true;
-    render();
-  });
-
-  if(state.printViewOpen) bindPrintViewEvents();
-
   if(state.autoWeekOpen) bindAutoWeekEvents();
   if(state.modalOpen) bindModalEvents();
 
@@ -2408,19 +2173,6 @@ function bindAppEvents(){
   document.querySelectorAll(".profil-input").forEach(input=>{
     input.addEventListener("change", async ()=>{
       state.profil[input.dataset.field] = parseFloat(input.value);
-      calcProfil();
-      render();
-    });
-  });
-  document.querySelectorAll(".profil-training-day").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const idx = parseInt(btn.dataset.idx, 10);
-      if(!state.profil.trainingstage) state.profil.trainingstage = [1,3,5];
-      if(state.profil.trainingstage.includes(idx)){
-        state.profil.trainingstage = state.profil.trainingstage.filter(d => d !== idx);
-      } else {
-        state.profil.trainingstage.push(idx);
-      }
       calcProfil();
       render();
     });
@@ -2454,16 +2206,6 @@ function bindAppEvents(){
   if(state.lymphTimer && state.lymphTimer.open) bindLymphTimerEvents();
 }
 
-function bindPrintViewEvents(){
-  const overlay = document.getElementById("print-view-overlay");
-  if(!overlay) return;
-  overlay.addEventListener("click", (e)=>{ if(e.target.id==="print-view-overlay"){ state.printViewOpen=false; render(); } });
-  const closeBtn = document.getElementById("print-view-close-btn");
-  if(closeBtn) closeBtn.addEventListener("click", ()=>{ state.printViewOpen=false; render(); });
-  const printBtn = document.getElementById("print-view-print-btn");
-  if(printBtn) printBtn.addEventListener("click", ()=>{ window.print(); });
-}
-
 function bindAutoWeekEvents(){
   const overlay = document.getElementById("autoweek-overlay");
   if(!overlay) return;
@@ -2480,11 +2222,6 @@ function bindAutoWeekEvents(){
   const irOnlyCheckbox = document.getElementById("autoweek-ir-only");
   if(irOnlyCheckbox) irOnlyCheckbox.addEventListener("change", ()=>{
     state.autoWeekIROnly = irOnlyCheckbox.checked;
-  });
-
-  const carbCyclingCheckbox = document.getElementById("autoweek-carb-cycling");
-  if(carbCyclingCheckbox) carbCyclingCheckbox.addEventListener("change", ()=>{
-    state.autoWeekCarbCycling = carbCyclingCheckbox.checked;
   });
 
   document.querySelectorAll("[data-kcal]").forEach(btn=>{
@@ -2504,47 +2241,34 @@ function bindAutoWeekEvents(){
       // aber wenig Fett enthalten (z.B. Magerquark-lastige Gerichte).
       const totalFatTarget = (state.profilMakros && state.profilMakros.fat) ? state.profilMakros.fat : null;
 
-      // ── Carb Cycling: an Trainingstagen mehr KH / weniger Fett, an Ruhetagen umgekehrt (gleiche kcal) ──
-      const carbCyclingOn = state.autoWeekCarbCycling && state.profilMakrosTraining && state.profilMakrosRuhetag;
-      const trainingstage = state.profil.trainingstage || [1,3,5];
-      const totalCarbTargetTraining = carbCyclingOn ? state.profilMakrosTraining.carbs : null;
-      const totalCarbTargetRuhetag = carbCyclingOn ? state.profilMakrosRuhetag.carbs : null;
-      const totalFatTargetTraining = carbCyclingOn ? state.profilMakrosTraining.fat : totalFatTarget;
-      const totalFatTargetRuhetag = carbCyclingOn ? state.profilMakrosRuhetag.fat : totalFatTarget;
-
-      // Kombinierter Abstand: relative Kalorien-Distanz + gewichtete relative Fett-Distanz + optional KH-Distanz.
-      // Rezepte ohne Fett-/KH-Angabe werden dafür nicht bestraft (kein Malus).
-      function combinedScore(r, kcalTarget, fatTarget, carbTarget){
+      // Kombinierter Abstand: relative Kalorien-Distanz + gewichtete relative Fett-Distanz.
+      // Rezepte ohne Fettangabe werden nur nach Kalorien bewertet (kein Fett-Malus).
+      function combinedScore(r, kcalTarget, fatTarget){
         const kcalPerServing = r.kcal / (r.servings || 1);
-        let score = Math.abs(kcalPerServing - kcalTarget) / Math.max(kcalTarget, 1);
-        if(fatTarget != null && r.fat != null){
-          const fatPerServing = r.fat / (r.servings || 1);
-          score += (Math.abs(fatPerServing - fatTarget) / Math.max(fatTarget, 1)) * 1.3;
-        }
-        if(carbTarget != null && r.carbs != null){
-          const carbPerServing = r.carbs / (r.servings || 1);
-          score += (Math.abs(carbPerServing - carbTarget) / Math.max(carbTarget, 1)) * 1.1;
-        }
-        return score;
+        const kcalScore = Math.abs(kcalPerServing - kcalTarget) / Math.max(kcalTarget, 1);
+        if(fatTarget == null || r.fat == null) return kcalScore;
+        const fatPerServing = r.fat / (r.servings || 1);
+        const fatScore = Math.abs(fatPerServing - fatTarget) / Math.max(fatTarget, 1);
+        return kcalScore + fatScore * 1.3; // Fett etwas stärker gewichtet, um dem Fettmangel gezielt entgegenzuwirken
       }
 
-      // Kalorienbasierte (+ fett-/KH-bewusste) Auswahl: pro Slot das Rezept wählen, dessen Makro-Profil
+      // Kalorienbasierte (+ fettbewusste) Auswahl: pro Slot das Rezept wählen, dessen Makro-Profil
       // am nächsten am Slot-Ziel liegt (statt komplett zufällig).
       // Damit sich Rezepte über die Woche abwechseln, werden bereits
       // verwendete Rezepte erst nach Ausschöpfen des Pools wiederholt.
-      function pickClosest(pool, kcalTarget, fatTarget, usedCounts, carbTarget){
+      function pickClosest(pool, kcalTarget, fatTarget, usedCounts){
         if(pool.length === 0) return null;
         // Sortiere nach: zuerst wie oft schon verwendet (weniger zuerst), dann kombinierter Distanz
         const sorted = [...pool].sort((a,b)=>{
           const usedA = usedCounts.get(a.id) || 0;
           const usedB = usedCounts.get(b.id) || 0;
           if(usedA !== usedB) return usedA - usedB;
-          return combinedScore(a, kcalTarget, fatTarget, carbTarget) - combinedScore(b, kcalTarget, fatTarget, carbTarget);
+          return combinedScore(a, kcalTarget, fatTarget) - combinedScore(b, kcalTarget, fatTarget);
         });
         // Unter den am wenigsten benutzten Rezepten: die 3 nächstliegenden nehmen und leicht zufällig wählen (Abwechslung)
         const leastUsed = usedCounts.get(sorted[0].id) || 0;
         const candidates = sorted.filter(r => (usedCounts.get(r.id)||0) === leastUsed)
-          .sort((a,b)=>combinedScore(a, kcalTarget, fatTarget, carbTarget) - combinedScore(b, kcalTarget, fatTarget, carbTarget))
+          .sort((a,b)=>combinedScore(a, kcalTarget, fatTarget) - combinedScore(b, kcalTarget, fatTarget))
           .slice(0, 3);
         const chosen = candidates[Math.floor(Math.random()*candidates.length)];
         usedCounts.set(chosen.id, (usedCounts.get(chosen.id)||0) + 1);
@@ -2560,74 +2284,43 @@ function bindAutoWeekEvents(){
       const kcalFrueh = Math.round(targetKcal * 0.25);
       const kcalMittag = Math.round(targetKcal * 0.35);
       const kcalAbend = Math.round(targetKcal * 0.30);
-      const avgHauptTarget = Math.round((kcalMittag + kcalAbend) / 2);
+      // Fettziel im selben Verhältnis aufteilen (falls ein Profil-Fettziel vorhanden ist)
+      const fatFrueh = totalFatTarget != null ? Math.round(totalFatTarget * 0.25) : null;
+      const fatHauptAvg = totalFatTarget != null ? Math.round(totalFatTarget * 0.325) : null; // (35%+30%)/2
+      const fatSnack = totalFatTarget != null ? Math.round(totalFatTarget * 0.10) : null;
 
-      // Fett-/KH-Ziel im selben Verhältnis aufteilen wie die Kalorien (25% Frühstück, 32,5% Hauptgericht Ø, 10% Snack)
-      function splitTarget(total){ return total == null ? null : { frueh: Math.round(total*0.25), haupt: Math.round(total*0.325), snack: Math.round(total*0.10) }; }
-      const fatSplitBase = splitTarget(totalFatTarget);
-      const fatSplitTraining = splitTarget(totalFatTargetTraining);
-      const fatSplitRuhetag = splitTarget(totalFatTargetRuhetag);
-      const carbSplitTraining = splitTarget(totalCarbTargetTraining);
-      const carbSplitRuhetag = splitTarget(totalCarbTargetRuhetag);
-
-      const hauptSourcePool = hauptPool.length ? hauptPool : fallback;
-
-      // Meal-Prep-Prinzip: fixe Hauptgerichte für die Woche wählen, die sich bei Mittag/Abend abwechseln.
-      // Bei aktivem Carb Cycling: zwei getrennte kleine Sets (höher-KH für Trainingstage, niedriger-KH für Ruhetage),
-      // sonst wie bisher ein gemeinsames Set für die ganze Woche.
+      // Meal-Prep-Prinzip: nur 3 Hauptgerichte für die GANZE Woche fix wählen,
+      // die sich bei Mittag/Abend abwechseln. Kein tägliches Neukochen mehr.
       const MAIN_DISH_COUNT = 3;
-      let mainDishesTraining, mainDishesRuhetag;
-      if(carbCyclingOn){
-        mainDishesTraining = [...hauptSourcePool]
-          .sort((a,b)=>combinedScore(a, avgHauptTarget, fatSplitTraining?.haupt, carbSplitTraining?.haupt) - combinedScore(b, avgHauptTarget, fatSplitTraining?.haupt, carbSplitTraining?.haupt))
-          .slice(0, Math.min(MAIN_DISH_COUNT, hauptSourcePool.length));
-        mainDishesRuhetag = [...hauptSourcePool]
-          .sort((a,b)=>combinedScore(a, avgHauptTarget, fatSplitRuhetag?.haupt, carbSplitRuhetag?.haupt) - combinedScore(b, avgHauptTarget, fatSplitRuhetag?.haupt, carbSplitRuhetag?.haupt))
-          .slice(0, Math.min(MAIN_DISH_COUNT, hauptSourcePool.length));
-      } else {
-        const mainDishes = [...hauptSourcePool]
-          .sort((a,b)=>combinedScore(a, avgHauptTarget, fatSplitBase?.haupt, null) - combinedScore(b, avgHauptTarget, fatSplitBase?.haupt, null))
-          .slice(0, Math.min(MAIN_DISH_COUNT, hauptSourcePool.length));
-        mainDishesTraining = mainDishes;
-        mainDishesRuhetag = mainDishes;
-      }
-      let mainSlotCounterTraining = 0;
-      let mainSlotCounterRuhetag = 0;
+      const avgHauptTarget = Math.round((kcalMittag + kcalAbend) / 2);
+      const hauptSourcePool = hauptPool.length ? hauptPool : fallback;
+      const mainDishes = [...hauptSourcePool]
+        .sort((a,b)=>combinedScore(a, avgHauptTarget, fatHauptAvg) - combinedScore(b, avgHauptTarget, fatHauptAvg))
+        .slice(0, Math.min(MAIN_DISH_COUNT, hauptSourcePool.length));
+      let mainSlotCounter = 0;
 
       const usedFrueh = new Map();
       const usedSnack = new Map();
 
       const rows = [];
-      weekDates.forEach((date, dayIdx) => {
+      weekDates.forEach((date) => {
         let tagesKcal = 0;
-        const isTrainingDay = carbCyclingOn && trainingstage.includes(dayIdx);
-        const fatFrueh = isTrainingDay ? fatSplitTraining?.frueh : (carbCyclingOn ? fatSplitRuhetag?.frueh : fatSplitBase?.frueh);
-        const fatSnack = isTrainingDay ? fatSplitTraining?.snack : (carbCyclingOn ? fatSplitRuhetag?.snack : fatSplitBase?.snack);
-        const carbFrueh = isTrainingDay ? carbSplitTraining?.frueh : carbSplitRuhetag?.frueh;
-        const carbSnack = isTrainingDay ? carbSplitTraining?.snack : carbSplitRuhetag?.snack;
-        const mainDishes = isTrainingDay ? mainDishesTraining : mainDishesRuhetag;
 
-        const frueh = pickClosest(fruehstueckPool.length ? fruehstueckPool : fallback, kcalFrueh, fatFrueh, usedFrueh, carbFrueh);
+        const frueh = pickClosest(fruehstueckPool.length ? fruehstueckPool : fallback, kcalFrueh, fatFrueh, usedFrueh);
         if(frueh){ rows.push({ user_id: state.user.id, recipe_id: frueh.id, log_date: date, servings_logged: 1 }); tagesKcal += frueh.kcal / (frueh.servings || 1); }
 
         if(mainDishes.length > 0){
-          if(isTrainingDay){
-            const mittag = mainDishes[mainSlotCounterTraining % mainDishes.length]; mainSlotCounterTraining++;
-            rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: 1 }); tagesKcal += mittag.kcal / (mittag.servings || 1);
-            const abend = mainDishes[mainSlotCounterTraining % mainDishes.length]; mainSlotCounterTraining++;
-            rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: 1 }); tagesKcal += abend.kcal / (abend.servings || 1);
-          } else {
-            const mittag = mainDishes[mainSlotCounterRuhetag % mainDishes.length]; mainSlotCounterRuhetag++;
-            rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: 1 }); tagesKcal += mittag.kcal / (mittag.servings || 1);
-            const abend = mainDishes[mainSlotCounterRuhetag % mainDishes.length]; mainSlotCounterRuhetag++;
-            rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: 1 }); tagesKcal += abend.kcal / (abend.servings || 1);
-          }
+          const mittag = mainDishes[mainSlotCounter % mainDishes.length]; mainSlotCounter++;
+          rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: 1 }); tagesKcal += mittag.kcal / (mittag.servings || 1);
+
+          const abend = mainDishes[mainSlotCounter % mainDishes.length]; mainSlotCounter++;
+          rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: 1 }); tagesKcal += abend.kcal / (abend.servings || 1);
         }
 
         // Snack ergänzen, um die Lücke zum Tagesziel zu schließen
         const restKcal = targetKcal - tagesKcal;
         if(restKcal >= 50 && snackPool.length > 0){
-          const snack = pickClosest(snackPool, restKcal, fatSnack, usedSnack, carbSnack);
+          const snack = pickClosest(snackPool, restKcal, fatSnack, usedSnack);
           if(snack) rows.push({ user_id: state.user.id, recipe_id: snack.id, log_date: date, servings_logged: 1 });
         }
       });
@@ -2873,8 +2566,8 @@ function bindDetailEvents(){
   document.getElementById("detail-close").addEventListener("click", ()=>{ state.detailRecipe=null; render(); });
   const minusBtn = document.getElementById("servings-minus");
   const plusBtn = document.getElementById("servings-plus");
-  if(minusBtn) minusBtn.addEventListener("click", ()=>{ if(state.detailServings > 1){ state.detailServings -= 1; render(); } });
-  if(plusBtn) plusBtn.addEventListener("click", ()=>{ state.detailServings += 1; render(); });
+  if(minusBtn) minusBtn.addEventListener("click", ()=>{ if(state.detailServings > 0.5){ state.detailServings = Math.round((state.detailServings - 0.5) * 2) / 2; render(); } });
+  if(plusBtn) plusBtn.addEventListener("click", ()=>{ state.detailServings = Math.round((state.detailServings + 0.5) * 2) / 2; render(); });
   const editBtn = document.getElementById("edit-from-detail");
   if(editBtn){
     editBtn.addEventListener("click", ()=>{
@@ -2921,7 +2614,7 @@ async function loadWeekLog(){
   const recipeIds = [...new Set(state.weekLog.map(e => e.recipe_id))];
   if(recipeIds.length > 0){
     const { data: detailData, error: detailError } = await sb.from("recipes")
-      .select("id,servings,ingredients_structured,ingredients_structured_hu,steps,steps_hu")
+      .select("id,servings,ingredients_structured")
       .in("id", recipeIds);
     if(!detailError && detailData){
       const map = {};
