@@ -499,6 +499,26 @@
   }
 .ing-estimate{ color:#999; font-size:0.9em; font-style:italic; }
 
+  /* ====== TAGES-ERNÄHRUNGSÜBERSICHT ====== */
+  .today-nutri-card{ background:var(--paper); border-radius:20px; padding:22px 20px; margin-bottom:20px; border:1px solid var(--line); box-shadow:var(--shadow); }
+  .today-nutri-title{ font-family:Georgia,serif; font-size:17px; color:var(--pine-dark); margin:0 0 4px; }
+  .today-nutri-sub{ font-size:12.5px; color:var(--ink-on-paper); opacity:0.6; margin:0 0 18px; }
+  .today-nutri-row{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:22px; }
+  .today-nutri-side{ text-align:center; flex:1; }
+  .today-nutri-side strong{ display:block; font-size:21px; color:var(--ink-on-paper); font-family:Georgia,serif; }
+  .today-nutri-side span{ font-size:10.5px; color:var(--ink-on-paper); opacity:0.6; text-transform:uppercase; letter-spacing:.04em; }
+  .today-nutri-ring{ position:relative; width:112px; height:112px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+  .today-nutri-ring-inner{ width:90px; height:90px; border-radius:50%; background:var(--paper); display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .today-nutri-ring-inner strong{ font-size:23px; font-family:Georgia,serif; color:var(--pine-dark); line-height:1.15; }
+  .today-nutri-ring-inner span{ font-size:9.5px; color:var(--ink-on-paper); opacity:0.65; text-transform:uppercase; letter-spacing:.03em; }
+  .today-macro-item{ margin-bottom:12px; }
+  .today-macro-item:last-child{ margin-bottom:0; }
+  .today-macro-label{ display:flex; justify-content:space-between; font-size:12px; color:var(--ink-on-paper); margin-bottom:5px; }
+  .today-macro-label b{ opacity:0.85; }
+  .today-macro-track{ background:rgba(58,74,48,0.1); border-radius:20px; height:7px; overflow:hidden; }
+  .today-macro-fill{ height:100%; border-radius:20px; background:var(--pine); transition:width .3s ease; }
+  .today-macro-fill.is-over{ background:var(--terracotta); }
+
   /* ====== TÄGLICHER FITNESS-MYTHOS ====== */
   .myth-card{
     border-radius:18px; padding:20px 22px; margin-bottom:18px;
@@ -657,14 +677,26 @@ const ADMIN_USER_ID = "55eaffe1-6a42-42ec-8888-708f31210c4c";
 const REGISTRATION_CLOSED = false;
 // Debug: zeigt die eingeloggte User-ID in der Konsole
 function debugUserId(){ if(state.user) console.log("Eingeloggt als:", state.user.id, "| Admin?", state.user.id === ADMIN_USER_ID); }
-const ALL_TAGS = ["Vegan","Vegetarisch","Frühstück","Hauptgericht","Snack","Dessert","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein","Meal Prep","Schnell","Airfryer","Pre Workout","Post Workout","IR"];
+const ALL_TAGS = ["Vegan","Vegetarisch","Frühstück","Hauptgericht","Snack","Dessert","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein","Meal Prep","Schnell","Airfryer","Pre Workout","Post Workout","IR","Reis","Kartoffel","Nudeln","Pommes"];
 const KCAL_BANDS = ["100 kcal","200 kcal","300 kcal","400 kcal"];
 const FILTER_GROUPS = [
-  { label: "Ern\u00e4hrung", tags: ["Vegan","Vegetarisch","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein"] },
-  { label: "Mahlzeit", tags: ["Fr\u00fchst\u00fcck","Hauptgericht","Snack","Dessert"] },
-  { label: "Zubereitung", tags: ["Meal Prep","Schnell","Airfryer"] },
-  { label: "Timing", tags: ["Pre Workout","Post Workout"] }
+  { labelKey: "de_ernaehrung", label: "Ern\u00e4hrung", tags: ["Vegan","Vegetarisch","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein"] },
+  { labelKey: "de_mahlzeit", label: "Mahlzeit", tags: ["Fr\u00fchst\u00fcck","Hauptgericht","Snack","Dessert"] },
+  { labelKey: "de_beilage", label: "Beilage", tags: ["Reis","Kartoffel","Nudeln","Pommes"] },
+  { labelKey: "de_zubereitung", label: "Zubereitung", tags: ["Meal Prep","Schnell","Airfryer"] },
+  { labelKey: "de_timing", label: "Timing", tags: ["Pre Workout","Post Workout"] }
 ];
+const FILTER_GROUP_LABELS_HU = {
+  de_ernaehrung: "Étkezés",
+  de_mahlzeit: "Étkezés típusa",
+  de_beilage: "Köret",
+  de_zubereitung: "Elkészítés",
+  de_timing: "Időzítés"
+};
+function trFilterGroupLabel(group){
+  if(currentLang === "hu" && FILTER_GROUP_LABELS_HU[group.labelKey]) return FILTER_GROUP_LABELS_HU[group.labelKey];
+  return group.label;
+}
 const WEEKDAY_NAMES = ["Mo","Di","Mi","Do","Fr","Sa","So"];
 
 /* ============================================================
@@ -742,7 +774,11 @@ const TAG_TRANSLATIONS_HU = {
   "Airfryer": "Airfryer",
   "Pre Workout": "Edzés előtt",
   "Post Workout": "Edzés után",
-  "IR": "IR"
+  "IR": "IR",
+  "Reis": "Rizs",
+  "Kartoffel": "Krumpli",
+  "Nudeln": "Tészta",
+  "Pommes": "Hasábburgonya"
 };
 function trTag(tag){
   if(currentLang === "hu" && TAG_TRANSLATIONS_HU[tag]) return TAG_TRANSLATIONS_HU[tag];
@@ -1165,14 +1201,14 @@ function renderFilterSheet(){
       <h2>${t("filter")}</h2>
       ${FILTER_GROUPS.map(group => `
         <div class="filter-group">
-          <h4 class="filter-group-label">${group.label}</h4>
+          <h4 class="filter-group-label">${trFilterGroupLabel(group)}</h4>
           <div class="tag-filters" id="tag-filters">
             ${group.tags.map(tg => `<span class="tag-chip ${state.activeTag===tg?'active':''}" data-tag="${tg}">${trTag(tg)}</span>`).join("")}
           </div>
         </div>
       `).join("")}
       <div class="filter-group">
-        <h4 class="filter-group-label">Kalorien</h4>
+        <h4 class="filter-group-label">${currentLang==='hu' ? 'Kalória' : 'Kalorien'}</h4>
         <div class="tag-filters" id="kcal-filters">
           ${KCAL_BANDS.map(b => `<span class="tag-chip kcal-chip ${state.activeKcalBand===b?'active':''}" data-band="${b}">${b}</span>`).join("")}
         </div>
@@ -1185,18 +1221,76 @@ function renderFilterSheet(){
   </div>`;
 }
 
+function renderTodayNutriCard(){
+  const isHu = currentLang === 'hu';
+  calcProfil();
+  const todayStr = new Date().toISOString().slice(0,10);
+  const entries = (state.weekLog || []).filter(e => e.log_date === todayStr);
+  let kcalSum=0, proteinSum=0, carbsSum=0, fatSum=0;
+  entries.forEach(e => {
+    const recipe = state.recipes.find(r => r.id === e.recipe_id);
+    if(!recipe) return;
+    const factor = e.servings_logged / (recipe.servings || 1);
+    if(recipe.kcal != null) kcalSum += recipe.kcal * factor;
+    if(recipe.protein != null) proteinSum += recipe.protein * factor;
+    if(recipe.carbs != null) carbsSum += recipe.carbs * factor;
+    if(recipe.fat != null) fatSum += recipe.fat * factor;
+  });
+  kcalSum = Math.round(kcalSum); proteinSum = Math.round(proteinSum); carbsSum = Math.round(carbsSum); fatSum = Math.round(fatSum);
+
+  if(!state.profilKcal){
+    return `<div class="today-nutri-card">
+      <h4 class="today-nutri-title">${isHu ? 'Mai áttekintés' : 'Heutige Übersicht'}</h4>
+      <p class="today-nutri-sub" style="margin-bottom:0;">${isHu ? `Eddig ma: ${kcalSum} kcal. Töltsd ki a Profilt a napi célhoz és a hátralévő kalóriák kiszámításához.` : `Bisher heute: ${kcalSum} kcal. Fülle dein Profil aus, um dein Tagesziel und die verbleibenden Kalorien zu sehen.`}</p>
+    </div>`;
+  }
+
+  const targetKcal = state.profilKcal;
+  const targetMakros = state.profilMakros || { protein:0, carbs:0, fat:0 };
+  const remaining = targetKcal - kcalSum;
+  const pctEaten = Math.max(0, Math.min(100, Math.round((kcalSum / targetKcal) * 100)));
+
+  function macroBar(label, eaten, target){
+    const pct = target > 0 ? Math.min(100, Math.round((eaten/target)*100)) : 0;
+    const over = eaten > target;
+    return `<div class="today-macro-item">
+      <div class="today-macro-label"><b>${label}</b><span>${eaten} / ${target} g</span></div>
+      <div class="today-macro-track"><div class="today-macro-fill ${over ? 'is-over' : ''}" style="width:${pct}%;"></div></div>
+    </div>`;
+  }
+
+  return `<div class="today-nutri-card">
+    <h4 class="today-nutri-title">${isHu ? 'Mai áttekintés' : 'Heutige Übersicht'}</h4>
+    <p class="today-nutri-sub">${isHu ? 'Napi cél' : 'Tagesziel'}: ${targetKcal} kcal</p>
+    <div class="today-nutri-row">
+      <div class="today-nutri-side"><strong>${kcalSum}</strong><span>${isHu ? 'Elfogyasztva' : 'Gegessen'}</span></div>
+      <div class="today-nutri-ring" style="--pct:${pctEaten}; background:conic-gradient(${remaining < 0 ? 'var(--terracotta)' : 'var(--pine)'} calc(var(--pct)*1%), rgba(58,74,48,0.12) 0);">
+        <div class="today-nutri-ring-inner">
+          <strong>${remaining < 0 ? '+' + Math.abs(remaining) : remaining}</strong>
+          <span>${remaining < 0 ? (isHu ? 'túllépve' : 'über Ziel') : (isHu ? 'marad' : 'übrig')}</span>
+        </div>
+      </div>
+      <div class="today-nutri-side"><strong>${entries.length}</strong><span>${isHu ? 'Bejegyzés' : 'Einträge'}</span></div>
+    </div>
+    ${macroBar(isHu ? 'Szénhidrát' : 'Kohlenhydrate', carbsSum, targetMakros.carbs)}
+    ${macroBar(isHu ? 'Fehérje' : 'Eiweiß', proteinSum, targetMakros.protein)}
+    ${macroBar(isHu ? 'Zsír' : 'Fett', fatSum, targetMakros.fat)}
+  </div>`;
+}
+
 function renderWeek(){
   const entries = state.weekLog || [];
   const weekDates = getCurrentWeekDates();
+  const nutriCard = renderTodayNutriCard();
   const header = `
     <div style="margin-bottom:16px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
       <button type="button" class="btn" id="auto-week-btn" style="flex:1; min-width:180px;">&#x2728; Woche automatisch planen</button>
       ${entries.length > 0 ? `<button type="button" class="btn-danger" id="clear-week-btn">Woche leeren</button>` : ''}
     </div>`;
   if(entries.length === 0){
-    return header + `<div class="empty-state"><h3>Noch nichts für diese Woche geplant</h3><p>Tippe auf "Woche automatisch planen" oder geh zu "Rezepte" und tippe bei einem Rezept auf "+ Geplant".</p></div>`;
+    return nutriCard + header + `<div class="empty-state"><h3>Noch nichts für diese Woche geplant</h3><p>Tippe auf "Woche automatisch planen" oder geh zu "Rezepte" und tippe bei einem Rezept auf "+ Geplant".</p></div>`;
   }
-  return header + `<div class="week-list">${weekDates.map((date, idx) => {
+  return nutriCard + header + `<div class="week-list">${weekDates.map((date, idx) => {
     const dayEntries = entries.filter(e => e.log_date === date);
     let kcalSum=0, proteinSum=0, carbsSum=0, fatSum=0;
     dayEntries.forEach(e => {
@@ -1416,14 +1510,14 @@ function renderDayAddPopup(){
       <h2>Filter \u2013 ${label}</h2>
       ${FILTER_GROUPS.map(group => `
         <div class="filter-group">
-          <h4 class="filter-group-label">${group.label}</h4>
+          <h4 class="filter-group-label">${trFilterGroupLabel(group)}</h4>
           <div class="tag-filters">
             ${group.tags.map(tg => `<span class="tag-chip dayadd-tag-chip ${state.dayAddTag===tg?'active':''}" data-tag="${tg}">${trTag(tg)}</span>`).join("")}
           </div>
         </div>
       `).join("")}
       <div class="filter-group">
-        <h4 class="filter-group-label">Kalorien</h4>
+        <h4 class="filter-group-label">${currentLang==='hu' ? 'Kalória' : 'Kalorien'}</h4>
         <div class="tag-filters">
           ${KCAL_BANDS.map(b => `<span class="tag-chip kcal-chip dayadd-kcal-chip ${state.dayAddKcalBand===b?'active':''}" data-band="${b}">${b}</span>`).join("")}
         </div>
@@ -1912,7 +2006,44 @@ function startWalkTimer(minutes){
     running: true, finished: false
   };
   render();
+  if(navigator.vibrate) navigator.vibrate([300,120,300,120,300]);
+  playWalkTone();
+  speakWalkCue("slow");
   startWalkTicker();
+}
+
+// ── Signale beim Tempo-Wechsel: Ton + gesprochene Ansage ──
+function playWalkTone(){
+  try{
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if(!Ctx) return;
+    const ctx = new Ctx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.55);
+  }catch(e){ /* Audio nicht verfügbar, ignorieren */ }
+}
+
+function speakWalkCue(phase){
+  try{
+    if(!window.speechSynthesis) return;
+    const isHu = currentLang === "hu";
+    const text = phase === "fast"
+      ? (isHu ? "Gyorsabban!" : "Schneller!")
+      : (isHu ? "Lassabban!" : "Langsamer!");
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = isHu ? "hu-HU" : "de-DE";
+    utter.rate = 0.95;
+    speechSynthesis.cancel(); // vorherige Ansage abbrechen, falls noch aktiv
+    speechSynthesis.speak(utter);
+  }catch(e){ /* Sprachausgabe nicht verfügbar, ignorieren */ }
 }
 
 function startWalkTicker(){
@@ -1929,7 +2060,9 @@ function startWalkTicker(){
     if(t.phaseSecondsLeft <= 0){
       t.phase = t.phase === "fast" ? "slow" : "fast";
       t.phaseSecondsLeft = Math.min(WALK_PHASE_SECONDS, t.totalSeconds - t.elapsedSeconds);
-      if(navigator.vibrate) navigator.vibrate([200,100,200]);
+      if(navigator.vibrate) navigator.vibrate([300,120,300,120,300]);
+      playWalkTone();
+      speakWalkCue(t.phase);
       render();
     } else {
       updateWalkTimerDOM();
