@@ -499,6 +499,20 @@
   }
 .ing-estimate{ color:#999; font-size:0.9em; font-style:italic; }
 
+  /* ====== TÄGLICHER FITNESS-MYTHOS ====== */
+  .myth-card{
+    border-radius:18px; padding:20px 22px; margin-bottom:18px;
+    background:var(--paper); border:1px solid var(--line); box-shadow:var(--shadow);
+  }
+  .myth-eyebrow{ font-size:11px; text-transform:uppercase; letter-spacing:.08em; font-weight:700; color:var(--terracotta); margin:0 0 12px; }
+  .myth-row{ display:flex; align-items:flex-start; gap:10px; margin-bottom:12px; }
+  .myth-row:last-child{ margin-bottom:0; }
+  .myth-icon{ flex-shrink:0; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; margin-top:1px; }
+  .myth-icon.is-false{ background:var(--terracotta-soft); color:var(--terracotta); }
+  .myth-icon.is-true{ background:rgba(201,153,59,0.18); color:var(--pine-dark); }
+  .myth-text{ font-size:14px; line-height:1.55; color:var(--ink-on-paper); }
+  .myth-text strong{ color:var(--ink-on-paper); }
+
   /* ====== 21-TAGE-CHALLENGE ====== */
   .challenge-hero{
     position:relative; overflow:hidden; border-radius:20px; padding:22px 22px 24px;
@@ -939,10 +953,11 @@ let state = {
   serviceDown: false,
   riseTodayWorkoutIds: [],
   // Intervall-Gehen-Timer
-  walkTimer: { open: false, stage: "select", durationMinutes: 20, phase: "fast", phaseSecondsLeft: WALK_PHASE_SECONDS, elapsedSeconds: 0, totalSeconds: 0, running: false, finished: false },
+  walkTimer: { open: false, stage: "select", durationMinutes: 20, phase: "slow", phaseSecondsLeft: WALK_PHASE_SECONDS, elapsedSeconds: 0, totalSeconds: 0, running: false, finished: false },
   // 21-Tage-Challenge
   challenge: { loaded: false, startDate: null, completedDays: [], bonusAwarded: false },
   challengeOpen: false,
+  fitnessMyths: [],
   // Lymphfluss-Timer (Morgenroutine)
   lymphTimer: { open: false, currentIndex: 0, secondsLeft: 0, running: false, finished: false },
   // Rezept direkt zu einem Tag im Wochenplan hinzufügen
@@ -1588,6 +1603,42 @@ function renderWorkoutCoverInner(title, image){
   return `<div class="workout-card-noimg">${escapeHtml(title)}</div>`;
 }
 
+async function loadFitnessMyths(){
+  if(state.fitnessMyths.length > 0) return; // nur einmal laden, ändert sich selten
+  const { data, error } = await sb.from("fitness_myths").select("*").order("sort_order", { ascending: true });
+  if(!error && data) state.fitnessMyths = data;
+}
+
+// Wählt für jeden Tag automatisch denselben Mythos für alle Nutzer:innen aus
+// (Tag des Jahres modulo Anzahl der Mythen) — ändert sich jeden Tag von selbst.
+function todaysFitnessMyth(){
+  if(state.fitnessMyths.length === 0) return null;
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((now - start) / (1000*60*60*24));
+  const index = dayOfYear % state.fitnessMyths.length;
+  return state.fitnessMyths[index];
+}
+
+function renderMythCard(){
+  const myth = todaysFitnessMyth();
+  if(!myth) return "";
+  const isHu = currentLang === 'hu';
+  const mythText = isHu ? myth.myth_hu : myth.myth_de;
+  const truthText = isHu ? myth.truth_hu : myth.truth_de;
+  return `<div class="myth-card">
+    <p class="myth-eyebrow">${isHu ? 'Napi fitnesz-mítosz' : 'Fitness-Mythos des Tages'}</p>
+    <div class="myth-row">
+      <span class="myth-icon is-false">\u2715</span>
+      <span class="myth-text"><strong>${isHu ? 'Mítosz:' : 'Mythos:'}</strong> ${escapeHtml(mythText)}</span>
+    </div>
+    <div class="myth-row">
+      <span class="myth-icon is-true">\u2713</span>
+      <span class="myth-text"><strong>${isHu ? 'A valóság:' : 'Die Wahrheit:'}</strong> ${escapeHtml(truthText)}</span>
+    </div>
+  </div>`;
+}
+
 function renderChallengeHero(){
   const isHu = currentLang === 'hu';
   const started = !!state.challenge.startDate;
@@ -1683,6 +1734,7 @@ function renderRise(){
 
   return `
     <div style="max-width:520px; margin:0 auto;">
+      ${renderMythCard()}
       ${renderChallengeHero()}
       <div class="training-intro">
         <h3>${currentLang==='hu' ? 'Edzésvideóid' : 'Deine Workout-Videos'}</h3>
@@ -1847,7 +1899,7 @@ function bindLymphTimerEvents(){
 let walkTickerHandle = null;
 
 function openWalkPicker(){
-  state.walkTimer = { open: true, stage: "select", durationMinutes: 20, phase: "fast", phaseSecondsLeft: WALK_PHASE_SECONDS, elapsedSeconds: 0, totalSeconds: 0, running: false, finished: false };
+  state.walkTimer = { open: true, stage: "select", durationMinutes: 20, phase: "slow", phaseSecondsLeft: WALK_PHASE_SECONDS, elapsedSeconds: 0, totalSeconds: 0, running: false, finished: false };
   render();
 }
 
@@ -1855,7 +1907,7 @@ function startWalkTimer(minutes){
   clearInterval(walkTickerHandle);
   state.walkTimer = {
     open: true, stage: "running", durationMinutes: minutes,
-    phase: "fast", phaseSecondsLeft: Math.min(WALK_PHASE_SECONDS, minutes*60),
+    phase: "slow", phaseSecondsLeft: Math.min(WALK_PHASE_SECONDS, minutes*60),
     elapsedSeconds: 0, totalSeconds: minutes*60,
     running: true, finished: false
   };
@@ -1921,7 +1973,7 @@ async function finishWalkTimer(){
 
 function closeWalkTimer(){
   clearInterval(walkTickerHandle);
-  state.walkTimer = { open: false, stage: "select", durationMinutes: 20, phase: "fast", phaseSecondsLeft: WALK_PHASE_SECONDS, elapsedSeconds: 0, totalSeconds: 0, running: false, finished: false };
+  state.walkTimer = { open: false, stage: "select", durationMinutes: 20, phase: "slow", phaseSecondsLeft: WALK_PHASE_SECONDS, elapsedSeconds: 0, totalSeconds: 0, running: false, finished: false };
   render();
 }
 
@@ -2263,7 +2315,7 @@ function bindAppEvents(){
       if(state.mainTab === "today") loadWeekLog();
       if(state.mainTab === "shopping"){ loadShoppingItems(); }
       if(state.mainTab === "profil") calcProfil();
-      if(state.mainTab === "reise"){ Promise.all([loadTodayWorkouts(), loadChallenge()]).then(render); }
+      if(state.mainTab === "reise"){ Promise.all([loadTodayWorkouts(), loadChallenge(), loadFitnessMyths()]).then(render); }
       render();
     });
   });
@@ -2586,6 +2638,18 @@ function bindAutoWeekEvents(){
 
       // Kombinierter Abstand: relative Kalorien-Distanz + gewichtete relative Fett-Distanz.
       // Rezepte ohne Fettangabe werden nur nach Kalorien bewertet (kein Fett-Malus).
+      // Berechnet, wie viele Portionen eines Rezepts nötig sind, um möglichst nah an das
+      // Kalorienziel des Slots zu kommen (in 0,5er-Schritten, z.B. bei kleinen Snacks/Muffins
+      // wie 41 kcal/Portion sonst massive Unterschätzung des Tagesziels).
+      function computeServingsForTarget(recipe, kcalTarget){
+        const perServing = recipe.kcal / (recipe.servings || 1);
+        if(!perServing || perServing <= 0) return 1;
+        let mult = kcalTarget / perServing;
+        mult = Math.round(mult * 2) / 2;
+        mult = Math.max(0.5, Math.min(4, mult));
+        return mult;
+      }
+
       function combinedScore(r, kcalTarget, fatTarget){
         const kcalPerServing = r.kcal / (r.servings || 1);
         const kcalScore = Math.abs(kcalPerServing - kcalTarget) / Math.max(kcalTarget, 1);
@@ -2650,21 +2714,32 @@ function bindAutoWeekEvents(){
         let tagesKcal = 0;
 
         const frueh = pickClosest(fruehstueckPool.length ? fruehstueckPool : fallback, kcalFrueh, fatFrueh, usedFrueh);
-        if(frueh){ rows.push({ user_id: state.user.id, recipe_id: frueh.id, log_date: date, servings_logged: 1 }); tagesKcal += frueh.kcal / (frueh.servings || 1); }
+        if(frueh){
+          const freuhServings = computeServingsForTarget(frueh, kcalFrueh);
+          rows.push({ user_id: state.user.id, recipe_id: frueh.id, log_date: date, servings_logged: freuhServings });
+          tagesKcal += (frueh.kcal / (frueh.servings || 1)) * freuhServings;
+        }
 
         if(mainDishes.length > 0){
           const mittag = mainDishes[mainSlotCounter % mainDishes.length]; mainSlotCounter++;
-          rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: 1 }); tagesKcal += mittag.kcal / (mittag.servings || 1);
+          const mittagServings = computeServingsForTarget(mittag, kcalMittag);
+          rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: mittagServings });
+          tagesKcal += (mittag.kcal / (mittag.servings || 1)) * mittagServings;
 
           const abend = mainDishes[mainSlotCounter % mainDishes.length]; mainSlotCounter++;
-          rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: 1 }); tagesKcal += abend.kcal / (abend.servings || 1);
+          const abendServings = computeServingsForTarget(abend, kcalAbend);
+          rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: abendServings });
+          tagesKcal += (abend.kcal / (abend.servings || 1)) * abendServings;
         }
 
         // Snack ergänzen, um die Lücke zum Tagesziel zu schließen
         const restKcal = targetKcal - tagesKcal;
         if(restKcal >= 50 && snackPool.length > 0){
           const snack = pickClosest(snackPool, restKcal, fatSnack, usedSnack);
-          if(snack) rows.push({ user_id: state.user.id, recipe_id: snack.id, log_date: date, servings_logged: 1 });
+          if(snack){
+            const snackServings = computeServingsForTarget(snack, restKcal);
+            rows.push({ user_id: state.user.id, recipe_id: snack.id, log_date: date, servings_logged: snackServings });
+          }
         }
       });
 
