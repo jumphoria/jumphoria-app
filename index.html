@@ -2589,6 +2589,17 @@ function closeModal(){
   state.selectedTags = []; state.ingredientRows = [{amount:"", unit:"g", name:""}]; render();
 }
 
+// Mischt ein Array zufällig (Fisher-Yates) — sorgt dafür, dass bei jedem App-Start
+// eine andere Rezept-Reihenfolge angezeigt wird, statt immer dieselbe.
+function shuffleArray(arr){
+  const a = [...arr];
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 /* ---------- DATA ---------- */
 async function loadRecipes(){
   // ── Nur Listenfelder laden, KEIN ingredients/steps/ingredients_structured ──
@@ -2596,7 +2607,7 @@ async function loadRecipes(){
     .select(LIST_COLUMNS)
     .order("created_at", { ascending: false });
   if(error){ console.error(error); return; }
-  state.recipes = data || [];
+  state.recipes = shuffleArray(data || []);
   render();
 }
 
