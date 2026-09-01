@@ -718,6 +718,16 @@ async function loadUserLanguage(){
 }
 
 // Liefert den Rezepttitel in der aktuell aktiven Sprache (Fallback: Deutsch, falls keine HU-Übersetzung vorhanden ist)
+// Sucht sowohl im deutschen als auch im ungarischen Titel — unabhängig davon,
+// in welcher Sprache die Person gerade tippt oder die App eingestellt ist.
+function recipeMatchesSearch(recipe, query){
+  if(!query) return true;
+  const q = query.toLowerCase();
+  const deMatch = recipe.title && recipe.title.toLowerCase().includes(q);
+  const huMatch = recipe.title_hu && recipe.title_hu.toLowerCase().includes(q);
+  return deMatch || huMatch;
+}
+
 function getRecipeTitle(recipe){
   if(currentLang === "hu" && recipe.title_hu) return recipe.title_hu;
   return recipe.title;
@@ -785,7 +795,7 @@ const JUMP_LIFT_WORKOUTS = [
 const LYMPH_FLOW_WORKOUT_ID = "lymph_morgenroutine";
 const LYMPH_FLOW_IMAGE = ""; // Cover-Foto fürs Kartenlayout, leer = Farbverlauf mit Titel
 const LYMPH_FLOW_EXERCISES = [
-  { name: "Tiefe Bauchatmung",         cue: "Ruhig durch die Nase ein-, durch den Mund ausatmen.", seconds: 60, video: "https://enossxziqzvntcagndum.supabase.co/storage/v1/object/public/lymph-videos/atmung.mp4" },
+  { name: "Tiefe Bauchatmung",         cue: "Ruhig durch die Nase ein-, durch den Mund ausatmen.", seconds: 60, video: "" },
   { name: "Armkreisen groß",           cue: "Große, lockere Kreise vor und zurück.",                seconds: 40, video: "" },
   { name: "Schulterrollen",            cue: "Locker nach hinten rollen.",                            seconds: 30, video: "" },
   { name: "Ausschütteln Arme & Beine", cue: "Ganz locker schütteln, wie ein Hund im Regen.",         seconds: 30, video: "" },
@@ -986,10 +996,7 @@ function renderAppShell(){
 
 function renderIRTab(){
   const irRecipes = state.recipes.filter(r => (r.tags||[]).includes('IR'));
-  const filtered = irRecipes.filter(r => {
-    const title = getRecipeTitle(r) || "";
-    return !state.irSearch || title.toLowerCase().includes(state.irSearch.toLowerCase());
-  });
+  const filtered = irRecipes.filter(r => recipeMatchesSearch(r, state.irSearch));
   // Aufteilung nach Kohlenhydraten pro Portion: <15g = leicht (Frühstück/Snack),
   // >=15g = Hauptmahlzeit mit bewusster CH-Quelle (Mittag/Abend)
   const lightList = filtered.filter(r => {
@@ -1338,7 +1345,7 @@ function renderDayAddPopup(){
   // Stufe 2: Rezeptauswahl anhand der gewählten Filter
   const search = state.dayAddSearch || "";
   const filtered = state.recipes.filter(r =>
-    (!search || r.title.toLowerCase().includes(search.toLowerCase())) &&
+    recipeMatchesSearch(r, search) &&
     (!state.dayAddTag || (r.tags||[]).includes(state.dayAddTag)) &&
     (!state.dayAddKcalBand || getKcalBand(r.kcal, r.servings) === state.dayAddKcalBand)
   );
@@ -1661,7 +1668,7 @@ function bindLymphTimerEvents(){
 
 function renderGrid(){
   const filtered = state.recipes.filter(r=>{
-    const matchesSearch = !state.search || r.title.toLowerCase().includes(state.search.toLowerCase());
+    const matchesSearch = recipeMatchesSearch(r, state.search);
     const matchesTag = !state.activeTag || (r.tags||[]).includes(state.activeTag);
     const matchesKcalBand = !state.activeKcalBand || getKcalBand(r.kcal, r.servings) === state.activeKcalBand;
     return matchesSearch && matchesTag && matchesKcalBand;
