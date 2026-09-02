@@ -546,6 +546,30 @@
     display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; font-size:13.5px;
   }
 
+  /* ====== PROGRESS-FOTOS ====== */
+  .progress-type-row{ display:flex; gap:8px; margin:16px 0; }
+  .progress-type-btn{
+    flex:1; padding:12px 6px; border-radius:12px; border:1.5px solid var(--line);
+    background:#fff; color:var(--ink-on-paper); font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;
+  }
+  .progress-type-btn.active{ background:var(--pine); border-color:var(--pine); color:#fff; }
+  .progress-photo-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-top:18px; }
+  .progress-photo-item{ position:relative; border-radius:12px; overflow:hidden; aspect-ratio:3/4; background:var(--cream); }
+  .progress-photo-item img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .progress-photo-badge{
+    position:absolute; top:6px; left:6px; background:rgba(0,0,0,0.6); color:#fff;
+    font-size:9.5px; font-weight:700; text-transform:uppercase; padding:2px 7px; border-radius:8px;
+  }
+  .progress-photo-date{
+    position:absolute; bottom:0; left:0; right:0; background:rgba(0,0,0,0.55); color:#fff;
+    font-size:10px; padding:3px 6px; text-align:center;
+  }
+  .progress-photo-delete{
+    position:absolute; top:4px; right:4px; width:22px; height:22px; border-radius:50%;
+    background:rgba(0,0,0,0.55); color:#fff; border:none; font-size:12px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+
   /* ====== TÄGLICHER FITNESS-MYTHOS ====== */
   .myth-card{
     border-radius:18px; padding:20px 22px; margin-bottom:18px;
@@ -848,6 +872,58 @@ async function setLanguage(lang){
   render();
 }
 
+async function loadProgressPhotos(){
+  if(!state.user) return;
+  const { data, error } = await sb.from("progress_photos")
+    .select("*").eq("user_id", state.user.id)
+    .order("taken_at", { ascending: false });
+  if(error){ console.error(error); return; }
+  const rows = data || [];
+  if(rows.length > 0){
+    const paths = rows.map(r => r.storage_path);
+    const { data: signedData, error: signedError } = await sb.storage
+      .from("progress-photos").createSignedUrls(paths, 3600);
+    if(!signedError && signedData){
+      rows.forEach(r => {
+        const match = signedData.find(s => s.path === r.storage_path);
+        r.signed_url = match ? match.signedUrl : null;
+      });
+    }
+  }
+  state.progressPhotos = rows;
+  render();
+}
+
+async function uploadProgressPhoto(file, type){
+  if(!state.user) return;
+  state.progressPhotoUploading = true;
+  render();
+  try{
+    const compressed = await compressImageFile(file, 1400, 0.8);
+    const fileName = `${state.user.id}/${Date.now()}-${type}.jpg`;
+    const { error: uploadError } = await sb.storage
+      .from("progress-photos")
+      .upload(fileName, compressed, { contentType: "image/jpeg", upsert: false });
+    if(uploadError) throw uploadError;
+    const { error: insertError } = await sb.from("progress_photos")
+      .insert({ user_id: state.user.id, storage_path: fileName, photo_type: type, taken_at: new Date().toISOString().slice(0,10) });
+    if(insertError) throw insertError;
+    await loadProgressPhotos();
+  }catch(err){
+    alert("Fehler: " + err.message);
+  }
+  state.progressPhotoUploading = false;
+  render();
+}
+
+async function deleteProgressPhoto(id, storagePath){
+  if(!confirm(currentLang==='hu' ? 'Biztosan törlöd ezt a fotót?' : 'Dieses Foto wirklich löschen?')) return;
+  await sb.storage.from("progress-photos").remove([storagePath]);
+  const { error } = await sb.from("progress_photos").delete().eq("id", id);
+  if(error){ alert("Fehler: " + error.message); return; }
+  await loadProgressPhotos();
+}
+
 async function loadUserLanguage(){
   if(!state.user) return;
   const { data, error } = await sb.from("user_settings")
@@ -1086,6 +1162,9 @@ let state = {
   challengeOpen: false,
   fitnessMyths: [],
   bodyTreatmentOpen: null,
+  progressPhotosOpen: false,
+  progressPhotos: [],
+  progressPhotoUploading: false,
   // Lymphfluss-Timer (Morgenroutine)
   lymphTimer: { open: false, currentIndex: 0, secondsLeft: 0, running: false, finished: false },
   // Rezept direkt zu einem Tag im Wochenplan hinzufügen
@@ -1213,6 +1292,7 @@ function renderAppShell(){
     ${state.detailRecipe ? renderDetail() : ""}
     ${state.lymphTimer && state.lymphTimer.open ? renderLymphTimerModal() : ""}
     ${state.bodyTreatmentOpen ? renderBodyTreatmentModal() : ""}
+    ${state.progressPhotosOpen ? renderProgressPhotosPopup() : ""}
     ${state.walkTimer && state.walkTimer.open ? renderWalkTimerModal() : ""}
   `;
 }
@@ -1813,6 +1893,12 @@ function renderProfil(){
         </div>
       </div>
       ` : ''}
+
+      <div style="background:var(--paper); border-radius:16px; padding:18px; border:1px solid var(--line); margin-top:16px;">
+        <h4 style="color:var(--terracotta); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 10px;">${isHu ? 'Testi átalakulás' : 'Körperliche Transformation'}</h4>
+        <p style="font-size:13px; color:var(--ink-on-paper); opacity:0.75; margin:0 0 12px;">${isHu ? 'Dokumentáld a fejlődésed előtte/utána fotókkal — csak te látod.' : 'Dokumentiere deinen Fortschritt mit Vorher/Nachher-Fotos — nur du siehst sie.'}</p>
+        <button type="button" class="btn btn-block" id="open-progress-photos-btn">\u{1F4F7} ${isHu ? 'Progressz fotók megnyitása' : 'Fortschritts-Fotos öffnen'}</button>
+      </div>
     </div>
   `;
 }
@@ -2159,6 +2245,63 @@ function renderLymphTimerModal(){
       </div>
     </div>
   </div>`;
+}
+
+/* ---------- PROGRESS-FOTOS ---------- */
+function renderProgressPhotosPopup(){
+  const isHu = currentLang === 'hu';
+  const typeLabels = isHu
+    ? { before: "Előtte", after: "Utána", progress: "Folyamat" }
+    : { before: "Vorher", after: "Nachher", progress: "Verlauf" };
+  const activeType = state.progressPhotoUploadType || "progress";
+  return `<div class="overlay" id="progress-photos-overlay"><div class="modal">
+    <button class="modal-close" id="progress-photos-close">\u2715</button>
+    <h2>${isHu ? 'Progressz fotók' : 'Fortschritts-Fotos'}</h2>
+    <p style="color:var(--ink-on-paper); opacity:0.7; font-size:13.5px; margin:0 0 4px;">${isHu ? 'Ezek a fotók csak neked láthatók, senki másnak.' : 'Diese Fotos sind nur für dich sichtbar, für niemand sonst.'}</p>
+    <div class="progress-type-row">
+      ${Object.keys(typeLabels).map(key => `<button type="button" class="progress-type-btn ${activeType===key?'active':''}" data-progress-type="${key}">${typeLabels[key]}</button>`).join("")}
+    </div>
+    <button type="button" class="btn btn-block" id="progress-photo-upload-btn" ${state.progressPhotoUploading ? 'disabled' : ''}>
+      ${state.progressPhotoUploading ? (isHu ? '\u23f3 Feltöltés\u2026' : '\u23f3 Wird hochgeladen\u2026') : '\u{1F4F7} ' + (isHu ? 'Fotó hozzáadása' : 'Foto hinzufügen')}
+    </button>
+    <input type="file" id="progress-photo-input" accept="image/*" style="display:none;">
+    ${state.progressPhotos.length === 0 ? `<p style="color:var(--ink-on-paper); opacity:0.55; font-size:13px; margin-top:18px; text-align:center;">${isHu ? 'Még nincs feltöltött fotó.' : 'Noch keine Fotos hochgeladen.'}</p>` : `
+    <div class="progress-photo-grid">
+      ${state.progressPhotos.map(p => `<div class="progress-photo-item">
+        ${p.signed_url ? `<img src="${p.signed_url}" alt="Progress">` : ""}
+        <span class="progress-photo-badge">${typeLabels[p.photo_type] || p.photo_type}</span>
+        <button type="button" class="progress-photo-delete" data-photo-id="${p.id}" data-photo-path="${escapeAttr(p.storage_path)}">\u2715</button>
+        <span class="progress-photo-date">${p.taken_at}</span>
+      </div>`).join("")}
+    </div>`}
+  </div></div>`;
+}
+
+function bindProgressPhotosEvents(){
+  const overlay = document.getElementById("progress-photos-overlay");
+  if(!overlay) return;
+  overlay.addEventListener("click", (e)=>{ if(e.target.id==="progress-photos-overlay"){ state.progressPhotosOpen=false; render(); } });
+  document.getElementById("progress-photos-close").addEventListener("click", ()=>{ state.progressPhotosOpen=false; render(); });
+
+  document.querySelectorAll(".progress-type-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ state.progressPhotoUploadType = btn.dataset.progressType; render(); });
+  });
+
+  const uploadBtn = document.getElementById("progress-photo-upload-btn");
+  const fileInput = document.getElementById("progress-photo-input");
+  if(uploadBtn && fileInput){
+    uploadBtn.addEventListener("click", ()=>{ fileInput.click(); });
+    fileInput.addEventListener("change", async (e)=>{
+      const file = e.target.files[0]; if(!file) return;
+      const type = state.progressPhotoUploadType || "progress";
+      await uploadProgressPhoto(file, type);
+      fileInput.value = "";
+    });
+  }
+
+  document.querySelectorAll(".progress-photo-delete").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ deleteProgressPhoto(btn.dataset.photoId, btn.dataset.photoPath); });
+  });
 }
 
 /* ---------- KÖRPERBEHANDLUNGEN ---------- */
@@ -2992,6 +3135,14 @@ function bindAppEvents(){
   if(state.swapTarget) bindSwapEvents();
   if(state.lymphTimer && state.lymphTimer.open) bindLymphTimerEvents();
   if(state.bodyTreatmentOpen) bindBodyTreatmentEvents();
+  if(state.progressPhotosOpen) bindProgressPhotosEvents();
+
+  const openProgressPhotosBtn = document.getElementById("open-progress-photos-btn");
+  if(openProgressPhotosBtn) openProgressPhotosBtn.addEventListener("click", ()=>{
+    state.progressPhotosOpen = true;
+    render();
+    loadProgressPhotos();
+  });
   if(state.walkTimer && state.walkTimer.open) bindWalkTimerEvents();
   if(state.challengeOpen) bindChallengePopupEvents();
 }
@@ -3387,11 +3538,17 @@ function bindModalEvents(){
   document.getElementById("photo-drop").addEventListener("click", ()=>{ document.getElementById("photo-input").click(); });
   document.getElementById("photo-input").addEventListener("change", async (e)=>{
     const file = e.target.files[0]; if(!file) return;
-    // Vorschau sofort anzeigen (lokal, ohne DB)
+    // Vorschau sofort mit Original zeigen, im Hintergrund komprimieren
     const previewUrl = URL.createObjectURL(file);
     state.photoDataUrl = previewUrl;
     state.photoFile = file;
     render();
+    try{
+      const compressed = await compressImageFile(file, 1200, 0.78);
+      state.photoFile = compressed;
+    }catch(err){
+      console.error("Komprimierung fehlgeschlagen, verwende Original:", err);
+    }
   });
   document.querySelectorAll("#tag-select-row .tag-pick").forEach(chip=>{
     chip.addEventListener("click", ()=>{
@@ -3808,6 +3965,35 @@ function escapeHtml(str){
   return str.replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 }
 function escapeAttr(str){ return escapeHtml(str); }
+
+// Verkleinert und komprimiert ein Bild im Browser, bevor es hochgeladen wird
+// (max. Breite/Höhe + JPEG-Qualität) — reduziert Dateigröße spürbar, ohne dass
+// die Person etwas davon merkt außer einem etwas schnelleren Upload.
+function compressImageFile(file, maxDimension = 1200, quality = 0.78){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      let { width, height } = img;
+      if(width > maxDimension || height > maxDimension){
+        if(width > height){ height = Math.round(height * (maxDimension / width)); width = maxDimension; }
+        else { width = Math.round(width * (maxDimension / height)); height = maxDimension; }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(objectUrl);
+      canvas.toBlob((blob) => {
+        if(!blob){ reject(new Error("Bildkomprimierung fehlgeschlagen")); return; }
+        const compressedFile = new File([blob], (file.name || "photo").replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+        resolve(compressedFile);
+      }, "image/jpeg", quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Bild konnte nicht geladen werden")); };
+    img.src = objectUrl;
+  });
+}
 
 /* ---------- INIT ---------- */
 sb.auth.onAuthStateChange((_event, session)=>{
