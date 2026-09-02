@@ -3248,16 +3248,21 @@ function bindAutoWeekEvents(){
       const fatHauptAvg = totalFatTarget != null ? Math.round(totalFatTarget * 0.325) : null; // (35%+30%)/2
       const fatSnack = totalFatTarget != null ? Math.round(totalFatTarget * 0.10) : null;
 
-      // Meal-Prep-Prinzip: nur 3 Hauptgerichte für die GANZE Woche fix wählen.
-      // Jedes Gericht bleibt für mehrere Tage hintereinander gleich (Blockrotation),
-      // statt bei jeder einzelnen Mahlzeit zu wechseln — so muss nicht täglich neu gekocht werden.
-      const MAIN_DISH_COUNT = 3;
-      const MAIN_DISH_BLOCK_SIZE = 3; // Anzahl Tage, für die dasselbe Mittag-/Abendgericht wiederholt wird
+      // Meal-Prep-Prinzip: mehrere Hauptgerichte für die GANZE Woche fix wählen.
+      // 5 Gerichte auf 14 Mahlzeiten (7 Tage × Mittag+Abend) verteilt = max. 3 Wiederholungen pro Gericht,
+      // und zwar in zusammenhängenden Blöcken (nicht zufällig zwischen den Tagen gemischt).
+      const MAIN_DISH_COUNT = 5;
       const avgHauptTarget = Math.round((kcalMittag + kcalAbend) / 2);
       const hauptSourcePool = hauptPool.length ? hauptPool : fallback;
       const mainDishes = [...hauptSourcePool]
         .sort((a,b)=>combinedScore(a, avgHauptTarget, fatHauptAvg) - combinedScore(b, avgHauptTarget, fatHauptAvg))
         .slice(0, Math.min(MAIN_DISH_COUNT, hauptSourcePool.length));
+      const totalMainSlots = weekDates.length * 2; // Mittag + Abend pro Tag
+      function mainDishForSlot(slotIndex){
+        if(mainDishes.length === 0) return null;
+        const idx = Math.min(mainDishes.length - 1, Math.floor(slotIndex * mainDishes.length / totalMainSlots));
+        return mainDishes[idx];
+      }
 
       const usedFrueh = new Map();
       const usedSnack = new Map();
@@ -3274,13 +3279,12 @@ function bindAutoWeekEvents(){
         }
 
         if(mainDishes.length > 0){
-          const blockIndex = Math.floor(dayIndex / MAIN_DISH_BLOCK_SIZE);
-          const mittag = mainDishes[blockIndex % mainDishes.length];
+          const mittag = mainDishForSlot(dayIndex * 2);
           const mittagServings = computeServingsForTarget(mittag, kcalMittag);
           rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: mittagServings });
           tagesKcal += (mittag.kcal / (mittag.servings || 1)) * mittagServings;
 
-          const abend = mainDishes[(blockIndex + 1) % mainDishes.length];
+          const abend = mainDishForSlot(dayIndex * 2 + 1);
           const abendServings = computeServingsForTarget(abend, kcalAbend);
           rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: abendServings });
           tagesKcal += (abend.kcal / (abend.servings || 1)) * abendServings;
