@@ -1471,7 +1471,13 @@ function renderWeek(){
   if(entries.length === 0){
     return nutriCard + header + `<div class="empty-state"><h3>Noch nichts für diese Woche geplant</h3><p>Tippe auf "Woche automatisch planen" oder geh zu "Rezepte" und tippe bei einem Rezept auf "+ Geplant".</p></div>`;
   }
-  return nutriCard + header + `<div class="week-list">${weekDates.map((date, idx) => {
+  const todayStrForOrder = new Date().toISOString().slice(0,10);
+  const todayIdxForOrder = weekDates.indexOf(todayStrForOrder);
+  const orderedDayIndices = todayIdxForOrder >= 0
+    ? Array.from({length:7}, (_, i) => (todayIdxForOrder + i) % 7)
+    : Array.from({length:7}, (_, i) => i);
+  return nutriCard + header + `<div class="week-list">${orderedDayIndices.map(idx => {
+    const date = weekDates[idx];
     const dayEntries = entries.filter(e => e.log_date === date);
     let kcalSum=0, proteinSum=0, carbsSum=0, fatSum=0;
     dayEntries.forEach(e => {
@@ -1907,7 +1913,7 @@ function renderWorkoutCoverInner(title, image){
   if(image){
     return `<img src="${escapeAttr(image)}" alt="${escapeAttr(title)}">`;
   }
-  return `<div class="workout-card-noimg">${escapeHtml(title)}</div>`;
+  return `<div class="workout-card-noimg"></div>`;
 }
 
 async function loadFitnessMyths(){
