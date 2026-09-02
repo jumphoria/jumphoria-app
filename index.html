@@ -1431,7 +1431,7 @@ function renderHomeTab(){
   const extras = (state.weekExtras || []).filter(x => x.log_date === todayStr);
 
   const greeting = `<div style="margin-bottom:18px;">
-    <h2 style="font-family:Georgia,serif; color:var(--pine-dark); font-size:22px; margin:0 0 4px;">${isHu ? `Szia ${firstName}! \u2728` : `Hallo ${firstName}! \u2728`}</h2>
+    <h2 style="font-family:Georgia,serif; color:var(--paper); font-size:22px; margin:0 0 4px;">${isHu ? `Szia ${firstName}! \u2728` : `Hallo ${firstName}! \u2728`}</h2>
     <p style="color:var(--ink); opacity:0.75; font-size:14px; margin:0;">${isHu ? 'Készen állsz egy újabb csodás napra?' : 'Bereit für einen weiteren wunderbaren Tag?'}</p>
   </div>`;
 
@@ -1493,7 +1493,7 @@ function renderHomeTab(){
     ${greeting}
     ${nutriCard}
     ${addButtons}
-    <h3 style="font-family:Georgia,serif; color:var(--pine-dark); font-size:16px; margin:0 0 10px;">${isHu ? 'Mai étkezéseid' : 'Deine heutigen Mahlzeiten'}</h3>
+    <h3 style="font-family:Georgia,serif; color:var(--paper); font-size:16px; margin:0 0 10px;">${isHu ? 'Mai étkezéseid' : 'Deine heutigen Mahlzeiten'}</h3>
     ${mealsListHtml}
   </div>`;
 }
