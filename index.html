@@ -503,6 +503,13 @@
   }
 .ing-estimate{ color:#999; font-size:0.9em; font-style:italic; }
 
+  .today-eaten-toggle{
+    background:none; border:1.5px solid var(--pine); color:var(--pine); border-radius:50%;
+    width:30px; height:30px; display:flex; align-items:center; justify-content:center;
+    font-size:15px; cursor:pointer; flex-shrink:0; font-weight:700;
+  }
+  .today-eaten-toggle.is-eaten{ background:var(--pine); color:#fff; }
+
   /* ====== TAGES-ERNÄHRUNGSÜBERSICHT ====== */
   .today-nutri-card{ background:var(--paper); border-radius:20px; padding:22px 20px; margin-bottom:20px; border:1px solid var(--line); box-shadow:var(--shadow); }
   .today-nutri-title{ font-family:Georgia,serif; font-size:17px; color:var(--pine-dark); margin:0 0 4px; }
@@ -1262,7 +1269,7 @@ function renderTodayNutriCard(){
   const isHu = currentLang === 'hu';
   calcProfil();
   const todayStr = new Date().toISOString().slice(0,10);
-  const entries = (state.weekLog || []).filter(e => e.log_date === todayStr);
+  const entries = (state.weekLog || []).filter(e => e.log_date === todayStr && e.eaten);
   let kcalSum=0, proteinSum=0, carbsSum=0, fatSum=0;
   entries.forEach(e => {
     const recipe = state.recipes.find(r => r.id === e.recipe_id);
@@ -1305,7 +1312,7 @@ function renderTodayNutriCard(){
 
   return `<div class="today-nutri-card">
     <h4 class="today-nutri-title">${isHu ? 'Mai áttekintés' : 'Heutige Übersicht'}</h4>
-    <p class="today-nutri-sub">${isHu ? 'Napi cél' : 'Tagesziel'}: ${targetKcal} kcal</p>
+    <p class="today-nutri-sub">${isHu ? 'Napi cél' : 'Tagesziel'}: ${targetKcal} kcal \u00b7 ${isHu ? 'csak a bejelölt étkezések számítanak bele' : 'nur als gegessen markierte Mahlzeiten zählen'}</p>
     <div class="today-nutri-row">
       <div class="today-nutri-side"><strong>${kcalSum}</strong><span>${isHu ? 'Elfogyasztva' : 'Gegessen'}</span></div>
       <div class="today-nutri-ring" style="--pct:${pctEaten}; background:conic-gradient(${remaining < 0 ? 'var(--terracotta)' : 'var(--pine)'} calc(var(--pct)*1%), rgba(58,74,48,0.12) 0);">
@@ -1392,6 +1399,7 @@ function renderWeek(){
                   <strong>${escapeHtml(getRecipeTitle(recipe))}</strong>
                   <span>${e.servings_logged} Portion${e.servings_logged==1?'':'en'}${kcalForEntry!==null?` \u00b7 ${kcalForEntry} kcal${isBatchEntry?'/Portion':''}`:''}</span>
                 </div>
+                ${isToday ? `<button type="button" class="today-eaten-toggle ${e.eaten?'is-eaten':''}" data-log-id="${e.id}" data-eaten="${e.eaten}" title="${currentLang==='hu' ? 'Megettem' : 'Gegessen'}">\u2713</button>` : ""}
                 <div class="today-qty-stepper">
                   <button type="button" class="stepper-btn today-qty-minus" data-log-id="${e.id}" data-current="${e.servings_logged}" title="Weniger Portionen">\u2212</button>
                   <span class="today-qty-value">${e.servings_logged}</span>
@@ -1664,51 +1672,58 @@ function renderProfil(){
   calcProfil();
   const kcal = state.profilKcal;
   const m = state.profilMakros;
+  const isHu = currentLang === 'hu';
 
   return `
     <div style="max-width:480px; margin:0 auto;">
-      <h2 style="font-family:Georgia,serif; color:var(--pine-dark); margin:0 0 6px;">Mein Profil</h2>
-      <p style="color:var(--ink); opacity:0.7; font-size:14px; margin:0 0 24px;">Berechne deinen persönlichen Kalorienbedarf für dein Jump & Lift Programm.</p>
+      <h2 style="font-family:Georgia,serif; color:var(--pine-dark); margin:0 0 6px;">${isHu ? 'Az én profilom' : 'Mein Profil'}</h2>
+      <p style="color:var(--ink); opacity:0.7; font-size:14px; margin:0 0 24px;">${isHu ? 'Számítsd ki a személyes kalóriaszükségleted a Jump & Lift programodhoz.' : 'Berechne deinen persönlichen Kalorienbedarf für dein Jump & Lift Programm.'}</p>
 
       <div style="background:var(--ink-on-paper); border-radius:16px; padding:20px; border:1px solid var(--line); margin-bottom:16px;">
-        <h4 style="color:var(--pine); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 14px;">Deine Daten</h4>
+        <h4 style="color:var(--pine); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 14px;">${isHu ? 'A te adataid' : 'Deine Daten'}</h4>
 
         <div class="field">
-          <label style="color:var(--ink); opacity:1;">Geschlecht</label>
+          <label style="color:var(--ink); opacity:1;">${isHu ? 'Nem' : 'Geschlecht'}</label>
           <div style="display:flex; gap:10px;">
-            <button type="button" class="profil-pick ${p.geschlecht==='w'?'active':''}" data-field="geschlecht" data-val="w" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.geschlecht==='w'?'var(--pine)':'#fff'}; color:${p.geschlecht==='w'?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">♀ Weiblich</button>
-            <button type="button" class="profil-pick ${p.geschlecht==='m'?'active':''}" data-field="geschlecht" data-val="m" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.geschlecht==='m'?'var(--pine)':'#fff'}; color:${p.geschlecht==='m'?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">♂ Männlich</button>
+            <button type="button" class="profil-pick ${p.geschlecht==='w'?'active':''}" data-field="geschlecht" data-val="w" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.geschlecht==='w'?'var(--pine)':'#fff'}; color:${p.geschlecht==='w'?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">♀ ${isHu ? 'Nő' : 'Weiblich'}</button>
+            <button type="button" class="profil-pick ${p.geschlecht==='m'?'active':''}" data-field="geschlecht" data-val="m" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.geschlecht==='m'?'var(--pine)':'#fff'}; color:${p.geschlecht==='m'?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">♂ ${isHu ? 'Férfi' : 'Männlich'}</button>
           </div>
         </div>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
           <div class="field">
-            <label style="color:var(--ink); opacity:1;">Alter (Jahre)</label>
+            <label style="color:var(--ink); opacity:1;">${isHu ? 'Életkor (év)' : 'Alter (Jahre)'}</label>
             <input type="number" class="profil-input" data-field="alter" value="${p.alter}" min="15" max="80" style="width:100%; padding:10px; border-radius:9px; border:1.5px solid var(--line); background:#fff; font-size:14px; color:var(--ink-on-paper);">
           </div>
           <div class="field">
-            <label style="color:var(--ink); opacity:1;">Größe (cm)</label>
+            <label style="color:var(--ink); opacity:1;">${isHu ? 'Magasság (cm)' : 'Größe (cm)'}</label>
             <input type="number" class="profil-input" data-field="groesse" value="${p.groesse}" min="140" max="210" style="width:100%; padding:10px; border-radius:9px; border:1.5px solid var(--line); background:#fff; font-size:14px; color:var(--ink-on-paper);">
           </div>
           <div class="field" style="grid-column:1/-1;">
-            <label style="color:var(--ink); opacity:1;">Gewicht (kg)</label>
+            <label style="color:var(--ink); opacity:1;">${isHu ? 'Testsúly (kg)' : 'Gewicht (kg)'}</label>
             <input type="number" class="profil-input" data-field="gewicht" value="${p.gewicht}" min="40" max="200" style="width:100%; padding:10px; border-radius:9px; border:1.5px solid var(--line); background:#fff; font-size:14px; color:var(--ink-on-paper);">
           </div>
         </div>
 
         <div class="field">
-          <label style="color:var(--ink); opacity:1;">Aktivitätslevel</label>
+          <label style="color:var(--ink); opacity:1;">${isHu ? 'Aktivitási szint' : 'Aktivitätslevel'}</label>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            ${[["wenig","🛋️ Kaum Sport"],["leicht","🚶 1-3× / Woche"],["mittel","🏃 3-5× / Woche"],["viel","💪 5-7× / Woche"]].map(([val,label]) =>
+            ${(isHu
+              ? [["wenig","🛋️ Alig sportol"],["leicht","🚶 heti 1-3×"],["mittel","🏃 heti 3-5×"],["viel","💪 heti 5-7×"]]
+              : [["wenig","🛋️ Kaum Sport"],["leicht","🚶 1-3× / Woche"],["mittel","🏃 3-5× / Woche"],["viel","💪 5-7× / Woche"]]
+            ).map(([val,label]) =>
               `<button type="button" class="profil-pick" data-field="aktivitaet" data-val="${val}" style="flex:1; min-width:90px; padding:9px 6px; border-radius:10px; border:1.5px solid var(--line); background:${p.aktivitaet===val?'var(--pine)':'#fff'}; color:${p.aktivitaet===val?'#fff':'var(--ink-on-paper)'}; font-size:12.5px; font-weight:600; cursor:pointer;">${label}</button>`
             ).join("")}
           </div>
         </div>
 
         <div class="field" style="margin-bottom:0;">
-          <label style="color:var(--ink); opacity:1;">Ziel</label>
+          <label style="color:var(--ink); opacity:1;">${isHu ? 'Cél' : 'Ziel'}</label>
           <div style="display:flex; gap:10px;">
-            ${[["abnehmen","⬇️ Abnehmen"],["halten","➡️ Gewicht halten"]].map(([val,label]) =>
+            ${(isHu
+              ? [["abnehmen","⬇️ Fogyás"],["halten","➡️ Súly tartása"]]
+              : [["abnehmen","⬇️ Abnehmen"],["halten","➡️ Gewicht halten"]]
+            ).map(([val,label]) =>
               `<button type="button" class="profil-pick ${p.ziel===val?'active':''}" data-field="ziel" data-val="${val}" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${p.ziel===val?'var(--terracotta)':'#fff'}; color:${p.ziel===val?'#fff':'var(--ink-on-paper)'}; font-weight:600; cursor:pointer;">${label}</button>`
             ).join("")}
           </div>
@@ -1717,8 +1732,8 @@ function renderProfil(){
 
       ${kcal ? `
       <div style="background:var(--ink-on-paper); border-radius:16px; padding:22px; margin-bottom:16px;">
-        <h4 style="color:var(--pine); font-size:13px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 16px;">Dein tägliches Ziel</h4>
-        ${state.profilKcalCapped ? `<div style="background:rgba(201,151,58,0.15); border:1px solid var(--pine); border-radius:10px; padding:10px 12px; margin-bottom:14px; font-size:12.5px; color:var(--ink-on-paper); line-height:1.4;">⚠️ Dein Kalorienziel wurde auf deinen Grundumsatz (${state.profilBmr} kcal) angehoben. Weniger zu essen wäre auf Dauer ungesund, da dein Körper auch in Ruhe diese Energie für lebenswichtige Funktionen braucht.</div>` : ""}
+        <h4 style="color:var(--pine); font-size:13px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 16px;">${isHu ? 'Napi célod' : 'Dein tägliches Ziel'}</h4>
+        ${state.profilKcalCapped ? `<div style="background:rgba(201,151,58,0.15); border:1px solid var(--pine); border-radius:10px; padding:10px 12px; margin-bottom:14px; font-size:12.5px; color:var(--ink-on-paper); line-height:1.4;">⚠️ ${isHu ? `A kalóriacélod fel lett emelve az alapanyagcseréd szintjére (${state.profilBmr} kcal). Ennél kevesebbet enni hosszú távon egészségtelen lenne, mivel a tested nyugalomban is ennyi energiát igényel az életfontosságú funkciókhoz.` : `Dein Kalorienziel wurde auf deinen Grundumsatz (${state.profilBmr} kcal) angehoben. Weniger zu essen wäre auf Dauer ungesund, da dein Körper auch in Ruhe diese Energie für lebenswichtige Funktionen braucht.`}</div>` : ""}
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
           <div style="flex:1; min-width:80px; background:rgba(255,255,255,0.1); border-radius:12px; padding:14px; text-align:center;">
             <div style="font-size:28px; font-weight:700; color:var(--pine); font-family:Georgia,serif;">${kcal}</div>
@@ -1726,25 +1741,25 @@ function renderProfil(){
           </div>
           <div style="flex:1; min-width:70px; background:rgba(255,255,255,0.1); border-radius:12px; padding:14px; text-align:center;">
             <div style="font-size:22px; font-weight:700; color:var(--ink);">${m.protein}g</div>
-            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">Eiweiß</div>
+            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">${isHu ? 'Fehérje' : 'Eiweiß'}</div>
           </div>
           <div style="flex:1; min-width:70px; background:rgba(255,255,255,0.1); border-radius:12px; padding:14px; text-align:center;">
             <div style="font-size:22px; font-weight:700; color:var(--ink);">${m.carbs}g</div>
-            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">KH</div>
+            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">${isHu ? 'SZH' : 'KH'}</div>
           </div>
           <div style="flex:1; min-width:70px; background:rgba(255,255,255,0.1); border-radius:12px; padding:14px; text-align:center;">
             <div style="font-size:22px; font-weight:700; color:var(--ink);">${m.fat}g</div>
-            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">Fett</div>
+            <div style="font-size:11px; color:var(--ink); opacity:0.7; text-transform:uppercase; margin-top:2px;">${isHu ? 'Zsír' : 'Fett'}</div>
           </div>
         </div>
-        <button type="button" class="btn btn-block" id="use-profil-kcal" style="background:var(--pine);">✨ Diese Kalorien für Wochenplanung verwenden</button>
+        <button type="button" class="btn btn-block" id="use-profil-kcal" style="background:var(--pine);">✨ ${isHu ? 'Ezt a kalóriaértéket használom a heti tervezéshez' : 'Diese Kalorien für Wochenplanung verwenden'}</button>
       </div>
 
       <div style="background:var(--paper); border-radius:16px; padding:18px; border:1px solid var(--line);">
-        <h4 style="color:var(--terracotta); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 10px;">Jump & Lift Empfehlungen</h4>
-        <div style="font-size:14px; color:var(--ink-on-paper); line-height:1.7; font-size:14px;">
-          <div style="margin-bottom:8px;">⚡ <strong>Pre Workout</strong> (30-60 Min vorher): ${Math.round(kcal * 0.15)} kcal · leichte KH + etwas Eiweiß</div>
-          <div>💪 <strong>Post Workout</strong> (direkt danach): ${Math.round(kcal * 0.25)} kcal · viel Eiweiß + KH zur Regeneration</div>
+        <h4 style="color:var(--terracotta); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 10px;">${isHu ? 'Jump & Lift ajánlások' : 'Jump & Lift Empfehlungen'}</h4>
+        <div style="font-size:14px; color:var(--ink-on-paper); line-height:1.7;">
+          <div style="margin-bottom:8px;">⚡ <strong>${isHu ? 'Edzés előtt' : 'Pre Workout'}</strong> ${isHu ? '(30-60 perccel korábban)' : '(30-60 Min vorher)'}: ${Math.round(kcal * 0.15)} kcal · ${isHu ? 'könnyű SZH + kevés fehérje' : 'leichte KH + etwas Eiweiß'}</div>
+          <div>💪 <strong>${isHu ? 'Edzés után' : 'Post Workout'}</strong> ${isHu ? '(közvetlenül utána)' : '(direkt danach)'}: ${Math.round(kcal * 0.25)} kcal · ${isHu ? 'sok fehérje + SZH a regenerációhoz' : 'viel Eiweiß + KH zur Regeneration'}</div>
         </div>
       </div>
       ` : ''}
@@ -1937,11 +1952,18 @@ function openLymphTimer(){
   clearInterval(lymphTickerHandle);
   state.lymphTimer = {
     open: true,
+    stage: "intro",
     currentIndex: 0,
     secondsLeft: LYMPH_FLOW_EXERCISES[0].seconds,
-    running: true,
+    running: false,
     finished: false
   };
+  render();
+}
+
+function startLymphSequence(){
+  state.lymphTimer.stage = "running";
+  state.lymphTimer.running = true;
   render();
   startLymphTicker();
 }
@@ -1992,12 +2014,28 @@ function advanceLymphExercise(){
 
 function closeLymphTimer(){
   clearInterval(lymphTickerHandle);
-  state.lymphTimer = { open: false, currentIndex: 0, secondsLeft: 0, running: false, finished: false };
+  state.lymphTimer = { open: false, stage: "intro", currentIndex: 0, secondsLeft: 0, running: false, finished: false };
   render();
 }
 
 function renderLymphTimerModal(){
   const t = state.lymphTimer;
+  const isHu = currentLang === 'hu';
+
+  if(t.stage === "intro"){
+    return `<div class="overlay" id="lymph-timer-overlay">
+      <div class="modal lymph-modal">
+        <button class="modal-close" id="lymph-timer-close">\u2715</button>
+        <p class="lymph-eyebrow">${isHu ? 'Reggeli rutin · Nyirokkeringés' : 'Morgenroutine · Lymphfluss'}</p>
+        <h2 class="lymph-exercise-name">${isHu ? 'Miért segít ez?' : 'Warum das hilft'}</h2>
+        <p class="lymph-cue" style="text-align:left;">${isHu
+          ? 'A nyirokrendszernek — ellentétben a vérkeringéssel — nincs saját pumpája: kizárólag az izommozgás és a légzés hajtja előre a folyadékot. Ez a rövid, könnyed mozgássorozat (mély légzés, karkörzés, kirázás) reggel beindítja ezt a keringést, csökkentheti a reggeli duzzadtságot, és élénkebbé tesz anélkül, hogy megterhelné a testet — tökéletes ébresztő a nap előtt.'
+          : 'Das Lymphsystem hat – anders als der Blutkreislauf – keine eigene Pumpe: Nur Muskelbewegung und Atmung treiben die Flüssigkeit voran. Diese kurze, sanfte Übungsfolge (tiefe Atmung, Armkreisen, Ausschütteln) bringt morgens genau diesen Kreislauf in Schwung, kann Morgen-Schwellungen reduzieren und macht wach, ohne den Körper zu belasten – der perfekte Start in den Tag.'}
+        </p>
+        <button type="button" class="btn btn-block" id="lymph-start-btn">${isHu ? 'Kezdés' : 'Starten'}</button>
+      </div>
+    </div>`;
+  }
 
   if(t.finished){
     return `<div class="overlay" id="lymph-timer-overlay">
@@ -2043,6 +2081,8 @@ function bindLymphTimerEvents(){
   overlay.addEventListener("click", (e)=>{ if(e.target.id==="lymph-timer-overlay") closeLymphTimer(); });
   const closeBtn = document.getElementById("lymph-timer-close");
   if(closeBtn) closeBtn.addEventListener("click", closeLymphTimer);
+  const startBtn = document.getElementById("lymph-start-btn");
+  if(startBtn) startBtn.addEventListener("click", startLymphSequence);
   const finishCloseBtn = document.getElementById("lymph-finish-close");
   if(finishCloseBtn) finishCloseBtn.addEventListener("click", closeLymphTimer);
   const pauseBtn = document.getElementById("lymph-pause-btn");
@@ -2182,6 +2222,10 @@ function renderWalkTimerModal(){
       <p class="lymph-eyebrow">${isHu ? 'Gyaloglás intervallum' : 'Intervall-Gehen'}</p>
       <h2 class="lymph-exercise-name">${isHu ? 'Válassz időtartamot' : 'Dauer wählen'}</h2>
       <p class="lymph-cue">${isHu ? '3 perc gyors tempó, 3 perc laza tempó, felváltva a végéig.' : '3 Minuten schnelles Tempo, 3 Minuten lockeres Tempo, im Wechsel bis zum Ende.'}</p>
+      <p class="lymph-cue" style="text-align:left; opacity:0.75; font-size:13px;">${isHu
+        ? 'Miért más ez, mint a napi lépésszám? A nap folyamán összegyűlő 10-15 ezer lépés főleg egyenletes, alacsony intenzitású mozgás — ez remek, de nem terheli meg érdemben a szív-érrendszert. A tempóváltásos gyaloglás tudatosan vált nyugalmi és erőltetett szakaszok között, ami hasonló élettani ingert ad, mint egy enyhe intervall-edzés: javítja az edzettségi szintet, segít a vércukor-szabályozásban, és rövidebb idő alatt nagyobb hatást ér el, mint ugyanennyi laza séta.'
+        : 'Warum das anders wirkt als die tägliche Schrittzahl? Die 10.000-15.000 Schritte über den Tag verteilt sind meist gleichmäßige, niedrig-intensive Bewegung – gut, aber ohne nennenswerten Reiz für Herz-Kreislauf-System. Das Tempo-Wechsel-Gehen wechselt bewusst zwischen ruhigen und angestrengten Phasen und setzt damit einen ähnlichen Reiz wie ein leichtes Intervalltraining: verbessert die Fitness, unterstützt die Blutzuckerregulation und wirkt in kürzerer Zeit stärker als die gleiche Menge lockeres Gehen.'}
+      </p>
       <div class="day-pick-row" style="margin:20px 0;">
         ${WALK_DURATION_OPTIONS.map(m => `<button type="button" class="btn-outline walk-duration-btn" data-minutes="${m}" style="flex:1; padding:16px 8px; font-size:15px;">${m} ${isHu ? 'perc' : 'Min'}</button>`).join("")}
       </div>
@@ -2612,6 +2656,17 @@ function bindAppEvents(){
     });
   });
 
+  document.querySelectorAll(".today-eaten-toggle").forEach(btn=>{
+    btn.addEventListener("click", async (e)=>{
+      e.stopPropagation();
+      const logId = btn.dataset.logId;
+      const currentlyEaten = btn.dataset.eaten === "true";
+      const { error } = await sb.from("daily_log").update({ eaten: !currentlyEaten }).eq("id", logId);
+      if(error){ alert("Fehler: " + error.message); return; }
+      await loadWeekLog();
+    });
+  });
+
   document.querySelectorAll(".today-qty-minus, .today-qty-plus").forEach(btn=>{
     btn.addEventListener("click", async (e)=>{
       e.stopPropagation();
@@ -2906,21 +2961,22 @@ function bindAutoWeekEvents(){
       const fatHauptAvg = totalFatTarget != null ? Math.round(totalFatTarget * 0.325) : null; // (35%+30%)/2
       const fatSnack = totalFatTarget != null ? Math.round(totalFatTarget * 0.10) : null;
 
-      // Meal-Prep-Prinzip: nur 3 Hauptgerichte für die GANZE Woche fix wählen,
-      // die sich bei Mittag/Abend abwechseln. Kein tägliches Neukochen mehr.
+      // Meal-Prep-Prinzip: nur 3 Hauptgerichte für die GANZE Woche fix wählen.
+      // Jedes Gericht bleibt für mehrere Tage hintereinander gleich (Blockrotation),
+      // statt bei jeder einzelnen Mahlzeit zu wechseln — so muss nicht täglich neu gekocht werden.
       const MAIN_DISH_COUNT = 3;
+      const MAIN_DISH_BLOCK_SIZE = 3; // Anzahl Tage, für die dasselbe Mittag-/Abendgericht wiederholt wird
       const avgHauptTarget = Math.round((kcalMittag + kcalAbend) / 2);
       const hauptSourcePool = hauptPool.length ? hauptPool : fallback;
       const mainDishes = [...hauptSourcePool]
         .sort((a,b)=>combinedScore(a, avgHauptTarget, fatHauptAvg) - combinedScore(b, avgHauptTarget, fatHauptAvg))
         .slice(0, Math.min(MAIN_DISH_COUNT, hauptSourcePool.length));
-      let mainSlotCounter = 0;
 
       const usedFrueh = new Map();
       const usedSnack = new Map();
 
       const rows = [];
-      weekDates.forEach((date) => {
+      weekDates.forEach((date, dayIndex) => {
         let tagesKcal = 0;
 
         const frueh = pickClosest(fruehstueckPool.length ? fruehstueckPool : fallback, kcalFrueh, fatFrueh, usedFrueh);
@@ -2931,12 +2987,13 @@ function bindAutoWeekEvents(){
         }
 
         if(mainDishes.length > 0){
-          const mittag = mainDishes[mainSlotCounter % mainDishes.length]; mainSlotCounter++;
+          const blockIndex = Math.floor(dayIndex / MAIN_DISH_BLOCK_SIZE);
+          const mittag = mainDishes[blockIndex % mainDishes.length];
           const mittagServings = computeServingsForTarget(mittag, kcalMittag);
           rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: mittagServings });
           tagesKcal += (mittag.kcal / (mittag.servings || 1)) * mittagServings;
 
-          const abend = mainDishes[mainSlotCounter % mainDishes.length]; mainSlotCounter++;
+          const abend = mainDishes[(blockIndex + 1) % mainDishes.length];
           const abendServings = computeServingsForTarget(abend, kcalAbend);
           rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: abendServings });
           tagesKcal += (abend.kcal / (abend.servings || 1)) * abendServings;
