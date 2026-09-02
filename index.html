@@ -933,6 +933,54 @@ const JUMP_LIFT_WORKOUTS = [
   { id: "jl_jump_reset",          title: "Jump & Reset",         duration: "20 Min", url: "https://youtube.com/DEIN-LINK-6", image: "" }
 ];
 
+// ── Körperbehandlungen (Madero, Gua Sha, etc.) ──
+// WICHTIG: url durch deine echten Video-Links ersetzen, sobald verfügbar.
+const BODY_TREATMENTS = [
+  { id: "bt_guasha", title_de: "Gua Sha Körperbehandlung", title_hu: "Test Gua Sha kezelés", duration: "10 Min", url: "https://youtube.com/DEIN-LINK-GUASHA", category_de: "Cellulite & Straffung", category_hu: "Cellulit & feszesítés",
+    info_de: "Gua Sha ist eine Streich- und Drucktechnik mit einem Steinwerkzeug, die die oberflächliche Durchblutung anregt und die Haut vorübergehend straffer wirken lassen kann. Der wissenschaftliche Beleg für dauerhaften Fett- oder Cellulite-Abbau ist schwach – viele schätzen aber die entspannende, wohltuende Wirkung.",
+    info_hu: "A Gua Sha egy kőeszközzel végzett simogató-nyomó technika, amely serkenti a felszíni vérkeringést, és ideiglenesen feszesebbé teheti a bőr érzetét. A tartós zsír- vagy cellulitcsökkentésre vonatkozó tudományos bizonyíték gyenge, de sokan élvezik relaxáló, közérzetjavító hatását." },
+  { id: "bt_madero", title_de: "Madero-Therapie", title_hu: "Madero-terápia", duration: "15 Min", url: "https://youtube.com/DEIN-LINK-MADERO", category_de: "Cellulite & Straffung", category_hu: "Cellulit & feszesítés",
+    info_de: "Eine aus Südamerika stammende Massagetechnik mit Holzwerkzeugen ('Wood Therapy'). Der Druck ist stärker als bei Gua Sha und wird oft zur Lockerung des Bindegewebes und für ein strafferes Hautgefühl eingesetzt. Die wissenschaftliche Grundlage ist noch begrenzt.",
+    info_hu: "Dél-Amerikából induló, fa eszközökkel végzett 'sculpting' masszázstechnika. Erősebb nyomást gyakorol, mint a Gua Sha, sokan a kötőszövet-lazítás és a feszesebb bőrérzet elérésére használják. Tudományos megalapozottsága még korlátozott." },
+  { id: "bt_dryrbrush", title_de: "Trockenbürsten", title_hu: "Száraz kefézés", duration: "5 Min", url: "https://youtube.com/DEIN-LINK-BRUSH", category_de: "Cellulite & Straffung", category_hu: "Cellulit & feszesítés",
+    info_de: "Mit einer festen Bürste wird die trockene Haut in Richtung Herz gebürstet. Regt die oberflächliche Durchblutung an und entfernt abgestorbene Hautschüppchen – ein einfacher, günstiger Einstieg mit spürbar frischerem Hautgefühl.",
+    info_hu: "Kemény sörtéjű kefével, a szív felé haladva végzett bőrmasszázs száraz bőrön. Serkenti a felszíni vérkeringést, eltávolítja az elhalt hámsejteket – egyszerű, olcsó belépő, érezhetően frissebb bőrérzettel." },
+  { id: "bt_cupping", title_de: "Schröpfen (Cupping)", title_hu: "Köpölyözés", duration: "10 Min", url: "https://youtube.com/DEIN-LINK-CUPPING", category_de: "Cellulite & Straffung", category_hu: "Cellulit & feszesítés",
+    info_de: "Mit einem Vakuum-Aufsatz wird das Gewebe unter der Haut vorübergehend gelockert (myofasziale Technik). Wird vor allem zur Entspannung der Muskulatur und des Bindegewebes eingesetzt.",
+    info_hu: "Vákuumos eszközzel végzett myofasciális technika, amely ideiglenesen fellazítja a bőr alatti kötőszövetet. Elsősorban izomfeszültség oldására és relaxációra használt módszer." },
+  { id: "bt_lymphmassage", title_de: "Manuelle Lymphdrainage", title_hu: "Kézi nyirokdrenázs", duration: "10 Min", url: "https://youtube.com/DEIN-LINK-LYMPH", category_de: "Lymphstau", category_hu: "Nyirokpangás",
+    info_de: "Sehr sanfte, rhythmische Streichbewegungen, die den Lymphfluss unterstützen. Kann besonders bei einem Schweregefühl in den Beinen oder Wassereinlagerungen wohltuend sein.",
+    info_hu: "Nagyon könnyed, ütemes simító mozdulatokkal végzett technika, amely segíti a nyirokfolyadék keringését. Kifejezetten jólesően hathat nehéz lábak vagy vizesedésérzet esetén." },
+  { id: "bt_contrastshower", title_de: "Wechseldusche", title_hu: "Kontraszt zuhany", duration: "5 Min", url: "https://youtube.com/DEIN-LINK-WECHSELDUSCHE", category_de: "Lymphstau", category_hu: "Nyirokpangás",
+    info_de: "Warmes und kaltes Wasser im Wechsel auf Beinen/Oberschenkeln. Das An- und Entspannen der Gefäße regt nachweislich die Durchblutung an und wirkt erfrischend und energiespendend.",
+    info_hu: "Meleg és hideg víz váltakozó alkalmazása a lábakon/combon. Az erek összehúzódása-tágulása bizonyítottan serkenti a keringést, frissítő és energizáló hatású." },
+  { id: "bt_saltbath", title_de: "Salzbad (Epsom-Salz)", title_hu: "Sós fürdő (Epsom-só)", duration: "20 Min", url: "https://youtube.com/DEIN-LINK-SALZBAD", category_de: "Entspannung", category_hu: "Relaxáció",
+    info_de: "Ein warmes Bad mit Magnesiumsalz (Epsom-Salz). Die Aufnahme von Magnesium über die Haut ist wissenschaftlich umstritten, die entspannende, muskellockernde Wirkung des warmen Bades ist für viele aber real spürbar.",
+    info_hu: "Magnéziumsóval (Epsom-só) készített meleg fürdő. A magnézium bőrön át történő felszívódása tudományosan vitatott, de a meleg fürdő izomlazító, relaxáló hatása sokak számára valós élmény." },
+  { id: "bt_foamroll", title_de: "Faszienrolle (Foam Rolling)", title_hu: "Foam rolling / önmasszázs", duration: "10 Min", url: "https://youtube.com/DEIN-LINK-FOAMROLL", category_de: "Entspannung", category_hu: "Relaxáció",
+    info_de: "Selbstmassage mit einer Rolle, die Muskelverspannungen lockert und die Beweglichkeit verbessern kann. Eine der am besten dokumentierten Methoden zur Regeneration nach dem Training.",
+    info_hu: "Hengeres eszközzel végzett önmasszázs, amely oldja az izomfeszültséget és javíthatja a mozgástartományt. Az egyik legjobban dokumentált módszer edzés utáni regenerációra." }
+];
+function bodyTreatmentTitle(t){ return currentLang === "hu" ? t.title_hu : t.title_de; }
+function bodyTreatmentCategory(t){ return currentLang === "hu" ? t.category_hu : t.category_de; }
+function bodyTreatmentInfo(t){ return currentLang === "hu" ? t.info_hu : t.info_de; }
+
+// ── Elme & Idegrendszer (Geist & Nervensystem) ──
+const MIND_NERVOUS_PRACTICES = [
+  { id: "mn_visualization", title_de: "Visualisierung – Körpertransformation", title_hu: "Vizualizáció – Testi átalakulás", duration: "12 Min", url: "https://youtube.com/DEIN-LINK-VISUALIZATION", category_de: "Routine & Mindset", category_hu: "Rutin & szemléletmód",
+    info_de: "Eine geführte Visualisierung, in der du dir deinen Körper und deine neue Routine in ihrem Zielzustand bildlich vorstellst. Mentales Training aktiviert ähnliche neuronale Bahnen wie die reale Handlung – im Spitzensport seit Jahrzehnten genutzt, um Motivation aufzubauen und neue Gewohnheiten leichter zu verankern und durchzuhalten.",
+    info_hu: "Egy vezetett vizualizáció, amelyben elképzeled a tested és az új rutinod a kívánt, elért állapotában. A mentális gyakorlás hasonló idegi pályákat aktivál, mint a tényleges cselekvés — a versenysportban évtizedek óta használt technika a motiváció felépítésére, valamint az új szokások könnyebb rögzítésére és megtartására." },
+  { id: "mn_nervensystem_reset", title_de: "Nervensystem-Reset auf dem Trampolin", title_hu: "Idegrendszer reset trambulinon", duration: "8 Min", url: "https://youtube.com/DEIN-LINK-NSRESET", category_de: "Routine & Mindset", category_hu: "Rutin & szemléletmód",
+    info_de: "Ganz sanftes, rhythmisches Wippen auf dem Trampolin – bewusst ohne Trainingsintensität. Die gleichmäßige Bewegung stimuliert das Gleichgewichtsorgan und kann beruhigend auf das Nervensystem wirken, ähnlich wie sanftes Schaukeln. Ideal für stressige Momente oder als kurze Pause zwischendurch, nicht als Workout gedacht.",
+    info_hu: "Nagyon könnyed, ritmikus rugózás a trambulinon — tudatosan edzésintenzitás nélkül. Az egyenletes mozgás stimulálja az egyensúlyszervet, és megnyugtató hatással lehet az idegrendszerre, hasonlóan a lágy hintázáshoz. Ideális stresszes pillanatokban vagy egy rövid szünetre napközben — nem edzésnek szánt gyakorlat." }
+];
+function mindNervousTitle(t){ return currentLang === "hu" ? t.title_hu : t.title_de; }
+
+// Kombinierte Liste für die Info-Popup-Suche (Körperbehandlungen + Elme/Idegrendszer)
+function findTreatmentById(id){
+  return BODY_TREATMENTS.find(x => x.id === id) || MIND_NERVOUS_PRACTICES.find(x => x.id === id);
+}
+
 // ── Morgenroutine · Lymphfluss aktivieren (echter In-App Timer, kein Video-Link) ──
 // Übungen/Dauer/Video hier anpassen. "video" ist optional: leer lassen = nur Text,
 // oder die öffentliche Supabase-Storage-URL deines Clips eintragen (Bucket "lymph-videos").
@@ -1037,6 +1085,7 @@ let state = {
   challenge: { loaded: false, startDate: null, completedDays: [], bonusAwarded: false },
   challengeOpen: false,
   fitnessMyths: [],
+  bodyTreatmentOpen: null,
   // Lymphfluss-Timer (Morgenroutine)
   lymphTimer: { open: false, currentIndex: 0, secondsLeft: 0, running: false, finished: false },
   // Rezept direkt zu einem Tag im Wochenplan hinzufügen
@@ -1163,6 +1212,7 @@ function renderAppShell(){
     ${state.challengeOpen ? renderChallengePopup() : ""}
     ${state.detailRecipe ? renderDetail() : ""}
     ${state.lymphTimer && state.lymphTimer.open ? renderLymphTimerModal() : ""}
+    ${state.bodyTreatmentOpen ? renderBodyTreatmentModal() : ""}
     ${state.walkTimer && state.walkTimer.open ? renderWalkTimerModal() : ""}
   `;
 }
@@ -1941,6 +1991,42 @@ function renderRise(){
           </div>`;
         }).join("")}
       </div>
+
+      <div class="training-intro">
+        <h3>${currentLang==='hu' ? 'Testkezelések' : 'Körperbehandlungen'}</h3>
+        <p>${currentLang==='hu' ? 'Cellulit-, nyirok- és relaxációs kezelések — koppints egy kártyára a magyarázatért.' : 'Behandlungen für Cellulite, Lymphfluss und Entspannung – tippe auf eine Karte für die Erklärung.'}</p>
+      </div>
+      <div class="workout-grid">
+        ${BODY_TREATMENTS.map(bt => {
+          const doneToday = state.riseTodayWorkoutIds.includes(bt.id);
+          return `<div class="workout-card" data-body-treatment-id="${bt.id}">
+            ${renderWorkoutCoverInner(bodyTreatmentTitle(bt), "")}
+            <div class="workout-card-overlay">
+              <div class="workout-card-title">${escapeHtml(bodyTreatmentTitle(bt))}</div>
+              <div class="workout-card-meta">${bt.duration} \u00b7 ${escapeHtml(bodyTreatmentCategory(bt))}</div>
+            </div>
+            ${doneToday ? `<div class="workout-card-done-badge">\u2713</div>` : ""}
+          </div>`;
+        }).join("")}
+      </div>
+
+      <div class="training-intro">
+        <h3>${currentLang==='hu' ? 'Elme & Idegrendszer' : 'Geist & Nervensystem'}</h3>
+        <p>${currentLang==='hu' ? 'A tartós változás nemcsak a testben, hanem a fejben is történik.' : 'Nachhaltige Veränderung passiert nicht nur im Körper, sondern auch im Kopf.'}</p>
+      </div>
+      <div class="workout-grid">
+        ${MIND_NERVOUS_PRACTICES.map(mn => {
+          const doneToday = state.riseTodayWorkoutIds.includes(mn.id);
+          return `<div class="workout-card" data-body-treatment-id="${mn.id}">
+            ${renderWorkoutCoverInner(mindNervousTitle(mn), "")}
+            <div class="workout-card-overlay">
+              <div class="workout-card-title">${escapeHtml(mindNervousTitle(mn))}</div>
+              <div class="workout-card-meta">${mn.duration} \u00b7 ${escapeHtml(bodyTreatmentCategory(mn))}</div>
+            </div>
+            ${doneToday ? `<div class="workout-card-done-badge">\u2713</div>` : ""}
+          </div>`;
+        }).join("")}
+      </div>
     </div>
   `;
 }
@@ -2073,6 +2159,43 @@ function renderLymphTimerModal(){
       </div>
     </div>
   </div>`;
+}
+
+/* ---------- KÖRPERBEHANDLUNGEN ---------- */
+function renderBodyTreatmentModal(){
+  const bt = findTreatmentById(state.bodyTreatmentOpen);
+  if(!bt) return "";
+  const isHu = currentLang === 'hu';
+  const doneToday = state.riseTodayWorkoutIds.includes(bt.id);
+  return `<div class="overlay" id="bt-modal-overlay"><div class="modal lymph-modal">
+    <button class="modal-close" id="bt-modal-close">\u2715</button>
+    <p class="lymph-eyebrow">${escapeHtml(bodyTreatmentCategory(bt))} \u00b7 ${bt.duration}</p>
+    <h2 class="lymph-exercise-name">${escapeHtml(bodyTreatmentTitle(bt))}</h2>
+    <p class="lymph-cue" style="text-align:left;">${escapeHtml(bodyTreatmentInfo(bt))}</p>
+    <div class="lymph-controls" style="flex-direction:column; gap:10px;">
+      <button type="button" class="btn btn-block" id="bt-modal-video-btn">${isHu ? '\u25b6 Videó megnyitása' : '\u25b6 Video öffnen'}</button>
+      <button type="button" class="btn-outline btn-block" id="bt-modal-done-btn">${doneToday ? (isHu ? '\u2713 Kész mára — visszavonás' : '\u2713 Für heute erledigt — zurücknehmen') : (isHu ? 'Megjelölöm késznek' : 'Als erledigt markieren')}</button>
+    </div>
+  </div></div>`;
+}
+
+function bindBodyTreatmentEvents(){
+  const overlay = document.getElementById("bt-modal-overlay");
+  if(!overlay) return;
+  overlay.addEventListener("click", (e)=>{ if(e.target.id==="bt-modal-overlay"){ state.bodyTreatmentOpen=null; render(); } });
+  document.getElementById("bt-modal-close").addEventListener("click", ()=>{ state.bodyTreatmentOpen=null; render(); });
+  const videoBtn = document.getElementById("bt-modal-video-btn");
+  if(videoBtn) videoBtn.addEventListener("click", ()=>{
+    const bt = findTreatmentById(state.bodyTreatmentOpen);
+    if(bt && bt.url) window.open(bt.url, "_blank", "noopener");
+  });
+  const doneBtn = document.getElementById("bt-modal-done-btn");
+  if(doneBtn) doneBtn.addEventListener("click", ()=>{
+    const id = state.bodyTreatmentOpen;
+    if(!state.riseTodayWorkoutIds.includes(id)) completeWorkout(id);
+    state.bodyTreatmentOpen = null;
+    render();
+  });
 }
 
 function bindLymphTimerEvents(){
@@ -2856,12 +2979,19 @@ function bindAppEvents(){
       if(!state.riseTodayWorkoutIds.includes(id)) completeWorkout(id);
     });
   });
+  document.querySelectorAll(".workout-card[data-body-treatment-id]").forEach(card=>{
+    card.addEventListener("click", ()=>{
+      state.bodyTreatmentOpen = card.dataset.bodyTreatmentId;
+      render();
+    });
+  });
   if(state.detailRecipe) bindDetailEvents();
   if(state.planRecipeId) bindPlanPopupEvents();
   if(state.dayAddTarget) bindDayAddEvents();
   if(state.sideAddTarget) bindSideAddEvents();
   if(state.swapTarget) bindSwapEvents();
   if(state.lymphTimer && state.lymphTimer.open) bindLymphTimerEvents();
+  if(state.bodyTreatmentOpen) bindBodyTreatmentEvents();
   if(state.walkTimer && state.walkTimer.open) bindWalkTimerEvents();
   if(state.challengeOpen) bindChallengePopupEvents();
 }
