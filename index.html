@@ -121,7 +121,7 @@
 
   /* ====== MAIN TABS ====== */
   .main-tabs{
-    display:grid; grid-template-columns:repeat(3, 1fr); gap:3px;
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:3px;
     margin-bottom:22px;
     background:var(--ink-on-paper); border-radius:14px; padding:5px;
   }
@@ -998,7 +998,8 @@ const NAV_ICONS = {
   reise: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`,
   ir: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/><path d="M8 12h2l1.5-3 2 6L15 12h1"/></svg>`,
   menu: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>`,
-  challenge: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M17 5h3a2 2 0 0 1 0 4h-1"/><path d="M7 5H4a2 2 0 0 0 0 4h1"/></svg>`
+  challenge: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M17 5h3a2 2 0 0 1 0 4h-1"/><path d="M7 5H4a2 2 0 0 0 0 4h1"/></svg>`,
+  home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>`
 };
 
 // ── Automatische Sortierung im Tagesplan: Frühstück → Hauptgericht → Snack → Dessert ──
@@ -1154,7 +1155,7 @@ let state = {
   selectedTags: [],
   ingredientRows: [{amount:"", unit:"g", name:""}],
   detailServings: null,
-  mainTab: "recipes",
+  mainTab: "home",
   weekLog: [],
   weekRecipeDetails: {},
   swapTarget: null,
@@ -1292,11 +1293,12 @@ function renderAppShell(){
       </div>
     </div>
     <div class="main-tabs">
+      <button class="main-tab ${state.mainTab==='home'?'active':''}" data-tab="home"><span class="main-tab-icon">${NAV_ICONS.home}</span>${currentLang==='hu' ? 'Kezdőlap' : 'Start'}</button>
       <button class="main-tab ${state.mainTab==='recipes'?'active':''}" data-tab="recipes"><span class="main-tab-icon">${NAV_ICONS.recipes}</span>${t("nav_recipes")}</button>
       <button class="main-tab ${state.mainTab==='training'?'active':''}" data-tab="training"><span class="main-tab-icon">${NAV_ICONS.reise}</span>${t("nav_training")}</button>
       <button class="main-tab ${state.mainTab==='menu'?'active':''}" data-tab="menu"><span class="main-tab-icon">${NAV_ICONS.menu}</span>${t("nav_profil")}</button>
     </div>
-    ${state.mainTab==='training' ? renderRise() : state.mainTab==='menu' ? renderMenuTab() : renderRecipesTab()}
+    ${state.mainTab==='home' ? renderHomeTab() : state.mainTab==='training' ? renderRise() : state.mainTab==='menu' ? renderMenuTab() : renderRecipesTab()}
     ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="fab" id="add-fab" title="Neues Rezept">+</button>` : ""}
     ${state.modalOpen ? renderModal() : ""}
     ${state.planRecipeId ? renderPlanPopup() : ""}
@@ -1421,6 +1423,81 @@ function getUserFirstName(){
   return cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
 }
 
+function renderHomeTab(){
+  const isHu = currentLang === 'hu';
+  const firstName = getUserFirstName();
+  const todayStr = new Date().toISOString().slice(0,10);
+  const entries = (state.weekLog || []).filter(e => e.log_date === todayStr);
+  const extras = (state.weekExtras || []).filter(x => x.log_date === todayStr);
+
+  const greeting = `<div style="margin-bottom:18px;">
+    <h2 style="font-family:Georgia,serif; color:var(--pine-dark); font-size:22px; margin:0 0 4px;">${isHu ? `Szia ${firstName}! \u2728` : `Hallo ${firstName}! \u2728`}</h2>
+    <p style="color:var(--ink); opacity:0.75; font-size:14px; margin:0;">${isHu ? 'Készen állsz egy újabb csodás napra?' : 'Bereit für einen weiteren wunderbaren Tag?'}</p>
+  </div>`;
+
+  const nutriCard = renderTodayNutriCard();
+
+  const addButtons = `<div style="display:flex; gap:10px; margin:16px 0;">
+    <button type="button" class="btn-outline day-add-btn" data-date="${todayStr}" style="flex:1;">+ ${isHu ? 'Recept' : 'Rezept'}</button>
+    <button type="button" class="btn-outline side-add-btn" data-date="${todayStr}" style="flex:1;">+ ${isHu ? 'Köret' : 'Beilage'}</button>
+  </div>`;
+
+  let mealsListHtml;
+  if(entries.length === 0 && extras.length === 0){
+    mealsListHtml = `<div class="empty-state"><h3>${isHu ? 'Mára még nincs semmi betervezve' : 'Für heute ist noch nichts geplant'}</h3></div>`;
+  } else {
+    const sortedEntries = [...entries].sort((a,b) => {
+      const rankA = getMealOrderRank(state.recipes.find(r => r.id === a.recipe_id));
+      const rankB = getMealOrderRank(state.recipes.find(r => r.id === b.recipe_id));
+      return rankA - rankB;
+    });
+    let lastRank = -1;
+    const entriesHtml = sortedEntries.map(e => {
+      const recipe = state.recipes.find(r => r.id === e.recipe_id);
+      if(!recipe) return "";
+      const rank = getMealOrderRank(recipe);
+      let sectionLabelHtml = "";
+      if(rank !== lastRank){ sectionLabelHtml = `<div class="meal-section-label">${MEAL_ORDER_LABELS[rank]}</div>`; lastRank = rank; }
+      const factor = e.servings_logged / (recipe.servings || 1);
+      const kcalForEntry = recipe.kcal != null ? Math.round(recipe.kcal * factor) : null;
+      const isBatchEntry = (recipe.servings || 1) > 1;
+      return sectionLabelHtml + `<div class="today-entry">
+        <div class="today-entry-info today-entry-clickable" data-recipe-id="${recipe.id}">
+          <strong>${escapeHtml(getRecipeTitle(recipe))}</strong>
+          <span>${e.servings_logged} Portion${e.servings_logged==1?'':'en'}${kcalForEntry!==null?` \u00b7 ${kcalForEntry} kcal${isBatchEntry?'/Portion':''}`:''}</span>
+        </div>
+        <button type="button" class="today-eaten-toggle ${e.eaten?'is-eaten':''}" data-log-id="${e.id}" data-eaten="${e.eaten}" title="${isHu ? 'Megettem' : 'Gegessen'}">\u2713</button>
+        <div class="today-qty-stepper">
+          <button type="button" class="stepper-btn today-qty-minus" data-log-id="${e.id}" data-current="${e.servings_logged}">\u2212</button>
+          <span class="today-qty-value">${e.servings_logged}</span>
+          <button type="button" class="stepper-btn today-qty-plus" data-log-id="${e.id}" data-current="${e.servings_logged}">+</button>
+        </div>
+        <button type="button" class="today-swap" data-log-id="${e.id}" data-recipe-id="${recipe.id}" title="Rezept tauschen">\u{1F504}</button>
+        <button type="button" class="today-remove" data-log-id="${e.id}">\u2715</button>
+      </div>`;
+    }).join("");
+
+    const extrasHtml = extras.length > 0 ? `<div class="meal-section-label">${isHu ? 'Köret' : 'Beilage'}</div>` + extras.map(x => {
+      const side = QUICK_SIDES.find(s => s.key === x.side_key);
+      const name = side ? quickSideName(side) : x.side_key;
+      return `<div class="side-extra-entry">
+        <span><strong>${escapeHtml(name)}</strong> \u00b7 ${x.amount_g}g \u00b7 ${Math.round(x.kcal)} kcal</span>
+        <button type="button" class="today-remove extra-remove" data-extra-id="${x.id}">\u2715</button>
+      </div>`;
+    }).join("") : "";
+
+    mealsListHtml = `<div class="today-list">${entriesHtml}${extrasHtml}</div>`;
+  }
+
+  return `<div style="max-width:520px; margin:0 auto;">
+    ${greeting}
+    ${nutriCard}
+    ${addButtons}
+    <h3 style="font-family:Georgia,serif; color:var(--pine-dark); font-size:16px; margin:0 0 10px;">${isHu ? 'Mai étkezéseid' : 'Deine heutigen Mahlzeiten'}</h3>
+    ${mealsListHtml}
+  </div>`;
+}
+
 function renderTodayNutriCard(){
   const isHu = currentLang === 'hu';
   calcProfil();
@@ -1488,13 +1565,6 @@ function renderTodayNutriCard(){
 function renderWeek(){
   const entries = state.weekLog || [];
   const weekDates = getCurrentWeekDates();
-  const isHu = currentLang === 'hu';
-  const firstName = getUserFirstName();
-  const greetingHtml = `
-    <div style="margin-bottom:18px;">
-      <h2 style="font-family:Georgia,serif; color:var(--pine-dark); font-size:22px; margin:0 0 4px;">${isHu ? `Szia ${firstName}! \u2728` : `Hallo ${firstName}! \u2728`}</h2>
-      <p style="color:var(--ink); opacity:0.75; font-size:14px; margin:0;">${isHu ? 'Készen állsz egy újabb csodás napra?' : 'Bereit für einen weiteren wunderbaren Tag?'}</p>
-    </div>`;
   const nutriCard = renderTodayNutriCard();
   const header = `
     <div style="margin-bottom:16px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
@@ -1502,14 +1572,14 @@ function renderWeek(){
       ${entries.length > 0 ? `<button type="button" class="btn-danger" id="clear-week-btn">Woche leeren</button>` : ''}
     </div>`;
   if(entries.length === 0){
-    return greetingHtml + nutriCard + header + `<div class="empty-state"><h3>Noch nichts für diese Woche geplant</h3><p>Tippe auf "Woche automatisch planen" oder geh zu "Rezepte" und tippe bei einem Rezept auf "+ Geplant".</p></div>`;
+    return nutriCard + header + `<div class="empty-state"><h3>Noch nichts für diese Woche geplant</h3><p>Tippe auf "Woche automatisch planen" oder geh zu "Rezepte" und tippe bei einem Rezept auf "+ Geplant".</p></div>`;
   }
   const todayStrForOrder = new Date().toISOString().slice(0,10);
   const todayIdxForOrder = weekDates.indexOf(todayStrForOrder);
   const orderedDayIndices = todayIdxForOrder >= 0
     ? Array.from({length:7}, (_, i) => (todayIdxForOrder + i) % 7)
     : Array.from({length:7}, (_, i) => i);
-  return greetingHtml + nutriCard + header + `<div class="week-list">${orderedDayIndices.map(idx => {
+  return nutriCard + header + `<div class="week-list">${orderedDayIndices.map(idx => {
     const date = weekDates[idx];
     const dayEntries = entries.filter(e => e.log_date === date);
     let kcalSum=0, proteinSum=0, carbsSum=0, fatSum=0;
@@ -2938,6 +3008,7 @@ function bindAppEvents(){
     tab.addEventListener("click", ()=>{
       state.mainTab = tab.dataset.tab;
       state.menuSubView = null;
+      if(state.mainTab === "home"){ loadWeekLog(); calcProfil(); }
       if(state.mainTab === "training"){ Promise.all([loadTodayWorkouts(), loadFitnessMyths(), loadChallenge()]).then(render); }
       render();
     });
@@ -4084,6 +4155,8 @@ async function checkSession(){
       state.view = "app";
       await loadUserLanguage();
       await loadRecipes();
+      await loadWeekLog();
+      calcProfil();
     debugUserId();
     } else if(error){
       state.view = "login";
