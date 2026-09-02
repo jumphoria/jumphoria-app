@@ -121,7 +121,7 @@
 
   /* ====== MAIN TABS ====== */
   .main-tabs{
-    display:grid; grid-template-columns:repeat(6, 1fr); gap:3px;
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:3px;
     margin-bottom:22px;
     background:var(--ink-on-paper); border-radius:14px; padding:5px;
   }
@@ -545,6 +545,22 @@
     background:var(--cream); border-radius:12px; padding:10px 14px;
     display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; font-size:13.5px;
   }
+  .menu-list-item{
+    display:flex; align-items:center; gap:14px; width:100%; text-align:left;
+    background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding:16px 18px; margin-bottom:10px; cursor:pointer; font-family:inherit;
+  }
+  .menu-list-icon{
+    width:38px; height:38px; border-radius:10px; background:rgba(201,153,59,0.15);
+    color:var(--pine-dark); display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .menu-list-icon svg{ width:19px; height:19px; }
+  .menu-list-title{ font-size:15px; font-weight:600; color:var(--ink-on-paper); }
+  .menu-list-sub{ font-size:12.5px; color:var(--ink-on-paper); opacity:0.6; }
+  .menu-back-btn{
+    display:inline-flex; align-items:center; gap:6px; background:none; border:none;
+    color:var(--pine-dark); font-weight:600; font-size:14px; cursor:pointer; padding:0; margin-bottom:16px; font-family:inherit;
+  }
 
   /* ====== PROGRESS-FOTOS ====== */
   .progress-type-row{ display:flex; gap:8px; margin:16px 0; }
@@ -776,7 +792,7 @@ const translations = {
     nav_recipes: "Rezepte",
     nav_today: "Woche",
     nav_shopping: "Einkauf",
-    nav_profil: "Profil",
+    nav_profil: "Menü",
     nav_training: "Training",
     nav_ir: "IR-Rezepte",
     ir_intro: "Rezepte mit wenig Kohlenhydraten und viel Eiweiß — gut geeignet bei Insulinresistenz.",
@@ -798,7 +814,7 @@ const translations = {
     nav_recipes: "Receptek",
     nav_today: "Hét",
     nav_shopping: "Bevásárlás",
-    nav_profil: "Profil",
+    nav_profil: "Menü",
     nav_training: "Edzés",
     nav_ir: "IR receptek",
     ir_intro: "Alacsony szénhidrát- és magas fehérjetartalmú receptek — inzulinrezisztencia esetén ajánlott.",
@@ -980,7 +996,9 @@ const NAV_ICONS = {
   shopping: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`,
   profil: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg>`,
   reise: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`,
-  ir: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/><path d="M8 12h2l1.5-3 2 6L15 12h1"/></svg>`
+  ir: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/><path d="M8 12h2l1.5-3 2 6L15 12h1"/></svg>`,
+  menu: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>`,
+  challenge: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M17 5h3a2 2 0 0 1 0 4h-1"/><path d="M7 5H4a2 2 0 0 0 0 4h1"/></svg>`
 };
 
 // ── Automatische Sortierung im Tagesplan: Frühstück → Hauptgericht → Snack → Dessert ──
@@ -1165,6 +1183,7 @@ let state = {
   progressPhotosOpen: false,
   progressPhotos: [],
   progressPhotoUploading: false,
+  menuSubView: null,
   // Lymphfluss-Timer (Morgenroutine)
   lymphTimer: { open: false, currentIndex: 0, secondsLeft: 0, running: false, finished: false },
   // Rezept direkt zu einem Tag im Wochenplan hinzufügen
@@ -1269,18 +1288,15 @@ function renderAppShell(){
       <div class="user-pill">
         ${renderLangSwitcher()}
         <span>${state.user?.email || ""}</span>
-        <button class="btn-ghost" id="logout-btn">${t("logout")}</button>
       </div>
     </div>
     <div class="main-tabs">
       <button class="main-tab ${state.mainTab==='recipes'?'active':''}" data-tab="recipes"><span class="main-tab-icon">${NAV_ICONS.recipes}</span>${t("nav_recipes")}</button>
-      <button class="main-tab ${state.mainTab==='ir'?'active':''}" data-tab="ir"><span class="main-tab-icon">${NAV_ICONS.ir}</span>${t("nav_ir")}</button>
-      <button class="main-tab ${state.mainTab==='today'?'active':''}" data-tab="today"><span class="main-tab-icon">${NAV_ICONS.today}</span>${t("nav_today")}</button>
-      <button class="main-tab ${state.mainTab==='shopping'?'active':''}" data-tab="shopping"><span class="main-tab-icon">${NAV_ICONS.shopping}</span>${t("nav_shopping")}</button>
-      <button class="main-tab ${state.mainTab==='profil'?'active':''}" data-tab="profil"><span class="main-tab-icon">${NAV_ICONS.profil}</span>${t("nav_profil")}</button>
-      <button class="main-tab ${state.mainTab==='reise'?'active':''}" data-tab="reise"><span class="main-tab-icon">${NAV_ICONS.reise}</span>${t("nav_training")}</button>
+      <button class="main-tab ${state.mainTab==='challenge'?'active':''}" data-tab="challenge"><span class="main-tab-icon">${NAV_ICONS.challenge}</span>${currentLang==='hu' ? 'Kihívás' : 'Challenge'}</button>
+      <button class="main-tab ${state.mainTab==='training'?'active':''}" data-tab="training"><span class="main-tab-icon">${NAV_ICONS.reise}</span>${t("nav_training")}</button>
+      <button class="main-tab ${state.mainTab==='menu'?'active':''}" data-tab="menu"><span class="main-tab-icon">${NAV_ICONS.menu}</span>${t("nav_profil")}</button>
     </div>
-    ${state.mainTab==='today' ? renderWeek() : state.mainTab==='shopping' ? renderShoppingList() : state.mainTab==='profil' ? renderProfil() : state.mainTab==='reise' ? renderRise() : state.mainTab==='ir' ? renderIRTab() : renderRecipesTab()}
+    ${state.mainTab==='challenge' ? renderChallengeTab() : state.mainTab==='training' ? renderRise() : state.mainTab==='menu' ? renderMenuTab() : renderRecipesTab()}
     ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="fab" id="add-fab" title="Neues Rezept">+</button>` : ""}
     ${state.modalOpen ? renderModal() : ""}
     ${state.planRecipeId ? renderPlanPopup() : ""}
@@ -1395,6 +1411,16 @@ function renderFilterSheet(){
   </div>`;
 }
 
+// Leitet einen Vornamen aus der E-Mail-Adresse ab (vor dem @, Ziffern/Punkte entfernt),
+// für die Begrüßung auf der Startansicht.
+function getUserFirstName(){
+  const email = state.user?.email || "";
+  const localPart = email.split("@")[0] || "";
+  const cleaned = localPart.replace(/[0-9._-]+$/g, "").split(/[._-]/)[0] || localPart;
+  if(!cleaned) return "";
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
+}
+
 function renderTodayNutriCard(){
   const isHu = currentLang === 'hu';
   calcProfil();
@@ -1462,6 +1488,13 @@ function renderTodayNutriCard(){
 function renderWeek(){
   const entries = state.weekLog || [];
   const weekDates = getCurrentWeekDates();
+  const isHu = currentLang === 'hu';
+  const firstName = getUserFirstName();
+  const greetingHtml = `
+    <div style="margin-bottom:18px;">
+      <h2 style="font-family:Georgia,serif; color:var(--pine-dark); font-size:22px; margin:0 0 4px;">${isHu ? `Szia ${firstName}! \u2728` : `Hallo ${firstName}! \u2728`}</h2>
+      <p style="color:var(--ink); opacity:0.75; font-size:14px; margin:0;">${isHu ? 'Készen állsz egy újabb csodás napra?' : 'Bereit für einen weiteren wunderbaren Tag?'}</p>
+    </div>`;
   const nutriCard = renderTodayNutriCard();
   const header = `
     <div style="margin-bottom:16px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
@@ -1469,14 +1502,14 @@ function renderWeek(){
       ${entries.length > 0 ? `<button type="button" class="btn-danger" id="clear-week-btn">Woche leeren</button>` : ''}
     </div>`;
   if(entries.length === 0){
-    return nutriCard + header + `<div class="empty-state"><h3>Noch nichts für diese Woche geplant</h3><p>Tippe auf "Woche automatisch planen" oder geh zu "Rezepte" und tippe bei einem Rezept auf "+ Geplant".</p></div>`;
+    return greetingHtml + nutriCard + header + `<div class="empty-state"><h3>Noch nichts für diese Woche geplant</h3><p>Tippe auf "Woche automatisch planen" oder geh zu "Rezepte" und tippe bei einem Rezept auf "+ Geplant".</p></div>`;
   }
   const todayStrForOrder = new Date().toISOString().slice(0,10);
   const todayIdxForOrder = weekDates.indexOf(todayStrForOrder);
   const orderedDayIndices = todayIdxForOrder >= 0
     ? Array.from({length:7}, (_, i) => (todayIdxForOrder + i) % 7)
     : Array.from({length:7}, (_, i) => i);
-  return nutriCard + header + `<div class="week-list">${orderedDayIndices.map(idx => {
+  return greetingHtml + nutriCard + header + `<div class="week-list">${orderedDayIndices.map(idx => {
     const date = weekDates[idx];
     const dayEntries = entries.filter(e => e.log_date === date);
     let kcalSum=0, proteinSum=0, carbsSum=0, fatSum=0;
@@ -1541,7 +1574,6 @@ function renderWeek(){
                   <span class="today-qty-value">${e.servings_logged}</span>
                   <button type="button" class="stepper-btn today-qty-plus" data-log-id="${e.id}" data-current="${e.servings_logged}" title="Mehr Portionen">+</button>
                 </div>
-                <button type="button" class="today-shopping-add" data-log-id="${e.id}" data-recipe-id="${recipe.id}" title="${currentLang==='hu' ? 'Hozzávalók a bevásárlólistához' : 'Zutaten zur Einkaufsliste'}">\u{1F6D2}</button>
                 <button type="button" class="today-swap" data-log-id="${e.id}" data-recipe-id="${recipe.id}" title="Rezept tauschen">\u{1F504}</button>
                 <button type="button" class="today-remove" data-log-id="${e.id}">\u2715</button>
               </div>`;
@@ -1977,6 +2009,91 @@ function renderChallengeHero(){
   </div>`;
 }
 
+function renderMenuTab(){
+  const isHu = currentLang === 'hu';
+  if(state.menuSubView){
+    const backLabel = isHu ? 'Vissza a Menübe' : 'Zurück zum Menü';
+    const content = state.menuSubView === 'profil' ? renderProfil()
+      : state.menuSubView === 'ir' ? renderIRTab()
+      : state.menuSubView === 'today' ? renderWeek()
+      : state.menuSubView === 'shopping' ? renderShoppingList()
+      : '';
+    return `<div>
+      <button type="button" class="menu-back-btn" id="menu-back-btn">\u2190 ${backLabel}</button>
+      ${content}
+    </div>`;
+  }
+  const items = [
+    { key: 'profil', icon: NAV_ICONS.profil, title: isHu ? 'Profil' : 'Profil', sub: isHu ? 'Kalóriaszükséglet kiszámítása' : 'Kalorienbedarf berechnen' },
+    { key: 'ir', icon: NAV_ICONS.ir, title: isHu ? 'IR receptek' : 'IR-Rezepte', sub: isHu ? 'Inzulinrezisztencia-barát ételek' : 'Insulinresistenz-freundliche Gerichte' },
+    { key: 'today', icon: NAV_ICONS.today, title: isHu ? 'Hét' : 'Woche', sub: isHu ? 'Napi áttekintés és heti tervező' : 'Tagesübersicht und Wochenplaner' },
+    { key: 'shopping', icon: NAV_ICONS.shopping, title: isHu ? 'Bevásárlás' : 'Einkauf', sub: isHu ? 'Bevásárlólista' : 'Einkaufsliste' }
+  ];
+  return `<div style="max-width:520px; margin:0 auto;">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:20px; background:var(--ink-on-paper); border-radius:14px; padding:12px 16px;">
+      <span style="color:var(--paper); opacity:0.75; font-size:12.5px;">${state.user?.email || ""}</span>
+      <button class="btn-ghost" id="logout-btn" style="color:var(--paper); border-color:rgba(255,255,255,0.3);">${t("logout")}</button>
+    </div>
+    ${items.map(item => `<button type="button" class="menu-list-item" data-menu-key="${item.key}">
+      <span class="menu-list-icon">${item.icon}</span>
+      <span>
+        <span class="menu-list-title" style="display:block;">${item.title}</span>
+        <span class="menu-list-sub">${item.sub}</span>
+      </span>
+    </button>`).join("")}
+  </div>`;
+}
+
+function renderChallengeTab(){
+  const isHu = currentLang === 'hu';
+  if(!state.challenge.startDate){
+    return `<div style="max-width:520px; margin:0 auto;">${renderChallengeHero()}</div>`;
+  }
+  const todayNum = currentChallengeDayNumber();
+  const todayType = getChallengeDayType(todayNum);
+  const doneCount = state.challenge.completedDays.length;
+
+  const todayTip = {
+    training: isHu ? 'Jump & Lift vagy talaj-edzés + súlyzós blokk.' : 'Jump & Lift oder Boden-Training + Hantel-Block.',
+    walk: isHu ? 'Tempóváltós gyaloglás — nyisd meg az Intervall-Gehen kártyát.' : 'Tempo-Wechsel-Gehen — öffne die Intervall-Gehen-Karte.',
+    rest: isHu ? 'Pihenőnap — nyújtás, séta, vagy csak lazítás.' : 'Ruhetag — Dehnen, Spaziergang, oder einfach entspannen.'
+  }[todayType];
+
+  return `<div style="max-width:520px; margin:0 auto;">
+    <h2 style="font-family:Georgia,serif; color:var(--pine-dark); margin:0 0 16px;">${isHu ? 'Transzformációs Challenge' : 'Transformations-Challenge'}</h2>
+
+    <div class="challenge-today-card">
+      <h4>${isHu ? `${todayNum}. nap ma` : `Heute ist Tag ${todayNum}`}</h4>
+      <p>${CHALLENGE_DAY_ICONS[todayType]} <strong>${challengeDayLabel(todayType)}</strong> — ${todayTip}</p>
+      <button type="button" class="btn ${state.challenge.completedDays.includes(todayNum) ? 'btn-outline' : ''}" id="challenge-toggle-today" data-day="${todayNum}" style="width:100%;">
+        ${state.challenge.completedDays.includes(todayNum) ? (isHu ? '\u2713 Kész — visszavonás' : '\u2713 Erledigt — zurücknehmen') : (isHu ? 'Megjelölöm késznek' : 'Als erledigt markieren')}
+      </button>
+    </div>
+
+    <p style="color:var(--ink-on-paper); opacity:0.7; font-size:13px; margin:18px 0 0;">${isHu ? `${doneCount} / ${CHALLENGE_LENGTH} nap kész` : `${doneCount} / ${CHALLENGE_LENGTH} Tage geschafft`}</p>
+    <div class="challenge-day-grid">
+      ${Array.from({length: CHALLENGE_LENGTH}, (_, i) => i + 1).map(day => {
+        const type = getChallengeDayType(day);
+        const isDone = state.challenge.completedDays.includes(day);
+        const isToday = day === todayNum;
+        const isFuture = day > todayNum;
+        return `<div class="challenge-day ${isDone ? 'is-done' : ''} ${isToday ? 'is-today' : ''} ${type==='rest' ? 'is-rest' : ''}"
+          data-day="${day}" data-clickable="${isFuture ? 'false' : 'true'}" style="${isFuture ? 'opacity:0.4;' : ''}">
+          <span class="challenge-day-icon">${CHALLENGE_DAY_ICONS[type]}</span>
+          <span class="challenge-day-num">${day}</span>
+          ${isDone ? `<span class="challenge-day-check">\u2713</span>` : ""}
+        </div>`;
+      }).join("")}
+    </div>
+    <div class="challenge-legend">
+      <span>${CHALLENGE_DAY_ICONS.training} ${challengeDayLabel('training')}</span>
+      <span>${CHALLENGE_DAY_ICONS.walk} ${challengeDayLabel('walk')}</span>
+      <span>${CHALLENGE_DAY_ICONS.rest} ${challengeDayLabel('rest')}</span>
+    </div>
+    <p style="color:var(--ink-on-paper); opacity:0.55; font-size:12px; margin:0;">${isHu ? 'Minden nap számít — kövesd a ritmust, és 21 nap múlva már máshogy fogod érezni magad.' : 'Jeder Tag zählt — bleib im Rhythmus, und in 21 Tagen fühlst du dich schon anders.'}</p>
+  </div>`;
+}
+
 function renderChallengePopup(){
   const isHu = currentLang === 'hu';
   const todayNum = currentChallengeDayNumber();
@@ -2048,7 +2165,6 @@ function renderRise(){
   return `
     <div style="max-width:520px; margin:0 auto;">
       ${renderMythCard()}
-      ${renderChallengeHero()}
       <div class="training-intro">
         <h3>${currentLang==='hu' ? 'Edzésvideóid' : 'Deine Workout-Videos'}</h3>
         <p>${currentLang==='hu' ? 'Minden edzés egy helyen — koppints egy edzésre az indításhoz.' : 'Alle Trainings-Videos an einem Ort – tippe auf ein Training, um zu starten.'}</p>
@@ -2811,7 +2927,8 @@ function renderDetail(){
 
 /* ---------- EVENTS ---------- */
 function bindAppEvents(){
-  document.getElementById("logout-btn").addEventListener("click", async ()=>{
+  const logoutBtn = document.getElementById("logout-btn");
+  if(logoutBtn) logoutBtn.addEventListener("click", async ()=>{
     await sb.auth.signOut();
     state.user = null; state.recipes = []; state.view = "login"; render();
   });
@@ -2823,12 +2940,33 @@ function bindAppEvents(){
   document.querySelectorAll(".main-tab").forEach(tab=>{
     tab.addEventListener("click", ()=>{
       state.mainTab = tab.dataset.tab;
-      if(state.mainTab === "today") loadWeekLog();
-      if(state.mainTab === "shopping"){ loadShoppingItems(); }
-      if(state.mainTab === "profil") calcProfil();
-      if(state.mainTab === "reise"){ Promise.all([loadTodayWorkouts(), loadChallenge(), loadFitnessMyths()]).then(render); }
+      state.menuSubView = null;
+      if(state.mainTab === "training"){ Promise.all([loadTodayWorkouts(), loadFitnessMyths()]).then(render); }
+      if(state.mainTab === "challenge"){ loadChallenge().then(render); }
       render();
     });
+  });
+
+  document.querySelectorAll(".menu-list-item").forEach(item=>{
+    item.addEventListener("click", ()=>{
+      const key = item.dataset.menuKey;
+      state.menuSubView = key;
+      if(key === "today") loadWeekLog();
+      if(key === "shopping") loadShoppingItems();
+      if(key === "profil") calcProfil();
+      render();
+    });
+  });
+
+  const menuBackBtn = document.getElementById("menu-back-btn");
+  if(menuBackBtn) menuBackBtn.addEventListener("click", ()=>{ state.menuSubView = null; render(); });
+
+  const challengeToggleTodayTab = document.getElementById("challenge-toggle-today");
+  if(challengeToggleTodayTab) challengeToggleTodayTab.addEventListener("click", ()=>{ toggleChallengeDay(parseInt(challengeToggleTodayTab.dataset.day, 10)); });
+  document.querySelectorAll(".challenge-day").forEach(el=>{
+    if(el.dataset.clickable === "true"){
+      el.addEventListener("click", ()=>{ toggleChallengeDay(parseInt(el.dataset.day, 10)); });
+    }
   });
 
   const searchInput = document.getElementById("search-input");
@@ -2944,9 +3082,9 @@ function bindAppEvents(){
       e.stopPropagation();
       const logId = btn.dataset.logId;
       const current = parseFloat(btn.dataset.current) || 1;
-      const delta = btn.classList.contains("today-qty-plus") ? 1 : -1;
-      const newAmount = current + delta;
-      if(newAmount < 1) return; // Zum Entfernen bitte ✕ nutzen
+      const delta = btn.classList.contains("today-qty-plus") ? 0.5 : -0.5;
+      const newAmount = Math.round((current + delta) * 2) / 2;
+      if(newAmount < 0.5) return; // Zum Entfernen bitte ✕ nutzen
       const { error } = await sb.from("daily_log").update({ servings_logged: newAmount }).eq("id", logId);
       if(error){ alert("Fehler: " + error.message); return; }
       await loadWeekLog();
@@ -3098,9 +3236,11 @@ function bindAppEvents(){
   const useProfilBtn = document.getElementById("use-profil-kcal");
   if(useProfilBtn){
     useProfilBtn.addEventListener("click", ()=>{
-      state.mainTab = "today";
+      state.mainTab = "menu";
+      state.menuSubView = "today";
       state.autoWeekIROnly = false;
       state.autoWeekOpen = true;
+      loadWeekLog();
       render();
     });
   }
@@ -3779,7 +3919,6 @@ async function startChallengeNow(){
   const { error } = await sb.from("challenge_state").upsert({ user_id: state.user.id, start_date: todayStr, completed_days: [], bonus_awarded: false, updated_at: new Date().toISOString() });
   if(error){ alert("Fehler: " + error.message); return; }
   state.challenge = { loaded: true, startDate: todayStr, completedDays: [], bonusAwarded: false };
-  state.challengeOpen = true;
   render();
 }
 
