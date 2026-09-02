@@ -121,7 +121,7 @@
 
   /* ====== MAIN TABS ====== */
   .main-tabs{
-    display:grid; grid-template-columns:repeat(4, 1fr); gap:3px;
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:3px;
     margin-bottom:22px;
     background:var(--ink-on-paper); border-radius:14px; padding:5px;
   }
@@ -1288,15 +1288,15 @@ function renderAppShell(){
       <div class="user-pill">
         ${renderLangSwitcher()}
         <span>${state.user?.email || ""}</span>
+        <button class="btn-ghost" id="logout-btn">${t("logout")}</button>
       </div>
     </div>
     <div class="main-tabs">
       <button class="main-tab ${state.mainTab==='recipes'?'active':''}" data-tab="recipes"><span class="main-tab-icon">${NAV_ICONS.recipes}</span>${t("nav_recipes")}</button>
-      <button class="main-tab ${state.mainTab==='challenge'?'active':''}" data-tab="challenge"><span class="main-tab-icon">${NAV_ICONS.challenge}</span>${currentLang==='hu' ? 'Kihívás' : 'Challenge'}</button>
       <button class="main-tab ${state.mainTab==='training'?'active':''}" data-tab="training"><span class="main-tab-icon">${NAV_ICONS.reise}</span>${t("nav_training")}</button>
       <button class="main-tab ${state.mainTab==='menu'?'active':''}" data-tab="menu"><span class="main-tab-icon">${NAV_ICONS.menu}</span>${t("nav_profil")}</button>
     </div>
-    ${state.mainTab==='challenge' ? renderChallengeTab() : state.mainTab==='training' ? renderRise() : state.mainTab==='menu' ? renderMenuTab() : renderRecipesTab()}
+    ${state.mainTab==='training' ? renderRise() : state.mainTab==='menu' ? renderMenuTab() : renderRecipesTab()}
     ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="fab" id="add-fab" title="Neues Rezept">+</button>` : ""}
     ${state.modalOpen ? renderModal() : ""}
     ${state.planRecipeId ? renderPlanPopup() : ""}
@@ -2030,10 +2030,6 @@ function renderMenuTab(){
     { key: 'shopping', icon: NAV_ICONS.shopping, title: isHu ? 'Bevásárlás' : 'Einkauf', sub: isHu ? 'Bevásárlólista' : 'Einkaufsliste' }
   ];
   return `<div style="max-width:520px; margin:0 auto;">
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:20px; background:var(--ink-on-paper); border-radius:14px; padding:12px 16px;">
-      <span style="color:var(--paper); opacity:0.75; font-size:12.5px;">${state.user?.email || ""}</span>
-      <button class="btn-ghost" id="logout-btn" style="color:var(--paper); border-color:rgba(255,255,255,0.3);">${t("logout")}</button>
-    </div>
     ${items.map(item => `<button type="button" class="menu-list-item" data-menu-key="${item.key}">
       <span class="menu-list-icon">${item.icon}</span>
       <span>
@@ -2165,6 +2161,7 @@ function renderRise(){
   return `
     <div style="max-width:520px; margin:0 auto;">
       ${renderMythCard()}
+      ${renderChallengeTab()}
       <div class="training-intro">
         <h3>${currentLang==='hu' ? 'Edzésvideóid' : 'Deine Workout-Videos'}</h3>
         <p>${currentLang==='hu' ? 'Minden edzés egy helyen — koppints egy edzésre az indításhoz.' : 'Alle Trainings-Videos an einem Ort – tippe auf ein Training, um zu starten.'}</p>
@@ -2941,8 +2938,7 @@ function bindAppEvents(){
     tab.addEventListener("click", ()=>{
       state.mainTab = tab.dataset.tab;
       state.menuSubView = null;
-      if(state.mainTab === "training"){ Promise.all([loadTodayWorkouts(), loadFitnessMyths()]).then(render); }
-      if(state.mainTab === "challenge"){ loadChallenge().then(render); }
+      if(state.mainTab === "training"){ Promise.all([loadTodayWorkouts(), loadFitnessMyths(), loadChallenge()]).then(render); }
       render();
     });
   });
