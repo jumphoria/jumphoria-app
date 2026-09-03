@@ -1051,46 +1051,48 @@ const JUMP_LIFT_WORKOUTS = [
   { id: "jl_jump_reset",          title: "Jump & Reset",         duration: "20 Min", url: "https://youtube.com/DEIN-LINK-6", image: "" }
 ];
 
-// ── Körperbehandlungen (Madero, Gua Sha, etc.) ──
+// ── BODY RESET (Madero, Gua Sha, etc.) ──
 // WICHTIG: url durch deine echten Video-Links ersetzen, sobald verfügbar.
+// Bewusst OHNE medizinische/physiologische Wirkversprechen (kein Blutzirkulation, Lymphfluss,
+// Cellulite, Stoffwechsel etc.) — nur erlebnis-/ritualbasierte Beschreibung.
 const BODY_TREATMENTS = [
-  { id: "bt_guasha", title_de: "Gua Sha Körperbehandlung", title_hu: "Test Gua Sha kezelés", duration: "10 Min", url: "https://youtube.com/DEIN-LINK-GUASHA", category_de: "Cellulite & Straffung", category_hu: "Cellulit & feszesítés",
-    info_de: "Gua Sha ist eine Streich- und Drucktechnik mit einem Steinwerkzeug, die die oberflächliche Durchblutung anregt und die Haut vorübergehend straffer wirken lassen kann. Der wissenschaftliche Beleg für dauerhaften Fett- oder Cellulite-Abbau ist schwach – viele schätzen aber die entspannende, wohltuende Wirkung.",
-    info_hu: "A Gua Sha egy kőeszközzel végzett simogató-nyomó technika, amely serkenti a felszíni vérkeringést, és ideiglenesen feszesebbé teheti a bőr érzetét. A tartós zsír- vagy cellulitcsökkentésre vonatkozó tudományos bizonyíték gyenge, de sokan élvezik relaxáló, közérzetjavító hatását." },
-  { id: "bt_madero", title_de: "Madero-Therapie", title_hu: "Madero-terápia", duration: "15 Min", url: "https://youtube.com/DEIN-LINK-MADERO", category_de: "Cellulite & Straffung", category_hu: "Cellulit & feszesítés",
-    info_de: "Eine aus Südamerika stammende Massagetechnik mit Holzwerkzeugen ('Wood Therapy'). Der Druck ist stärker als bei Gua Sha und wird oft zur Lockerung des Bindegewebes und für ein strafferes Hautgefühl eingesetzt. Die wissenschaftliche Grundlage ist noch begrenzt.",
-    info_hu: "Dél-Amerikából induló, fa eszközökkel végzett 'sculpting' masszázstechnika. Erősebb nyomást gyakorol, mint a Gua Sha, sokan a kötőszövet-lazítás és a feszesebb bőrérzet elérésére használják. Tudományos megalapozottsága még korlátozott." },
-  { id: "bt_dryrbrush", title_de: "Trockenbürsten", title_hu: "Száraz kefézés", duration: "5 Min", url: "https://youtube.com/DEIN-LINK-BRUSH", category_de: "Cellulite & Straffung", category_hu: "Cellulit & feszesítés",
-    info_de: "Mit einer festen Bürste wird die trockene Haut in Richtung Herz gebürstet. Regt die oberflächliche Durchblutung an und entfernt abgestorbene Hautschüppchen – ein einfacher, günstiger Einstieg mit spürbar frischerem Hautgefühl.",
-    info_hu: "Kemény sörtéjű kefével, a szív felé haladva végzett bőrmasszázs száraz bőrön. Serkenti a felszíni vérkeringést, eltávolítja az elhalt hámsejteket – egyszerű, olcsó belépő, érezhetően frissebb bőrérzettel." },
-  { id: "bt_cupping", title_de: "Schröpfen (Cupping)", title_hu: "Köpölyözés", duration: "10 Min", url: "https://youtube.com/DEIN-LINK-CUPPING", category_de: "Cellulite & Straffung", category_hu: "Cellulit & feszesítés",
-    info_de: "Mit einem Vakuum-Aufsatz wird das Gewebe unter der Haut vorübergehend gelockert (myofasziale Technik). Wird vor allem zur Entspannung der Muskulatur und des Bindegewebes eingesetzt.",
-    info_hu: "Vákuumos eszközzel végzett myofasciális technika, amely ideiglenesen fellazítja a bőr alatti kötőszövetet. Elsősorban izomfeszültség oldására és relaxációra használt módszer." },
-  { id: "bt_lymphmassage", title_de: "Manuelle Lymphdrainage", title_hu: "Kézi nyirokdrenázs", duration: "10 Min", url: "https://youtube.com/DEIN-LINK-LYMPH", category_de: "Lymphstau", category_hu: "Nyirokpangás",
-    info_de: "Sehr sanfte, rhythmische Streichbewegungen, die den Lymphfluss unterstützen. Kann besonders bei einem Schweregefühl in den Beinen oder Wassereinlagerungen wohltuend sein.",
-    info_hu: "Nagyon könnyed, ütemes simító mozdulatokkal végzett technika, amely segíti a nyirokfolyadék keringését. Kifejezetten jólesően hathat nehéz lábak vagy vizesedésérzet esetén." },
-  { id: "bt_contrastshower", title_de: "Wechseldusche", title_hu: "Kontraszt zuhany", duration: "5 Min", url: "https://youtube.com/DEIN-LINK-WECHSELDUSCHE", category_de: "Lymphstau", category_hu: "Nyirokpangás",
-    info_de: "Warmes und kaltes Wasser im Wechsel auf Beinen/Oberschenkeln. Das An- und Entspannen der Gefäße regt nachweislich die Durchblutung an und wirkt erfrischend und energiespendend.",
-    info_hu: "Meleg és hideg víz váltakozó alkalmazása a lábakon/combon. Az erek összehúzódása-tágulása bizonyítottan serkenti a keringést, frissítő és energizáló hatású." },
-  { id: "bt_saltbath", title_de: "Salzbad (Epsom-Salz)", title_hu: "Sós fürdő (Epsom-só)", duration: "20 Min", url: "https://youtube.com/DEIN-LINK-SALZBAD", category_de: "Entspannung", category_hu: "Relaxáció",
-    info_de: "Ein warmes Bad mit Magnesiumsalz (Epsom-Salz). Die Aufnahme von Magnesium über die Haut ist wissenschaftlich umstritten, die entspannende, muskellockernde Wirkung des warmen Bades ist für viele aber real spürbar.",
-    info_hu: "Magnéziumsóval (Epsom-só) készített meleg fürdő. A magnézium bőrön át történő felszívódása tudományosan vitatott, de a meleg fürdő izomlazító, relaxáló hatása sokak számára valós élmény." },
-  { id: "bt_foamroll", title_de: "Faszienrolle (Foam Rolling)", title_hu: "Foam rolling / önmasszázs", duration: "10 Min", url: "https://youtube.com/DEIN-LINK-FOAMROLL", category_de: "Entspannung", category_hu: "Relaxáció",
-    info_de: "Selbstmassage mit einer Rolle, die Muskelverspannungen lockert und die Beweglichkeit verbessern kann. Eine der am besten dokumentierten Methoden zur Regeneration nach dem Training.",
-    info_hu: "Hengeres eszközzel végzett önmasszázs, amely oldja az izomfeszültséget és javíthatja a mozgástartományt. Az egyik legjobban dokumentált módszer edzés utáni regenerációra." }
+  { id: "bt_guasha", title_de: "Gua Sha", title_hu: "Gua Sha", duration: "10 Min", url: "https://youtube.com/DEIN-LINK-GUASHA", category_de: "Ritual", category_hu: "Rituálé",
+    info_de: "Eine ruhige Streich- und Drucktechnik mit einem Steinwerkzeug, ursprünglich aus der traditionellen chinesischen Praxis. Viele empfinden die gleichmäßigen Bewegungen als angenehm entspannend und nehmen sich dafür bewusst ein paar Minuten Zeit für sich.",
+    info_hu: "Egy nyugodt, kőeszközzel végzett simogató-nyomó technika, amely a hagyományos kínai gyakorlatból ered. Sokan kifejezetten kellemesnek és pihentetőnek élik meg az egyenletes mozdulatokat, és tudatosan szánnak rá pár percet maguknak." },
+  { id: "bt_madero", title_de: "Madero", title_hu: "Madero", duration: "15 Min", url: "https://youtube.com/DEIN-LINK-MADERO", category_de: "Ritual", category_hu: "Rituálé",
+    info_de: "Eine aus Südamerika stammende Massagetechnik mit Holzwerkzeugen ('Wood Therapy'). Der Druck ist etwas intensiver als bei Gua Sha — viele nutzen dieses Ritual bewusst als kleine Auszeit im Alltag.",
+    info_hu: "Dél-Amerikából induló masszázstechnika fa eszközökkel ('Wood Therapy'). A nyomás valamivel erősebb, mint a Gua Shánál — sokan tudatos kis kikapcsolódásként építik be a napjukba." },
+  { id: "bt_dryrbrush", title_de: "Trockenbürsten", title_hu: "Száraz kefézés", duration: "5 Min", url: "https://youtube.com/DEIN-LINK-BRUSH", category_de: "Ritual", category_hu: "Rituálé",
+    info_de: "Mit einer festen Bürste wird die trockene Haut in sanften Bewegungen gebürstet. Ein einfaches, kurzes Ritual, das sich für viele wie ein frischer, achtsamer Start eignet.",
+    info_hu: "Kemény sörtéjű kefével, könnyed mozdulatokkal végzett bőrmasszázs száraz bőrön. Egyszerű, rövid rituálé, amit sokan üdítő, tudatos kezdésként élnek meg a napjukhoz." },
+  { id: "bt_cupping", title_de: "Schröpfen (Cupping)", title_hu: "Köpölyözés", duration: "10 Min", url: "https://youtube.com/DEIN-LINK-CUPPING", category_de: "Ritual", category_hu: "Rituálé",
+    info_de: "Eine Technik mit einem Vakuum-Aufsatz, die auf der Haut ein charakteristisches Sog-Gefühl erzeugt. Wird von vielen als angenehmes, entspannendes Ritual geschätzt.",
+    info_hu: "Vákuumos eszközzel végzett technika, amely jellegzetes szívó-érzetet kelt a bőrön. Sokan kellemes, ellazító rituáléként élik meg." },
+  { id: "bt_lymphmassage", title_de: "Sanfte Selbstmassage", title_hu: "Könnyed önmasszázs", duration: "10 Min", url: "https://youtube.com/DEIN-LINK-LYMPH", category_de: "Ritual", category_hu: "Rituálé",
+    info_de: "Sehr sanfte, rhythmische Streichbewegungen am ganzen Körper. Ein ruhiges Ritual, das viele als angenehm und wohltuend empfinden — einfach als Moment für sich selbst.",
+    info_hu: "Nagyon könnyed, ütemes simító mozdulatok az egész testen. Egy nyugodt rituálé, amit sokan kellemesnek és jólesőnek élnek meg — egyszerűen egy pillanat önmagunknak." },
+  { id: "bt_contrastshower", title_de: "Wechseldusche", title_hu: "Kontraszt zuhany", duration: "5 Min", url: "https://youtube.com/DEIN-LINK-WECHSELDUSCHE", category_de: "Ritual", category_hu: "Rituálé",
+    info_de: "Warmes und kaltes Wasser im Wechsel auf Beinen/Oberschenkeln. Ein belebendes kurzes Ritual, das viele als erfrischenden Kick empfinden, um in den Tag zu starten.",
+    info_hu: "Meleg és hideg víz váltakozó alkalmazása a lábakon/combon. Egy élénkítő, rövid rituálé, amit sokan frissítő löketnek éreznek a nap kezdéséhez." },
+  { id: "bt_saltbath", title_de: "Salzbad (Epsom-Salz)", title_hu: "Sós fürdő (Epsom-só)", duration: "20 Min", url: "https://youtube.com/DEIN-LINK-SALZBAD", category_de: "Ritual", category_hu: "Rituálé",
+    info_de: "Ein warmes Bad mit Magnesiumsalz (Epsom-Salz). Ein ruhiger Moment zum Abschalten — für viele einfach eine schöne Art, den Tag ausklingen zu lassen.",
+    info_hu: "Magnéziumsóval (Epsom-só) készített meleg fürdő. Egy nyugodt pillanat a kikapcsolódásra — sokak számára egyszerűen szép módja a nap lezárásának." },
+  { id: "bt_foamroll", title_de: "Faszienrolle (Foam Rolling)", title_hu: "Foam rolling / önmasszázs", duration: "10 Min", url: "https://youtube.com/DEIN-LINK-FOAMROLL", category_de: "Ritual", category_hu: "Rituálé",
+    info_de: "Selbstmassage mit einer Rolle. Ein beliebtes Ritual nach dem Training, das viele als angenehm empfinden, um kurz zur Ruhe zu kommen.",
+    info_hu: "Hengeres eszközzel végzett önmasszázs. Népszerű rituálé edzés után, amit sokan kellemesnek élnek meg egy rövid lenyugvásra." }
 ];
 function bodyTreatmentTitle(t){ return currentLang === "hu" ? t.title_hu : t.title_de; }
 function bodyTreatmentCategory(t){ return currentLang === "hu" ? t.category_hu : t.category_de; }
 function bodyTreatmentInfo(t){ return currentLang === "hu" ? t.info_hu : t.info_de; }
 
-// ── Elme & Idegrendszer (Geist & Nervensystem) ──
+// ── BODY RESET: Geist & Mindset ──
 const MIND_NERVOUS_PRACTICES = [
-  { id: "mn_visualization", title_de: "Visualisierung – Körpertransformation", title_hu: "Vizualizáció – Testi átalakulás", duration: "12 Min", url: "https://youtube.com/DEIN-LINK-VISUALIZATION", category_de: "Routine & Mindset", category_hu: "Rutin & szemléletmód",
-    info_de: "Eine geführte Visualisierung, in der du dir deinen Körper und deine neue Routine in ihrem Zielzustand bildlich vorstellst. Mentales Training aktiviert ähnliche neuronale Bahnen wie die reale Handlung – im Spitzensport seit Jahrzehnten genutzt, um Motivation aufzubauen und neue Gewohnheiten leichter zu verankern und durchzuhalten.",
-    info_hu: "Egy vezetett vizualizáció, amelyben elképzeled a tested és az új rutinod a kívánt, elért állapotában. A mentális gyakorlás hasonló idegi pályákat aktivál, mint a tényleges cselekvés — a versenysportban évtizedek óta használt technika a motiváció felépítésére, valamint az új szokások könnyebb rögzítésére és megtartására." },
-  { id: "mn_nervensystem_reset", title_de: "Nervensystem-Reset auf dem Trampolin", title_hu: "Idegrendszer reset trambulinon", duration: "8 Min", url: "https://youtube.com/DEIN-LINK-NSRESET", category_de: "Routine & Mindset", category_hu: "Rutin & szemléletmód",
-    info_de: "Ganz sanftes, rhythmisches Wippen auf dem Trampolin – bewusst ohne Trainingsintensität. Die gleichmäßige Bewegung stimuliert das Gleichgewichtsorgan und kann beruhigend auf das Nervensystem wirken, ähnlich wie sanftes Schaukeln. Ideal für stressige Momente oder als kurze Pause zwischendurch, nicht als Workout gedacht.",
-    info_hu: "Nagyon könnyed, ritmikus rugózás a trambulinon — tudatosan edzésintenzitás nélkül. Az egyenletes mozgás stimulálja az egyensúlyszervet, és megnyugtató hatással lehet az idegrendszerre, hasonlóan a lágy hintázáshoz. Ideális stresszes pillanatokban vagy egy rövid szünetre napközben — nem edzésnek szánt gyakorlat." }
+  { id: "mn_visualization", title_de: "Visualisierung", title_hu: "Vizualizáció", duration: "12 Min", url: "https://youtube.com/DEIN-LINK-VISUALIZATION", category_de: "Ritual", category_hu: "Rituálé",
+    info_de: "Eine geführte Visualisierung, in der du dir deine neue Routine in Ruhe vorstellst. Viele nutzen solche Momente, um sich Zeit für ihre Ziele und Gewohnheiten zu nehmen.",
+    info_hu: "Egy vezetett vizualizáció, amelyben nyugodtan elképzeled az új rutinodat. Sokan használnak ilyen pillanatokat arra, hogy időt szánjanak a céljaikra és a szokásaikra." },
+  { id: "mn_nervensystem_reset", title_de: "Ruhiges Wippen auf dem Trampolin", title_hu: "Nyugodt rugózás a trambulinon", duration: "8 Min", url: "https://youtube.com/DEIN-LINK-NSRESET", category_de: "Ritual", category_hu: "Rituálé",
+    info_de: "Ganz sanftes, rhythmisches Wippen auf dem Trampolin – bewusst ohne Trainingsintensität. Ein kurzes Ritual für einen ruhigen Moment zwischendurch, nicht als Workout gedacht.",
+    info_hu: "Nagyon könnyed, ritmikus rugózás a trambulinon — tudatosan edzésintenzitás nélkül. Egy rövid rituálé egy nyugodt pillanatra napközben — nem edzésnek szánt gyakorlat." }
 ];
 function mindNervousTitle(t){ return currentLang === "hu" ? t.title_hu : t.title_de; }
 
@@ -2302,35 +2304,17 @@ function renderRise(){
       </div>
 
       <div class="training-intro">
-        <h3>${currentLang==='hu' ? 'Testkezelések' : 'Körperbehandlungen'}</h3>
-        <p>${currentLang==='hu' ? 'Cellulit-, nyirok- és relaxációs kezelések — koppints egy kártyára a magyarázatért.' : 'Behandlungen für Cellulite, Lymphfluss und Entspannung – tippe auf eine Karte für die Erklärung.'}</p>
+        <h3>BODY RESET</h3>
+        <p>${currentLang==='hu' ? 'Kis rituálék a testednek és a fejednek — koppints egy kártyára a leírásért.' : 'Kleine Rituale für Körper und Kopf – tippe auf eine Karte für die Beschreibung.'}</p>
       </div>
       <div class="workout-grid">
-        ${BODY_TREATMENTS.map(bt => {
+        ${[...BODY_TREATMENTS, ...MIND_NERVOUS_PRACTICES].map(bt => {
           const doneToday = state.riseTodayWorkoutIds.includes(bt.id);
           return `<div class="workout-card" data-body-treatment-id="${bt.id}">
             ${renderWorkoutCoverInner(bodyTreatmentTitle(bt), "")}
             <div class="workout-card-overlay">
               <div class="workout-card-title">${escapeHtml(bodyTreatmentTitle(bt))}</div>
               <div class="workout-card-meta">${bt.duration} \u00b7 ${escapeHtml(bodyTreatmentCategory(bt))}</div>
-            </div>
-            ${doneToday ? `<div class="workout-card-done-badge">\u2713</div>` : ""}
-          </div>`;
-        }).join("")}
-      </div>
-
-      <div class="training-intro">
-        <h3>${currentLang==='hu' ? 'Elme & Idegrendszer' : 'Geist & Nervensystem'}</h3>
-        <p>${currentLang==='hu' ? 'A tartós változás nemcsak a testben, hanem a fejben is történik.' : 'Nachhaltige Veränderung passiert nicht nur im Körper, sondern auch im Kopf.'}</p>
-      </div>
-      <div class="workout-grid">
-        ${MIND_NERVOUS_PRACTICES.map(mn => {
-          const doneToday = state.riseTodayWorkoutIds.includes(mn.id);
-          return `<div class="workout-card" data-body-treatment-id="${mn.id}">
-            ${renderWorkoutCoverInner(mindNervousTitle(mn), "")}
-            <div class="workout-card-overlay">
-              <div class="workout-card-title">${escapeHtml(mindNervousTitle(mn))}</div>
-              <div class="workout-card-meta">${mn.duration} \u00b7 ${escapeHtml(bodyTreatmentCategory(mn))}</div>
             </div>
             ${doneToday ? `<div class="workout-card-done-badge">\u2713</div>` : ""}
           </div>`;
@@ -2424,8 +2408,8 @@ function renderLymphTimerModal(){
         <p class="lymph-eyebrow">${isHu ? 'Reggeli rutin · Nyirokkeringés' : 'Morgenroutine · Lymphfluss'}</p>
         <h2 class="lymph-exercise-name">${isHu ? 'Miért segít ez?' : 'Warum das hilft'}</h2>
         <p class="lymph-cue" style="text-align:left;">${isHu
-          ? 'A nyirokrendszernek — ellentétben a vérkeringéssel — nincs saját pumpája: kizárólag az izommozgás és a légzés hajtja előre a folyadékot. Ez a rövid, könnyed mozgássorozat (mély légzés, karkörzés, kirázás) reggel beindítja ezt a keringést, csökkentheti a reggeli duzzadtságot, és élénkebbé tesz anélkül, hogy megterhelné a testet — tökéletes ébresztő a nap előtt.'
-          : 'Das Lymphsystem hat – anders als der Blutkreislauf – keine eigene Pumpe: Nur Muskelbewegung und Atmung treiben die Flüssigkeit voran. Diese kurze, sanfte Übungsfolge (tiefe Atmung, Armkreisen, Ausschütteln) bringt morgens genau diesen Kreislauf in Schwung, kann Morgen-Schwellungen reduzieren und macht wach, ohne den Körper zu belasten – der perfekte Start in den Tag.'}
+          ? 'Ez a rövid, könnyed mozgássorozat (mély légzés, karkörzés, kirázás) egy nyugodt, tudatos kezdés a napodhoz. Sokan élénkítőnek és kellemesnek élik meg — anélkül, hogy megterhelné a testet.'
+          : 'Diese kurze, sanfte Übungsfolge (tiefe Atmung, Armkreisen, Ausschütteln) ist ein ruhiger, bewusster Start in deinen Tag. Viele empfinden sie als belebend und angenehm — ohne den Körper zu belasten.'}
         </p>
         <button type="button" class="btn btn-block" id="lymph-start-btn">${isHu ? 'Kezdés' : 'Starten'}</button>
       </div>
@@ -2712,8 +2696,8 @@ function renderWalkTimerModal(){
       <h2 class="lymph-exercise-name">${isHu ? 'Válassz időtartamot' : 'Dauer wählen'}</h2>
       <p class="lymph-cue">${isHu ? '3 perc gyors tempó, 3 perc laza tempó, felváltva a végéig.' : '3 Minuten schnelles Tempo, 3 Minuten lockeres Tempo, im Wechsel bis zum Ende.'}</p>
       <p class="lymph-cue" style="text-align:left; opacity:0.75; font-size:13px;">${isHu
-        ? 'Miért más ez, mint a napi lépésszám? A nap folyamán összegyűlő 10-15 ezer lépés főleg egyenletes, alacsony intenzitású mozgás — ez remek, de nem terheli meg érdemben a szív-érrendszert. A tempóváltásos gyaloglás tudatosan vált nyugalmi és erőltetett szakaszok között, ami hasonló élettani ingert ad, mint egy enyhe intervall-edzés: javítja az edzettségi szintet, segít a vércukor-szabályozásban, és rövidebb idő alatt nagyobb hatást ér el, mint ugyanennyi laza séta.'
-        : 'Warum das anders wirkt als die tägliche Schrittzahl? Die 10.000-15.000 Schritte über den Tag verteilt sind meist gleichmäßige, niedrig-intensive Bewegung – gut, aber ohne nennenswerten Reiz für Herz-Kreislauf-System. Das Tempo-Wechsel-Gehen wechselt bewusst zwischen ruhigen und angestrengten Phasen und setzt damit einen ähnlichen Reiz wie ein leichtes Intervalltraining: verbessert die Fitness, unterstützt die Blutzuckerregulation und wirkt in kürzerer Zeit stärker als die gleiche Menge lockeres Gehen.'}
+        ? 'Miért más ez, mint a napi lépésszám? A nap folyamán összegyűlő 10-15 ezer lépés főleg egyenletes, nyugodt tempójú mozgás. A tempóváltásos gyaloglás tudatosan vált nyugodtabb és élénkebb szakaszok között — sokan ezt intenzívebb, változatosabb élményként élik meg, mint ugyanannyi egyenletes tempójú sétát.'
+        : 'Warum fühlt sich das anders an als die tägliche Schrittzahl? Die 10.000-15.000 Schritte über den Tag verteilt sind meist gleichmäßige, ruhige Bewegung. Das Tempo-Wechsel-Gehen wechselt bewusst zwischen ruhigeren und flotteren Abschnitten — viele empfinden das als intensiveres, abwechslungsreicheres Erlebnis als die gleiche Menge gleichmäßiges Gehen.'}
       </p>
       <div class="day-pick-row" style="margin:20px 0;">
         ${WALK_DURATION_OPTIONS.map(m => `<button type="button" class="btn-outline walk-duration-btn" data-minutes="${m}" style="flex:1; padding:16px 8px; font-size:15px;">${m} ${isHu ? 'perc' : 'Min'}</button>`).join("")}
