@@ -766,14 +766,20 @@ function trFilterGroupLabel(group){
 }
 // ── Köret gyors hozzáadása (Beilagen-Schnellzugriff) — Nährwerte pro 100g (roh/trocken) ──
 const QUICK_SIDES = [
-  { key: "reis",     name_de: "Reis (roh)",         name_hu: "Rizs (nyers)",           kcal: 360, protein: 7,  carbs: 79, fat: 0.6 },
+  { key: "reis",     name_de: "Reis (roh)",         name_hu: "Rizs (nyers)",           kcal: 360, protein: 7,  carbs: 79, fat: 0.6, cookedFactor: 2.5 },
   { key: "kartoffel",name_de: "Kartoffel (roh)",    name_hu: "Krumpli (nyers)",        kcal: 77,  protein: 2,  carbs: 17, fat: 0.1 },
-  { key: "nudeln",   name_de: "Nudeln (trocken)",   name_hu: "Tészta (száraz)",        kcal: 350, protein: 12, carbs: 71, fat: 1.5 },
+  { key: "nudeln",   name_de: "Nudeln (trocken)",   name_hu: "Tészta (száraz)",        kcal: 350, protein: 12, carbs: 71, fat: 1.5, cookedFactor: 2.3 },
   { key: "pommes",   name_de: "Pommes (TK)",        name_hu: "Hasábburgonya (fagyasztott)", kcal: 185, protein: 3,  carbs: 27, fat: 7 },
-  { key: "haferflocken", name_de: "Haferflocken",   name_hu: "Zabpehely",              kcal: 370, protein: 13, carbs: 60, fat: 7 },
+  { key: "haferflocken", name_de: "Haferflocken",   name_hu: "Zabpehely",              kcal: 370, protein: 13, carbs: 60, fat: 7, cookedFactor: 2.5 },
   { key: "vollkornbrot", name_de: "Vollkornbrot",   name_hu: "Teljes kiőrlésű kenyér",  kcal: 250, protein: 9,  carbs: 41, fat: 3.5 }
 ];
 function quickSideName(side){ return currentLang === "hu" ? side.name_hu : side.name_de; }
+// Gibt einen Text mit dem geschätzten gekochten Gewicht zurück, falls ein Kochfaktor vorhanden ist
+function quickSideCookedHint(side, grams){
+  if(!side || !side.cookedFactor) return "";
+  const cooked = Math.round(grams * side.cookedFactor);
+  return currentLang === "hu" ? ` \u00b7 ~${cooked}g f\u0151zve` : ` \u00b7 ~${cooked}g gekocht`;
+}
 
 const WEEKDAY_NAMES = ["Mo","Di","Mi","Do","Fr","Sa","So"];
 
@@ -1510,7 +1516,7 @@ function renderHomeTab(){
       const side = QUICK_SIDES.find(s => s.key === x.side_key);
       const name = side ? quickSideName(side) : x.side_key;
       return `<div class="side-extra-entry">
-        <span><strong>${escapeHtml(name)}</strong> \u00b7 ${x.amount_g}g \u00b7 ${Math.round(x.kcal)} kcal</span>
+        <span><strong>${escapeHtml(name)}</strong> \u00b7 ${x.amount_g}g \u00b7 ${Math.round(x.kcal)} kcal${quickSideCookedHint(side, x.amount_g)}</span>
         <button type="button" class="today-remove extra-remove" data-extra-id="${x.id}">\u2715</button>
       </div>`;
     }).join("") : "";
@@ -1682,7 +1688,7 @@ function renderWeek(){
               const side = QUICK_SIDES.find(s => s.key === x.side_key);
               const name = side ? quickSideName(side) : x.side_key;
               return `<div class="side-extra-entry">
-                <span><strong>${escapeHtml(name)}</strong> \u00b7 ${x.amount_g}g \u00b7 ${Math.round(x.kcal)} kcal</span>
+                <span><strong>${escapeHtml(name)}</strong> \u00b7 ${x.amount_g}g \u00b7 ${Math.round(x.kcal)} kcal${quickSideCookedHint(side, x.amount_g)}</span>
                 <button type="button" class="today-remove extra-remove" data-extra-id="${x.id}">\u2715</button>
               </div>`;
             }).join("")}
@@ -3669,7 +3675,7 @@ function renderSideAddPopup(){
     </div>
     <div style="background:var(--ink-on-paper); border-radius:14px; padding:16px; margin:14px 0; text-align:center; color:#fff;">
       <div style="font-size:24px; font-weight:700; font-family:Georgia,serif;">${previewKcal} kcal</div>
-      <div style="font-size:12px; opacity:0.8;">${grams}g \u00b7 ${previewCarbs}g ${isHu ? 'SZH' : 'KH'}</div>
+      <div style="font-size:12px; opacity:0.8;">${grams}g \u00b7 ${previewCarbs}g ${isHu ? 'SZH' : 'KH'}${quickSideCookedHint(side, grams)}</div>
     </div>
     <div class="modal-actions">
       <button type="button" class="btn-outline" id="sideadd-back">${isHu ? 'Vissza' : 'Zurück'}</button>
