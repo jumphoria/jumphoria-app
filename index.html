@@ -800,8 +800,8 @@ const translations = {
     nav_shopping: "Einkauf",
     nav_profil: "Menü",
     nav_training: "Training",
-    nav_ir: "IR-Rezepte",
-    ir_intro: "Rezepte mit wenig Kohlenhydraten und viel Eiweiß — gut geeignet bei Insulinresistenz.",
+    nav_ir: "IR-freundlich",
+    ir_intro: "Ausgewogene, eiweiß- und ballaststoffreiche Gerichte für bewussteres Essen.",
     logout: "Abmelden",
     loading: "Lädt …",
     portionen: "Portionen",
@@ -822,8 +822,8 @@ const translations = {
     nav_shopping: "Bevásárlás",
     nav_profil: "Menü",
     nav_training: "Edzés",
-    nav_ir: "IR receptek",
-    ir_intro: "Alacsony szénhidrát- és magas fehérjetartalmú receptek — inzulinrezisztencia esetén ajánlott.",
+    nav_ir: "IR-barát",
+    ir_intro: "Kiegyensúlyozott, fehérje- és rostban gazdag ételek a tudatosabb étkezéshez.",
     logout: "Kijelentkezés",
     loading: "Betöltés…",
     portionen: "Adag",
@@ -2131,7 +2131,7 @@ function renderMenuTab(){
   }
   const items = [
     { key: 'profil', icon: NAV_ICONS.profil, title: isHu ? 'Profil' : 'Profil', sub: isHu ? 'Kalóriaszükséglet kiszámítása' : 'Kalorienbedarf berechnen' },
-    { key: 'ir', icon: NAV_ICONS.ir, title: isHu ? 'IR receptek' : 'IR-Rezepte', sub: isHu ? 'Inzulinrezisztencia-barát ételek' : 'Insulinresistenz-freundliche Gerichte' },
+    { key: 'ir', icon: NAV_ICONS.ir, title: isHu ? 'IR-barát receptajánlások' : 'IR-freundliche Rezeptempfehlungen', sub: isHu ? 'Kiegyensúlyozott, fehérjében gazdag ételek' : 'Ausgewogene, eiweißreiche Gerichte' },
     { key: 'today', icon: NAV_ICONS.today, title: isHu ? 'Hét' : 'Woche', sub: isHu ? 'Napi áttekintés és heti tervező' : 'Tagesübersicht und Wochenplaner' },
     { key: 'shopping', icon: NAV_ICONS.shopping, title: isHu ? 'Bevásárlás' : 'Einkauf', sub: isHu ? 'Bevásárlólista' : 'Einkaufsliste' }
   ];
