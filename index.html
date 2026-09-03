@@ -400,7 +400,7 @@
   .empty-state{
     text-align:center; padding:60px 20px; color:var(--ink-soft);
   }
-  .empty-state h3{ color:var(--pine-dark); margin-bottom:6px; }
+  .empty-state h3{ color:var(--paper); margin-bottom:6px; }
 
   /* ====== FAB ====== */
   .fab{
@@ -559,7 +559,7 @@
   .menu-list-sub{ font-size:12.5px; color:var(--ink-on-paper); opacity:0.6; }
   .menu-back-btn{
     display:inline-flex; align-items:center; gap:6px; background:none; border:none;
-    color:var(--pine-dark); font-weight:600; font-size:14px; cursor:pointer; padding:0; margin-bottom:16px; font-family:inherit;
+    color:var(--paper); font-weight:600; font-size:14px; cursor:pointer; padding:0; margin-bottom:16px; font-family:inherit; opacity:0.9;
   }
 
   /* ====== PROGRESS-FOTOS ====== */
@@ -779,6 +779,24 @@ function quickSideCookedHint(side, grams){
   if(!side || !side.cookedFactor) return "";
   const cooked = Math.round(grams * side.cookedFactor);
   return currentLang === "hu" ? ` \u00b7 ~${cooked}g f\u0151zve` : ` \u00b7 ~${cooked}g gekocht`;
+}
+
+// ── Gyümölcs gyors hozzáadása (Obst-Schnellzugriff) — Nährwerte pro 100g (nyers) ──
+const QUICK_FRUITS = [
+  { key: "alma",       name_de: "Apfel",         name_hu: "Alma",          kcal: 52, protein: 0.3, carbs: 14, fat: 0.2 },
+  { key: "banan",      name_de: "Banane",        name_hu: "Banán",         kcal: 89, protein: 1.1, carbs: 23, fat: 0.3 },
+  { key: "narancs",    name_de: "Orange",        name_hu: "Narancs",       kcal: 47, protein: 0.9, carbs: 12, fat: 0.1 },
+  { key: "korte",      name_de: "Birne",         name_hu: "Körte",         kcal: 57, protein: 0.4, carbs: 15, fat: 0.1 },
+  { key: "szolo",      name_de: "Weintrauben",   name_hu: "Szőlő",         kcal: 69, protein: 0.7, carbs: 18, fat: 0.2 },
+  { key: "eper",       name_de: "Erdbeere",      name_hu: "Eper",          kcal: 32, protein: 0.7, carbs: 8,  fat: 0.3 },
+  { key: "afonya",     name_de: "Blaubeere",     name_hu: "Áfonya",        kcal: 57, protein: 0.7, carbs: 14, fat: 0.3 },
+  { key: "kiwi",       name_de: "Kiwi",          name_hu: "Kiwi",          kcal: 61, protein: 1.1, carbs: 15, fat: 0.5 },
+  { key: "gorogdinnye",name_de: "Wassermelone",  name_hu: "Görögdinnye",   kcal: 30, protein: 0.6, carbs: 8,  fat: 0.2 },
+  { key: "ananasz",    name_de: "Ananas",        name_hu: "Ananász",       kcal: 50, protein: 0.5, carbs: 13, fat: 0.1 }
+];
+// Sucht ein Element (Beilage oder Frucht) anhand des gespeicherten Keys — für Anzeige & Auswahl
+function findQuickExtraItem(key){
+  return QUICK_SIDES.find(s => s.key === key) || QUICK_FRUITS.find(f => f.key === key);
 }
 
 const WEEKDAY_NAMES = ["Mo","Di","Mi","Do","Fr","Sa","So"];
@@ -1476,7 +1494,7 @@ function renderHomeTab(){
 
   const addButtons = `<div style="display:flex; gap:10px; margin:16px 0;">
     <button type="button" class="btn-outline day-add-btn" data-date="${todayStr}" style="flex:1;">+ ${isHu ? 'Recept' : 'Rezept'}</button>
-    <button type="button" class="btn-outline side-add-btn" data-date="${todayStr}" style="flex:1;">+ ${isHu ? 'Köret' : 'Beilage'}</button>
+    <button type="button" class="btn-outline side-add-btn" data-date="${todayStr}" style="flex:1;">+ ${isHu ? 'Kiegészítés' : 'Extra'}</button>
   </div>`;
 
   let mealsListHtml;
@@ -1515,7 +1533,7 @@ function renderHomeTab(){
     }).join("");
 
     const extrasHtml = extras.length > 0 ? `<div class="meal-section-label">${isHu ? 'Köret' : 'Beilage'}</div>` + extras.map(x => {
-      const side = QUICK_SIDES.find(s => s.key === x.side_key);
+      const side = findQuickExtraItem(x.side_key);
       const name = side ? quickSideName(side) : x.side_key;
       return `<div class="side-extra-entry">
         <span><strong>${escapeHtml(name)}</strong> \u00b7 ${x.amount_g}g \u00b7 ${Math.round(x.kcal)} kcal${quickSideCookedHint(side, x.amount_g)}</span>
@@ -1645,7 +1663,7 @@ function renderWeek(){
           <div style="display:flex; align-items:center; gap:8px;">
             ${(dayEntries.length > 0 || dayExtras.length > 0) ? `<div class="week-day-macros"><span class="week-day-kcal">${Math.round(kcalSum)} kcal</span><span class="week-day-macro-detail">E ${Math.round(proteinSum)}g \u00b7 KH ${Math.round(carbsSum)}g \u00b7 F ${Math.round(fatSum)}g</span></div>` : ""}
             <button type="button" class="btn-outline day-add-btn" data-date="${date}" style="font-size:12px; padding:5px 10px; white-space:nowrap;">+ Rezept</button>
-            <button type="button" class="btn-outline side-add-btn" data-date="${date}" style="font-size:12px; padding:5px 10px; white-space:nowrap;">+ ${currentLang==='hu' ? 'Köret' : 'Beilage'}</button>
+            <button type="button" class="btn-outline side-add-btn" data-date="${date}" style="font-size:12px; padding:5px 10px; white-space:nowrap;">+ ${currentLang==='hu' ? 'Kiegészítés' : 'Extra'}</button>
           </div>
         </div>
         ${(dayEntries.length === 0 && dayExtras.length === 0) ? `<p class="week-day-empty">Nichts geplant</p>` : `
@@ -1687,7 +1705,7 @@ function renderWeek(){
             })()}
             ${dayExtras.length > 0 ? `<div class="meal-section-label">${currentLang==='hu' ? 'Köret' : 'Beilage'}</div>` : ""}
             ${dayExtras.map(x => {
-              const side = QUICK_SIDES.find(s => s.key === x.side_key);
+              const side = findQuickExtraItem(x.side_key);
               const name = side ? quickSideName(side) : x.side_key;
               return `<div class="side-extra-entry">
                 <span><strong>${escapeHtml(name)}</strong> \u00b7 ${x.amount_g}g \u00b7 ${Math.round(x.kcal)} kcal${quickSideCookedHint(side, x.amount_g)}</span>
@@ -3631,16 +3649,23 @@ function renderSideAddPopup(){
   if(state.sideAddStage === "pick"){
     return `<div class="overlay" id="sideadd-overlay"><div class="modal plan-modal">
       <button class="modal-close" id="sideadd-close">\u2715</button>
-      <h2>${isHu ? 'Köret hozzáadása' : 'Beilage hinzufügen'} \u2013 ${label}</h2>
+      <h2>${isHu ? 'Hozzáadás' : 'Hinzufügen'} \u2013 ${label}</h2>
+      <p style="color:var(--ink-on-paper); opacity:0.6; font-size:11px; text-transform:uppercase; letter-spacing:.05em; margin:14px 0 8px;">${isHu ? 'Köret' : 'Beilage'}</p>
       <div>
         ${QUICK_SIDES.map(s => `<button type="button" class="side-pick-item" data-side-key="${s.key}">
           <span>${quickSideName(s)}</span><span style="color:var(--pine-dark); font-size:12px; font-weight:700;">${s.kcal} kcal/100g</span>
         </button>`).join("")}
       </div>
+      <p style="color:var(--ink-on-paper); opacity:0.6; font-size:11px; text-transform:uppercase; letter-spacing:.05em; margin:18px 0 8px;">${isHu ? 'Gyümölcs' : 'Obst'}</p>
+      <div>
+        ${QUICK_FRUITS.map(f => `<button type="button" class="side-pick-item" data-side-key="${f.key}">
+          <span>${quickSideName(f)}</span><span style="color:var(--pine-dark); font-size:12px; font-weight:700;">${f.kcal} kcal/100g</span>
+        </button>`).join("")}
+      </div>
     </div></div>`;
   }
 
-  const side = QUICK_SIDES.find(s => s.key === state.sideAddSelected);
+  const side = findQuickExtraItem(state.sideAddSelected);
   const grams = state.sideAddGrams;
   const factor = grams / 100;
   const previewKcal = Math.round(side.kcal * factor);
@@ -3701,7 +3726,7 @@ function bindSideAddEvents(){
 
   const confirmBtn = document.getElementById("sideadd-confirm");
   if(confirmBtn) confirmBtn.addEventListener("click", async ()=>{
-    const side = QUICK_SIDES.find(s => s.key === state.sideAddSelected);
+    const side = findQuickExtraItem(state.sideAddSelected);
     const date = state.sideAddTarget;
     confirmBtn.disabled = true;
     await addSideExtra(date, side, state.sideAddGrams);
