@@ -2030,8 +2030,8 @@ function renderProfil(){
       <div style="background:var(--paper); border-radius:16px; padding:18px; border:1px solid var(--line);">
         <h4 style="color:var(--terracotta); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 10px;">${isHu ? 'Jump & Lift ajánlások' : 'Jump & Lift Empfehlungen'}</h4>
         <div style="font-size:14px; color:var(--ink-on-paper); line-height:1.7;">
-          <div style="margin-bottom:8px;">⚡ <strong>${isHu ? 'Edzés előtt' : 'Pre Workout'}</strong> ${isHu ? '(30-60 perccel korábban)' : '(30-60 Min vorher)'}: ${Math.round(kcal * 0.15)} kcal · ${isHu ? 'könnyű SZH + kevés fehérje' : 'leichte KH + etwas Eiweiß'}</div>
-          <div>💪 <strong>${isHu ? 'Edzés után' : 'Post Workout'}</strong> ${isHu ? '(közvetlenül utána)' : '(direkt danach)'}: ${Math.round(kcal * 0.25)} kcal · ${isHu ? 'sok fehérje + SZH a regenerációhoz' : 'viel Eiweiß + KH zur Regeneration'}</div>
+          <div style="margin-bottom:8px;">⚡ <strong>${isHu ? 'Edzés előtt' : 'Pre Workout'}</strong> ${isHu ? '(30-60 perccel korábban)' : '(30-60 Min vorher)'}: ${isHu ? 'egy könnyen emészthető snack, kevés zsírral — pl. egy darab gyümölcs vagy egy kis joghurt' : 'ein leicht verdaulicher Snack mit wenig Fett — z. B. ein Stück Obst oder etwas Joghurt'}</div>
+          <div>💪 <strong>${isHu ? 'Edzés után' : 'Post Workout'}</strong> ${isHu ? '(közvetlenül utána)' : '(direkt danach)'}: ${isHu ? 'egy fehérjében gazdagabb étkezés a regenerációhoz — a pontos mennyiség a napi céljaidtól függ' : 'eine eiweißreichere Mahlzeit zur Regeneration — die genaue Menge hängt von deinem Tagesziel ab'}</div>
         </div>
       </div>
       ` : ''}
