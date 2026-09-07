@@ -18,6 +18,11 @@
     --terracotta-soft:#F3DCD2;
     --line:#D8CFB8;
     --shadow: 0 6px 18px rgba(58,74,48,0.18), 0 1px 3px rgba(58,74,48,0.12);
+    /* Auth/Login-Fenster: eigenes Schwarz-Gold-Thema, passend zur neuen Webador-Startseite */
+    --auth-bg:#0B0B0B;
+    --auth-bg-soft:#161616;
+    --auth-text:#F5EFDD;
+    --auth-line:#3A3A3A;
   }
 
   *{box-sizing:border-box;}
@@ -50,7 +55,7 @@
   }
   .brand{ display:flex !important; align-items:center !important; gap:10px !important; }
   .brand-logo{ height:75px !important; width:auto !important; max-width:280px !important; display:block !important; image-rendering:high-quality; }
-  .auth-logo{ height:130px !important; width:auto !important; max-width:340px !important; display:block !important; margin:0 auto 18px !important; image-rendering:high-quality; border-radius:16px; background:var(--ink-on-paper); padding:12px 20px; }
+  .auth-logo{ height:130px !important; width:auto !important; max-width:340px !important; display:block !important; margin:0 auto 18px !important; image-rendering:high-quality; border-radius:16px; background:transparent; padding:12px 20px; }
   .user-pill{
     display:flex; align-items:center; gap:10px;
     font-size:13px; color:var(--ink-soft);
@@ -90,32 +95,36 @@
   .btn-block{ width:100%; }
 
   /* ====== AUTH CARD ====== */
-  .auth-wrap{ display:flex; justify-content:center; padding-top:40px; }
+  .auth-wrap{ display:flex; justify-content:center; padding-top:40px; background:var(--auth-bg); min-height:100vh; margin:-24px -18px -80px; }
   .auth-card{
-    background:var(--ink-on-paper); border-radius:18px; padding:36px 32px;
-    box-shadow:var(--shadow); max-width:380px; width:100%;
-    border:1px solid var(--line);
+    background:var(--auth-bg-soft); border-radius:18px; padding:36px 32px;
+    box-shadow:0 0 0 1px rgba(201,153,59,0.15), 0 12px 32px rgba(0,0,0,0.55); max-width:380px; width:100%;
+    border:1.5px solid var(--pine);
   }
-  .auth-card h2{ font-size:24px; margin:0 0 4px; color:var(--paper); }
-  .auth-sub{ color:var(--paper); opacity:0.9; font-size:14px; margin:0 0 24px; }
+  .auth-card h2{ font-size:24px; margin:0 0 4px; color:var(--pine); }
+  .auth-sub{ color:var(--auth-text); opacity:0.8; font-size:14px; margin:0 0 24px; }
+  .auth-card .field label{ color:var(--pine); opacity:0.9; }
   .field{ margin-bottom:14px; }
   .field label{ display:block; font-size:12.5px; color:var(--ink); opacity:0.85; margin-bottom:6px; font-weight:600; }
   .field input, .field select, .field textarea{
     width:100%; padding:11px 13px; border-radius:9px; border:1.5px solid var(--line);
     background:#fff; font-size:14px; color:var(--ink-on-paper); font-family:inherit;
   }
+  .auth-card .field input{ border:1.5px solid var(--auth-line); }
   .field input:focus, .field select:focus, .field textarea:focus{
     outline:none; border-color:var(--pine);
   }
   .auth-toggle{ text-align:center; margin-top:18px; font-size:13.5px; color:var(--ink); opacity:0.75; }
+  .auth-card .auth-toggle{ color:var(--auth-text); opacity:0.65; }
   .auth-toggle a{ color:var(--paper); font-weight:600; cursor:pointer; text-decoration:none; }
+  .auth-card .auth-toggle a{ color:var(--pine); }
   .auth-error{
     background:#6B3530; color:#F5D5C8; border-radius:8px;
     padding:9px 12px; font-size:13px; margin-bottom:14px;
   }
   .auth-closed-notice{
     background:rgba(201,151,58,0.15); border:1px solid var(--pine);
-    color:var(--ink); border-radius:10px; padding:14px 16px;
+    color:var(--auth-text); border-radius:10px; padding:14px 16px;
     font-size:13.5px; line-height:1.5; margin-bottom:16px; text-align:left;
   }
 
@@ -1244,6 +1253,11 @@ let state = {
 
 function render(){
   const el = document.getElementById("app");
+  if(state.view === "login" || state.view === "register"){
+    document.body.style.background = "#0B0B0B";
+  } else {
+    document.body.style.background = "";
+  }
   if(state.view === "loading"){
     el.innerHTML = `<div class="loading">${t("loading")}</div>`;
     return;
