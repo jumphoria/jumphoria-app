@@ -803,10 +803,22 @@ const QUICK_FRUITS = [
   { key: "gorogdinnye",name_de: "Wassermelone",  name_hu: "Görögdinnye",   kcal: 30, protein: 0.6, carbs: 8,  fat: 0.2 },
   { key: "ananasz",    name_de: "Ananas",        name_hu: "Ananász",       kcal: 50, protein: 0.5, carbs: 13, fat: 0.1 }
 ];
-// Sucht ein Element (Beilage oder Frucht) anhand des gespeicherten Keys — für Anzeige & Auswahl
+// ── Getränke-Schnellzugriff — Nährwerte pro 100ml (fertig zubereitet, ungesüßt) ──
+const QUICK_DRINKS = [
+  { key: "kaffee_milch",     name_de: "Kaffee mit Milch",            name_hu: "Tejeskávé",                kcal: 15, protein: 0.7, carbs: 1.1, fat: 0.8 },
+  { key: "cappuccino",       name_de: "Cappuccino",                  name_hu: "Cappuccino",               kcal: 29, protein: 1.5, carbs: 2.1, fat: 1.6 },
+  { key: "latte_macchiato",  name_de: "Latte Macchiato",             name_hu: "Latte Macchiato",          kcal: 42, protein: 2.0, carbs: 3.0, fat: 2.2 },
+  { key: "milchkaffee",      name_de: "Milchkaffee (große Tasse)",   name_hu: "Tejeskávé (nagy csésze)",  kcal: 22, protein: 1.1, carbs: 1.6, fat: 1.2 },
+  { key: "kakao",            name_de: "Kakao / heiße Schokolade",    name_hu: "Kakaó / forró csoki",      kcal: 70, protein: 3.0, carbs: 8.5, fat: 2.6 },
+  { key: "schwarzer_kaffee", name_de: "Schwarzer Kaffee / Espresso", name_hu: "Fekete kávé / eszpresszó", kcal: 2,  protein: 0.1, carbs: 0.3, fat: 0.0 }
+];
+// Sucht ein Element (Beilage, Frucht oder Getränk) anhand des gespeicherten Keys — für Anzeige & Auswahl
 function findQuickExtraItem(key){
-  return QUICK_SIDES.find(s => s.key === key) || QUICK_FRUITS.find(f => f.key === key);
+  return QUICK_SIDES.find(s => s.key === key) || QUICK_FRUITS.find(f => f.key === key) || QUICK_DRINKS.find(d => d.key === key);
 }
+// Getränke werden in ml statt g gemessen — zentral geregelt, wo Menge & Einheit angezeigt werden
+function isQuickDrink(item){ return !!item && QUICK_DRINKS.some(d => d.key === item.key); }
+function quickExtraUnit(item){ return isQuickDrink(item) ? "ml" : "g"; }
 
 const WEEKDAY_NAMES = ["Mo","Di","Mi","Do","Fr","Sa","So"];
 
@@ -1550,7 +1562,7 @@ function renderHomeTab(){
       const side = findQuickExtraItem(x.side_key);
       const name = side ? quickSideName(side) : x.side_key;
       return `<div class="side-extra-entry">
-        <span><strong>${escapeHtml(name)}</strong> \u00b7 ${x.amount_g}g \u00b7 ${Math.round(x.kcal)} kcal${quickSideCookedHint(side, x.amount_g)}</span>
+        <span><strong>${escapeHtml(name)}</strong> \u00b7 ${x.amount_g}${quickExtraUnit(side)} \u00b7 ${Math.round(x.kcal)} kcal${quickSideCookedHint(side, x.amount_g)}</span>
         <button type="button" class="today-remove extra-remove" data-extra-id="${x.id}">\u2715</button>
       </div>`;
     }).join("") : "";
@@ -1722,7 +1734,7 @@ function renderWeek(){
               const side = findQuickExtraItem(x.side_key);
               const name = side ? quickSideName(side) : x.side_key;
               return `<div class="side-extra-entry">
-                <span><strong>${escapeHtml(name)}</strong> \u00b7 ${x.amount_g}g \u00b7 ${Math.round(x.kcal)} kcal${quickSideCookedHint(side, x.amount_g)}</span>
+                <span><strong>${escapeHtml(name)}</strong> \u00b7 ${x.amount_g}${quickExtraUnit(side)} \u00b7 ${Math.round(x.kcal)} kcal${quickSideCookedHint(side, x.amount_g)}</span>
                 <button type="button" class="today-remove extra-remove" data-extra-id="${x.id}">\u2715</button>
               </div>`;
             }).join("")}
@@ -3676,6 +3688,12 @@ function renderSideAddPopup(){
           <span>${quickSideName(f)}</span><span style="color:var(--pine-dark); font-size:12px; font-weight:700;">${f.kcal} kcal/100g</span>
         </button>`).join("")}
       </div>
+      <p style="color:var(--ink-on-paper); opacity:0.6; font-size:11px; text-transform:uppercase; letter-spacing:.05em; margin:18px 0 8px;">${isHu ? 'Ital' : 'Getränke'}</p>
+      <div>
+        ${QUICK_DRINKS.map(d => `<button type="button" class="side-pick-item" data-side-key="${d.key}">
+          <span>${quickSideName(d)}</span><span style="color:var(--pine-dark); font-size:12px; font-weight:700;">${d.kcal} kcal/100ml</span>
+        </button>`).join("")}
+      </div>
     </div></div>`;
   }
 
@@ -3684,21 +3702,22 @@ function renderSideAddPopup(){
   const factor = grams / 100;
   const previewKcal = Math.round(side.kcal * factor);
   const previewCarbs = Math.round(side.carbs * factor * 10) / 10;
-  const gramOptions = [30, 50, 75, 100, 150];
+  const unit = quickExtraUnit(side);
+  const gramOptions = isQuickDrink(side) ? [100, 150, 200, 250, 300] : [30, 50, 75, 100, 150];
   return `<div class="overlay" id="sideadd-overlay"><div class="modal plan-modal">
     <button class="modal-close" id="sideadd-close">\u2715</button>
     <h2>${quickSideName(side)}</h2>
     <p style="color:var(--ink-on-paper); opacity:0.7; font-size:13.5px; margin:0 0 4px;">${label}</p>
     <div class="side-gram-row">
-      ${gramOptions.map(g => `<button type="button" class="side-gram-btn ${grams===g?'active':''}" data-grams="${g}">${g}g</button>`).join("")}
+      ${gramOptions.map(g => `<button type="button" class="side-gram-btn ${grams===g?'active':''}" data-grams="${g}">${g}${unit}</button>`).join("")}
     </div>
     <div class="field">
-      <label>${isHu ? 'Egyéni mennyiség (g)' : 'Eigene Menge (g)'}</label>
+      <label>${isHu ? `Egyéni mennyiség (${unit})` : `Eigene Menge (${unit})`}</label>
       <input type="number" id="sideadd-custom-grams" min="1" step="1" value="${grams}" style="max-width:120px;">
     </div>
     <div style="background:var(--ink-on-paper); border-radius:14px; padding:16px; margin:14px 0; text-align:center; color:#fff;">
       <div style="font-size:24px; font-weight:700; font-family:Georgia,serif;">${previewKcal} kcal</div>
-      <div style="font-size:12px; opacity:0.8;">${grams}g \u00b7 ${previewCarbs}g ${isHu ? 'SZH' : 'KH'}${quickSideCookedHint(side, grams)}</div>
+      <div style="font-size:12px; opacity:0.8;">${grams}${unit} \u00b7 ${previewCarbs}g ${isHu ? 'SZH' : 'KH'}${quickSideCookedHint(side, grams)}</div>
     </div>
     <div class="modal-actions">
       <button type="button" class="btn-outline" id="sideadd-back">${isHu ? 'Vissza' : 'Zurück'}</button>
@@ -3719,7 +3738,8 @@ function bindSideAddEvents(){
       btn.addEventListener("click", ()=>{
         state.sideAddSelected = btn.dataset.sideKey;
         state.sideAddStage = "grams";
-        state.sideAddGrams = 30;
+        const pickedItem = findQuickExtraItem(state.sideAddSelected);
+        state.sideAddGrams = isQuickDrink(pickedItem) ? 200 : 30;
         render();
       });
     });
