@@ -1168,7 +1168,8 @@ const NAV_ICONS = {
   ir: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/><path d="M8 12h2l1.5-3 2 6L15 12h1"/></svg>`,
   menu: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>`,
   challenge: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M17 5h3a2 2 0 0 1 0 4h-1"/><path d="M7 5H4a2 2 0 0 0 0 4h1"/></svg>`,
-  home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>`
+  home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>`,
+  shop: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9V6a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v3"/><path d="M4 9h16l-1 11.13A2 2 0 0 1 17.01 22H6.99a2 2 0 0 1-1.99-1.87L4 9Z"/><path d="M9 13a3 3 0 0 0 6 0"/></svg>`
 };
 
 // ── Automatische Sortierung im Tagesplan: Frühstück → Hauptgericht → Snack → Dessert ──
@@ -2294,6 +2295,15 @@ function renderChallengeHero(){
   </div>`;
 }
 
+function renderShopPlaceholder(){
+  const isHu = currentLang === 'hu';
+  return `<div style="max-width:520px; margin:0 auto; text-align:center; padding:40px 20px;">
+    <div style="font-size:40px; margin-bottom:14px;">🛍️</div>
+    <h3 style="font-family:Georgia,serif; color:var(--paper); margin:0 0 8px;">${isHu ? 'Hamarosan' : 'Bald verfügbar'}</h3>
+    <p style="color:var(--paper); opacity:0.8; font-size:14px; margin:0;">${isHu ? 'Itt fog megjelenni a JUMPHORIA shop.' : 'Hier entsteht bald der JUMPHORIA Shop.'}</p>
+  </div>`;
+}
+
 function renderMenuTab(){
   const isHu = currentLang === 'hu';
   if(state.menuSubView){
@@ -2302,6 +2312,7 @@ function renderMenuTab(){
       : state.menuSubView === 'ir' ? renderIRTab()
       : state.menuSubView === 'today' ? renderWeek()
       : state.menuSubView === 'shopping' ? renderShoppingList()
+      : state.menuSubView === 'shop' ? renderShopPlaceholder()
       : '';
     return `<div>
       <button type="button" class="menu-back-btn" id="menu-back-btn">\u2190 ${backLabel}</button>
@@ -2311,7 +2322,8 @@ function renderMenuTab(){
   const items = [
     { key: 'profil', icon: NAV_ICONS.profil, title: isHu ? 'Profil' : 'Profil', sub: isHu ? 'Kalóriaszükséglet kiszámítása' : 'Kalorienbedarf berechnen' },
     { key: 'today', icon: NAV_ICONS.today, title: isHu ? 'Hét' : 'Woche', sub: isHu ? 'Napi áttekintés és heti tervező' : 'Tagesübersicht und Wochenplaner' },
-    { key: 'shopping', icon: NAV_ICONS.shopping, title: isHu ? 'Bevásárlás' : 'Einkauf', sub: isHu ? 'Bevásárlólista' : 'Einkaufsliste' }
+    { key: 'shopping', icon: NAV_ICONS.shopping, title: isHu ? 'Bevásárlás' : 'Einkauf', sub: isHu ? 'Bevásárlólista' : 'Einkaufsliste' },
+    { key: 'shop', icon: NAV_ICONS.shop, title: isHu ? 'Shop' : 'Shop', sub: isHu ? 'Hamarosan' : 'Bald verfügbar' }
   ];
   return `<div style="max-width:520px; margin:0 auto;">
     ${items.map(item => `<button type="button" class="menu-list-item" data-menu-key="${item.key}">
