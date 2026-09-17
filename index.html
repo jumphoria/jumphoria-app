@@ -722,6 +722,45 @@
     font-size:13px; box-shadow:0 2px 6px rgba(0,0,0,0.3); font-weight:700;
   }
 
+  /* ====== WORKOUT-SLIDER (swipebar, mit Punkten) ====== */
+  .workout-slider-wrap{ margin-bottom:22px; }
+  .workout-slider{
+    display:flex; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
+    scrollbar-width:none; -ms-overflow-style:none; margin:0 -18px; padding:0 18px;
+  }
+  .workout-slider::-webkit-scrollbar{ display:none; }
+  .workout-slide{
+    scroll-snap-align:start; flex:0 0 100%; max-width:100%; padding-right:0; cursor:pointer;
+  }
+  .workout-slide-photo{
+    position:relative; width:100%; aspect-ratio:4/3; border-radius:20px; overflow:hidden;
+    box-shadow:var(--shadow); border:1px solid var(--line);
+    background:linear-gradient(135deg, var(--pine) 0%, var(--terracotta) 100%);
+  }
+  .workout-slide-photo img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .workout-slide-noimg{ width:100%; height:100%; }
+  .workout-slide-new-badge{
+    position:absolute; top:14px; right:14px; background:var(--pine); color:#fff;
+    font-size:11px; font-weight:800; letter-spacing:.04em; padding:7px 15px; border-radius:20px;
+    box-shadow:0 3px 8px rgba(0,0,0,0.28); text-transform:uppercase;
+  }
+  .workout-slide-info{ padding:14px 4px 0; }
+  .workout-slide-title{ font-family:Georgia,serif; font-size:20px; color:var(--paper); margin:0 0 7px; font-weight:700; }
+  .workout-slide-meta-row{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; color:var(--paper); opacity:0.85; font-size:13.5px; }
+  .slider-dots{ display:flex; justify-content:center; gap:6px; margin-top:16px; }
+  .slider-dot{ width:8px; height:8px; border-radius:50%; background:var(--line); cursor:pointer; transition:all .2s ease; border:none; padding:0; }
+  .slider-dot.active{ background:var(--pine); width:22px; border-radius:5px; }
+
+  /* ====== WORKOUT-SUCHER (Zeitfilter) ====== */
+  .workout-time-filter{ display:flex; gap:7px; flex-wrap:wrap; margin:14px 0 18px; }
+  .time-filter-chip{
+    padding:9px 15px; border-radius:20px; font-size:12.5px; cursor:pointer;
+    border:1.5px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.15);
+    color:var(--ink); font-weight:600; white-space:nowrap; transition:all .18s cubic-bezier(.22,1,.36,1);
+  }
+  .time-filter-chip.active{ background:var(--pine); border-color:var(--pine); color:#fff; }
+  .workout-empty-note{ color:var(--paper); opacity:0.7; font-size:13.5px; padding:14px 2px; margin:0 0 12px; }
+
   /* ====== LYMPH TIMER ====== */
   .lymph-modal{ text-align:center; padding-top:56px; }
   .lymph-eyebrow{ color:var(--terracotta); font-size:12px; text-transform:uppercase; letter-spacing:.06em; font-weight:700; margin:0 0 8px; }
@@ -1081,14 +1120,27 @@ function getMealOrderRank(recipe){
 // image: Cover-Foto fürs Kartenlayout. Leer lassen = zeigt automatisch einen Farbverlauf mit Titel statt Foto.
 //   Empfohlen: eigenes Hochformat-Foto (z.B. Screenshot aus dem Video), hochgeladen zu Supabase Storage
 //   (Bucket "workout-covers") oder direkt die Bunny-Thumbnail-URL des Videos.
+// difficulty: "leicht" | "mittel" | "schwer" — für die Anzeige "Nehézség: Közepes" / "Schwierigkeit: Mittel"
+// isNew: manuell pro Workout setzen (true = zeigt den "NEU"-Badge im Slider)
+// durationMinutes: numerischer Wert für den Workout-Sucher (Zeitfilter)
 const JUMP_LIFT_WORKOUTS = [
-  { id: "jl_basics",              title: "Basics",              duration: "20 Min", url: "https://youtube.com/DEIN-LINK-1", image: "" },
-  { id: "jl_bounce_flow",         title: "Bounce & Flow",        duration: "20 Min", url: "https://youtube.com/DEIN-LINK-2", image: "" },
-  { id: "jl_jump_flow",           title: "Jump & Flow",          duration: "20 Min", url: "https://youtube.com/DEIN-LINK-3", image: "" },
-  { id: "jl_jump_flow_strength",  title: "Jump & Flow Strength", duration: "20 Min", url: "https://youtube.com/DEIN-LINK-4", image: "" },
-  { id: "jl_jump_lift",           title: "Jump & Lift",          duration: "20 Min", url: "https://youtube.com/DEIN-LINK-5", image: "" },
-  { id: "jl_jump_reset",          title: "Jump & Reset",         duration: "20 Min", url: "https://youtube.com/DEIN-LINK-6", image: "" }
+  { id: "jl_basics",              title: "Basics",              duration: "20 Min", durationMinutes: 20, difficulty: "leicht", isNew: false, url: "https://youtube.com/DEIN-LINK-1", image: "" },
+  { id: "jl_bounce_flow",         title: "Bounce & Flow",        duration: "20 Min", durationMinutes: 20, difficulty: "mittel", isNew: false, url: "https://youtube.com/DEIN-LINK-2", image: "" },
+  { id: "jl_jump_flow",           title: "Jump & Flow",          duration: "20 Min", durationMinutes: 20, difficulty: "mittel", isNew: false, url: "https://youtube.com/DEIN-LINK-3", image: "" },
+  { id: "jl_jump_flow_strength",  title: "Jump & Flow Strength", duration: "20 Min", durationMinutes: 20, difficulty: "schwer", isNew: false, url: "https://youtube.com/DEIN-LINK-4", image: "" },
+  { id: "jl_jump_lift",           title: "Jump & Lift",          duration: "20 Min", durationMinutes: 20, difficulty: "schwer", isNew: false, url: "https://youtube.com/DEIN-LINK-5", image: "" },
+  { id: "jl_jump_reset",          title: "Jump & Reset",         duration: "20 Min", durationMinutes: 20, difficulty: "leicht", isNew: false, url: "https://youtube.com/DEIN-LINK-6", image: "" }
 ];
+const WORKOUT_DIFFICULTY_LABELS = {
+  de: { leicht: "Leicht", mittel: "Mittel", schwer: "Schwer" },
+  hu: { leicht: "Könnyű", mittel: "Közepes", schwer: "Nehéz" }
+};
+function workoutDifficultyLabel(level){
+  if(!level) return "";
+  return (WORKOUT_DIFFICULTY_LABELS[currentLang === "hu" ? "hu" : "de"][level]) || "";
+}
+// Zeitstufen für den Workout-Sucher — "bis X Minuten Zeit"
+const WORKOUT_TIME_FILTERS = [5, 10, 15, 20, 30, 40];
 
 // ── BODY RESET (Madero, Gua Sha, etc.) ──
 // WICHTIG: url durch deine echten Video-Links ersetzen, sobald verfügbar.
@@ -1238,6 +1290,8 @@ let state = {
   error: "",
   serviceDown: false,
   riseTodayWorkoutIds: [],
+  // Workout-Sucher: null = alle Workouts, sonst maximale Minutenzahl (5/10/15/20/30/40)
+  workoutTimeFilter: null,
   // Intervall-Gehen-Timer
   walkTimer: { open: false, stage: "select", durationMinutes: 20, phase: "slow", phaseSecondsLeft: WALK_PHASE_SECONDS, elapsedSeconds: 0, totalSeconds: 0, running: false, finished: false },
   // 21-Tage-Challenge
@@ -2302,39 +2356,126 @@ function bindChallengePopupEvents(){
   });
 }
 
+// Rundet die Lymphfluss-Gesamtdauer auf ganze Minuten, für den Zeitfilter-Vergleich (<=X Min)
+function lymphDurationMinutesValue(){ return Math.round(lymphTotalSeconds() / 60); }
+// true, wenn kein Zeitfilter aktiv ist oder das Workout in die gewählte Zeit passt
+function matchesWorkoutTimeFilter(minutes){
+  if(state.workoutTimeFilter == null) return true;
+  return minutes <= state.workoutTimeFilter;
+}
+
+// Aktualisiert den aktiven Punkt beim Wischen, ohne render() aufzurufen (das würde die Scroll-Position stören).
+// Klick auf einen Punkt springt sanft zum jeweiligen Slide.
+function bindWorkoutSliderEvents(){
+  const slider = document.getElementById("jumplift-slider");
+  const dotsWrap = document.getElementById("jumplift-dots");
+  if(!slider || !dotsWrap) return;
+  const dots = dotsWrap.querySelectorAll(".slider-dot");
+  if(dots.length === 0) return;
+
+  function updateActiveDot(){
+    const slideWidth = slider.clientWidth || 1;
+    const index = Math.round(slider.scrollLeft / slideWidth);
+    dots.forEach((d, i) => d.classList.toggle("active", i === index));
+  }
+
+  let scrollRaf = null;
+  slider.addEventListener("scroll", ()=>{
+    if(scrollRaf) return;
+    scrollRaf = window.requestAnimationFrame(()=>{ updateActiveDot(); scrollRaf = null; });
+  }, { passive: true });
+
+  dots.forEach((dot, i) => {
+    dot.addEventListener("click", ()=>{
+      slider.scrollTo({ left: i * (slider.clientWidth || 0), behavior: "smooth" });
+    });
+  });
+}
+
+function renderJumpLiftSlide(w){
+  const isHu = currentLang === 'hu';
+  const doneToday = state.riseTodayWorkoutIds.includes(w.id);
+  const diffLabel = workoutDifficultyLabel(w.difficulty);
+  return `<div class="workout-slide" data-workout-id="${w.id}" data-workout-url="${escapeAttr(w.url)}">
+    <div class="workout-slide-photo">
+      ${w.image ? `<img src="${escapeAttr(w.image)}" alt="${escapeAttr(w.title)}">` : `<div class="workout-slide-noimg"></div>`}
+      ${w.isNew ? `<span class="workout-slide-new-badge">${isHu ? 'ÚJ' : 'NEU'}</span>` : ""}
+      ${doneToday ? `<div class="workout-card-done-badge" style="${w.isNew ? 'top:56px;' : ''}">\u2713</div>` : ""}
+    </div>
+    <div class="workout-slide-info">
+      <h4 class="workout-slide-title">${escapeHtml(w.title)}</h4>
+      <div class="workout-slide-meta-row">
+        ${diffLabel ? `<span>\u{1F4AA} ${isHu ? 'Nehézség' : 'Schwierigkeit'}: ${diffLabel}</span>` : ""}
+        <span>\u{1F553} ${w.durationMinutes} ${isHu ? 'perc' : 'Min'}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderWorkoutTimeFilter(){
+  const isHu = currentLang === 'hu';
+  const active = state.workoutTimeFilter;
+  return `<div class="workout-time-filter">
+    <span class="time-filter-chip ${active===null?'active':''}" data-time-filter="all">${isHu ? 'Mind' : 'Alle'}</span>
+    ${WORKOUT_TIME_FILTERS.map(m => `<span class="time-filter-chip ${active===m?'active':''}" data-time-filter="${m}">${isHu ? `${m} perc` : `bis ${m} Min`}</span>`).join("")}
+  </div>`;
+}
+
 function renderRise(){
+  const isHu = currentLang === 'hu';
   const lymphDoneToday = state.riseTodayWorkoutIds.includes(LYMPH_FLOW_WORKOUT_ID);
   const walkDoneToday = state.riseTodayWorkoutIds.includes(WALK_INTERVAL_WORKOUT_ID);
-  const walkLabel = currentLang==='hu' ? 'Gyaloglás intervallum' : 'Intervall-Gehen';
-  const walkMeta = currentLang==='hu' ? 'Tempóváltás' : 'Tempo-Wechsel';
+  const walkLabel = isHu ? 'Gyaloglás intervallum' : 'Intervall-Gehen';
+  const walkMeta = isHu ? 'Tempóváltás' : 'Tempo-Wechsel';
+  const lymphMinutes = lymphDurationMinutesValue();
+
+  const showLymph = matchesWorkoutTimeFilter(lymphMinutes);
+  const showWalk = matchesWorkoutTimeFilter(WALK_DURATION_OPTIONS[0]);
+  const filteredJumpLift = JUMP_LIFT_WORKOUTS.filter(w => matchesWorkoutTimeFilter(w.durationMinutes));
+  const noResults = !showLymph && !showWalk && filteredJumpLift.length === 0;
 
   return `
     <div style="max-width:520px; margin:0 auto;">
       ${renderMythCard()}
       ${renderChallengeTab()}
       <div class="training-intro">
-        <h3>${currentLang==='hu' ? 'Edzésvideóid' : 'Deine Workout-Videos'}</h3>
-        <p>${currentLang==='hu' ? 'Minden edzés egy helyen — koppints egy edzésre az indításhoz.' : 'Alle Trainings-Videos an einem Ort – tippe auf ein Training, um zu starten.'}</p>
+        <h3>${isHu ? 'Legújabb edzések' : 'Neueste Workouts'}</h3>
+        <p>${isHu ? 'Csúsztasd oldalra, és nézd meg az összes edzésedet.' : 'Wisch zur Seite, um alle deine Workouts zu sehen.'}</p>
+      </div>
+      <div class="workout-slider-wrap">
+        <div class="workout-slider" id="jumplift-slider">
+          ${JUMP_LIFT_WORKOUTS.map(w => renderJumpLiftSlide(w)).join("")}
+        </div>
+        <div class="slider-dots" id="jumplift-dots">
+          ${JUMP_LIFT_WORKOUTS.map((_,i) => `<button type="button" class="slider-dot ${i===0?'active':''}" data-slide-index="${i}"></button>`).join("")}
+        </div>
       </div>
 
+      <div class="training-intro">
+        <h3>${isHu ? 'Edzéskereső' : 'Workout-Sucher'}</h3>
+        <p>${isHu ? 'Mennyi időd van most?' : 'Wie viel Zeit hast du gerade?'}</p>
+      </div>
+      ${renderWorkoutTimeFilter()}
+
+      ${noResults ? `<p class="workout-empty-note">${isHu ? 'Ennyi idő alatt nincs edzés — válassz hosszabb időt.' : 'Für so wenig Zeit gibt es noch kein Workout — wähle eine längere Zeit.'}</p>` : `
       <div class="workout-grid">
-        <div class="workout-card" id="lymph-card" data-lymph="1">
+        ${showLymph ? `<div class="workout-card" id="lymph-card" data-lymph="1">
           ${renderWorkoutCoverInner("Morgenroutine", LYMPH_FLOW_IMAGE)}
           <div class="workout-card-overlay">
             <div class="workout-card-title">Morgenroutine</div>
             <div class="workout-card-meta">${formatMinutesLabel(lymphTotalSeconds())} \u00b7 Lymphfluss</div>
           </div>
           ${lymphDoneToday ? `<div class="workout-card-done-badge">\u2713</div>` : ""}
-        </div>
-        <div class="workout-card" id="walk-card" data-walk="1">
+        </div>` : ""}
+        ${showWalk ? `<div class="workout-card" id="walk-card" data-walk="1">
           ${renderWorkoutCoverInner(walkLabel, "")}
           <div class="workout-card-overlay">
             <div class="workout-card-title">${walkLabel}</div>
             <div class="workout-card-meta">20-40 Min \u00b7 ${walkMeta}</div>
           </div>
           ${walkDoneToday ? `<div class="workout-card-done-badge">\u2713</div>` : ""}
-        </div>
-        ${JUMP_LIFT_WORKOUTS.map(w => {
+        </div>` : ""}
+        ${filteredJumpLift.map(w => {
           const doneToday = state.riseTodayWorkoutIds.includes(w.id);
           return `<div class="workout-card" data-workout-id="${w.id}" data-workout-url="${escapeAttr(w.url)}">
             ${renderWorkoutCoverInner(w.title, w.image)}
@@ -2345,7 +2486,7 @@ function renderRise(){
             ${doneToday ? `<div class="workout-card-done-badge">\u2713</div>` : ""}
           </div>`;
         }).join("")}
-      </div>
+      </div>`}
 
       <div class="training-intro">
         <h3>BODY RESET</h3>
@@ -3388,6 +3529,25 @@ function bindAppEvents(){
   if(challengeStartBtn) challengeStartBtn.addEventListener("click", ()=>{ startChallengeNow(); });
   const challengeOpenBtn = document.getElementById("challenge-open-btn");
   if(challengeOpenBtn) challengeOpenBtn.addEventListener("click", ()=>{ state.challengeOpen = true; render(); });
+
+  document.querySelectorAll(".time-filter-chip").forEach(chip=>{
+    chip.addEventListener("click", ()=>{
+      const val = chip.dataset.timeFilter;
+      state.workoutTimeFilter = val === "all" ? null : parseInt(val, 10);
+      render();
+    });
+  });
+
+  bindWorkoutSliderEvents();
+
+  document.querySelectorAll(".workout-slide[data-workout-id]").forEach(slide=>{
+    slide.addEventListener("click", ()=>{
+      const id = slide.dataset.workoutId;
+      const url = slide.dataset.workoutUrl;
+      if(url) window.open(url, "_blank", "noopener");
+      if(!state.riseTodayWorkoutIds.includes(id)) completeWorkout(id);
+    });
+  });
 
   document.querySelectorAll(".workout-card[data-workout-id]").forEach(card=>{
     card.addEventListener("click", ()=>{
