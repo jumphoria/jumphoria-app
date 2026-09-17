@@ -619,6 +619,37 @@
     display:inline-flex; align-items:center; gap:6px; background:none; border:none;
     color:var(--paper); font-weight:600; font-size:14px; cursor:pointer; padding:0; margin-bottom:16px; font-family:inherit; opacity:0.9;
   }
+  .chat-wrap{ max-width:520px; margin:0 auto; display:flex; flex-direction:column; height:calc(100vh - 230px); min-height:360px; }
+  .chat-hint{
+    font-size:12px; color:var(--paper); opacity:0.75; background:rgba(201,164,92,0.14);
+    border:1px solid var(--line); border-radius:10px; padding:9px 12px; margin-bottom:10px; text-align:center;
+  }
+  .chat-messages{
+    flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px;
+    padding:4px 2px 10px; -webkit-overflow-scrolling:touch;
+  }
+  .chat-bubble-row{ display:flex; justify-content:flex-start; }
+  .chat-bubble-row.is-own{ justify-content:flex-end; }
+  .chat-bubble{
+    position:relative; max-width:82%; background:var(--card-bg); border:1px solid var(--line);
+    border-radius:14px; padding:9px 32px 9px 12px;
+  }
+  .chat-bubble-row.is-own .chat-bubble{ background:rgba(201,164,92,0.22); padding-right:12px; }
+  .chat-bubble-head{ display:flex; align-items:baseline; gap:8px; margin-bottom:2px; }
+  .chat-bubble-name{ font-size:12.5px; font-weight:700; color:var(--pine-dark); }
+  .chat-bubble-time{ font-size:10.5px; color:var(--ink-on-paper); opacity:0.5; }
+  .chat-bubble-text{ font-size:14px; color:var(--ink-on-paper); line-height:1.4; white-space:pre-wrap; word-break:break-word; }
+  .chat-delete-btn{
+    position:absolute; top:6px; right:6px; background:none; border:none; cursor:pointer;
+    color:var(--terracotta); opacity:0.6; font-size:12px; padding:4px;
+  }
+  .chat-delete-btn:hover{ opacity:1; }
+  .chat-form{ display:flex; gap:8px; padding-top:8px; }
+  .chat-form input{
+    flex:1; padding:11px 14px; border-radius:22px; border:1.5px solid var(--line);
+    font-size:14px; font-family:inherit; background:var(--card-bg); color:var(--input-ink);
+  }
+  .chat-form .btn{ padding:0 20px; border-radius:22px; flex-shrink:0; }
 
   /* ====== PROGRESS-FOTOS ====== */
   .progress-type-row{ display:flex; gap:8px; margin:16px 0; }
@@ -1169,7 +1200,8 @@ const NAV_ICONS = {
   menu: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>`,
   challenge: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M17 5h3a2 2 0 0 1 0 4h-1"/><path d="M7 5H4a2 2 0 0 0 0 4h1"/></svg>`,
   home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>`,
-  shop: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9V6a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v3"/><path d="M4 9h16l-1 11.13A2 2 0 0 1 17.01 22H6.99a2 2 0 0 1-1.99-1.87L4 9Z"/><path d="M9 13a3 3 0 0 0 6 0"/></svg>`
+  shop: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9V6a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v3"/><path d="M4 9h16l-1 11.13A2 2 0 0 1 17.01 22H6.99a2 2 0 0 1-1.99-1.87L4 9Z"/><path d="M9 13a3 3 0 0 0 6 0"/></svg>`,
+  chat: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`
 };
 
 // ── Automatische Sortierung im Tagesplan: Frühstück → Hauptgericht → Snack → Dessert ──
@@ -1384,7 +1416,10 @@ let state = {
   dayAddKcalBand: null,
   dayAddStage: "filter",
   irSearch: "",
-  autoWeekIROnly: false
+  autoWeekIROnly: false,
+  chatMessages: [],
+  chatLoading: false,
+  chatLastSentAt: 0
 };
 
 function render(){
@@ -2305,6 +2340,115 @@ function renderShopPlaceholder(){
   </div>`;
 }
 
+/* ---------- COMMUNITY-CHAT (öffentlich, 30 Tage Aufbewahrung, Moderation nur Admin) ---------- */
+let chatChannel = null;
+
+function formatChatTime(iso){
+  const d = new Date(iso);
+  const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  if(sameDay) return `${hh}:${mm}`;
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mo = String(d.getMonth() + 1).padStart(2, "0");
+  return `${dd}.${mo}. ${hh}:${mm}`;
+}
+
+function renderChatTab(){
+  const isHu = currentLang === 'hu';
+  const isAdmin = state.user && state.user.id === ADMIN_USER_ID;
+  const messagesHtml = state.chatMessages.length === 0
+    ? `<div class="empty-state"><h3>${isHu ? 'Még nincs üzenet – írj elsőként!' : 'Noch keine Nachricht – schreib die erste!'}</h3></div>`
+    : state.chatMessages.map(m => {
+        const isOwn = state.user && m.user_id === state.user.id;
+        return `<div class="chat-bubble-row ${isOwn ? 'is-own' : ''}">
+          <div class="chat-bubble">
+            <div class="chat-bubble-head">
+              <span class="chat-bubble-name">${escapeHtml(m.display_name || (isHu ? 'Jumphoria-tag' : 'Jumphoria-Mitglied'))}</span>
+              <span class="chat-bubble-time">${formatChatTime(m.created_at)}</span>
+            </div>
+            <div class="chat-bubble-text">${escapeHtml(m.message)}</div>
+            ${isAdmin ? `<button type="button" class="chat-delete-btn" data-chat-id="${m.id}" title="${isHu ? 'Törlés' : 'Löschen'}">✕</button>` : ""}
+          </div>
+        </div>`;
+      }).join("");
+
+  return `<div class="chat-wrap">
+    <div class="chat-hint">${isHu ? 'Nyilvános chat – minden Jumphoria-tag látja. Legyél kedves! \u{1F49B}' : 'Öffentlicher Chat – alle Jumphoria-Mitglieder sehen deine Nachrichten. Sei nett zueinander! \u{1F49B}'}</div>
+    <div class="chat-messages" id="chat-messages">
+      ${state.chatLoading ? `<div class="loading">${t("loading")}</div>` : messagesHtml}
+    </div>
+    <form id="chat-form" class="chat-form">
+      <input type="text" id="chat-input" maxlength="500" placeholder="${isHu ? 'Írj üzenetet…' : 'Nachricht schreiben…'}" autocomplete="off">
+      <button type="submit" class="btn" id="chat-send-btn">${isHu ? 'Küldés' : 'Senden'}</button>
+    </form>
+  </div>`;
+}
+
+function scrollChatToBottom(){
+  const el = document.getElementById("chat-messages");
+  if(el) el.scrollTop = el.scrollHeight;
+}
+
+async function loadChatMessages(){
+  state.chatLoading = true;
+  render();
+  const { data, error } = await sb.from("chat_messages")
+    .select("id,user_id,display_name,message,created_at")
+    .order("created_at", { ascending: true })
+    .limit(200);
+  state.chatLoading = false;
+  if(!error && data) state.chatMessages = data;
+  subscribeChatRealtime();
+  render();
+  scrollChatToBottom();
+}
+
+function subscribeChatRealtime(){
+  if(chatChannel) return;
+  chatChannel = sb.channel("chat-messages-feed")
+    .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages" }, (payload) => {
+      if(!state.chatMessages.some(m => m.id === payload.new.id)){
+        state.chatMessages.push(payload.new);
+        if(state.chatMessages.length > 200) state.chatMessages.shift();
+      }
+      if(state.mainTab === "menu" && state.menuSubView === "chat"){ render(); scrollChatToBottom(); }
+    })
+    .on("postgres_changes", { event: "DELETE", schema: "public", table: "chat_messages" }, (payload) => {
+      state.chatMessages = state.chatMessages.filter(m => m.id !== payload.old.id);
+      if(state.mainTab === "menu" && state.menuSubView === "chat") render();
+    })
+    .subscribe();
+}
+
+function unsubscribeChatRealtime(){
+  if(chatChannel){ sb.removeChannel(chatChannel); chatChannel = null; }
+}
+
+async function sendChatMessageFromInput(){
+  const input = document.getElementById("chat-input");
+  if(!input || !state.user) return;
+  const text = input.value.trim();
+  if(!text || text.length > 500) return;
+  const now = Date.now();
+  if(now - state.chatLastSentAt < 3000){
+    alert(currentLang === "hu" ? "Kérlek várj néhány másodpercet, mielőtt újra írsz." : "Bitte warte ein paar Sekunden, bevor du wieder schreibst.");
+    return;
+  }
+  state.chatLastSentAt = now;
+  input.value = "";
+  const displayName = getUserFirstName() || "Jumphoria-Mitglied";
+  const { error } = await sb.from("chat_messages").insert({ user_id: state.user.id, display_name: displayName, message: text });
+  if(error) console.log("Chat send error:", error.message);
+}
+
+async function deleteChatMessageById(id){
+  if(!state.user || state.user.id !== ADMIN_USER_ID) return;
+  if(!confirm(currentLang === "hu" ? "Üzenet törlése?" : "Nachricht wirklich löschen?")) return;
+  await sb.from("chat_messages").delete().eq("id", id);
+}
+
 function renderMenuTab(){
   const isHu = currentLang === 'hu';
   if(state.menuSubView){
@@ -2314,6 +2458,7 @@ function renderMenuTab(){
       : state.menuSubView === 'today' ? renderWeek()
       : state.menuSubView === 'shopping' ? renderShoppingList()
       : state.menuSubView === 'shop' ? renderShopPlaceholder()
+      : state.menuSubView === 'chat' ? renderChatTab()
       : '';
     return `<div>
       <button type="button" class="menu-back-btn" id="menu-back-btn">\u2190 ${backLabel}</button>
@@ -2324,7 +2469,8 @@ function renderMenuTab(){
     { key: 'profil', icon: NAV_ICONS.profil, title: isHu ? 'Profil' : 'Profil', sub: isHu ? 'Kalóriaszükséglet kiszámítása' : 'Kalorienbedarf berechnen' },
     { key: 'today', icon: NAV_ICONS.today, title: isHu ? 'Hét' : 'Woche', sub: isHu ? 'Napi áttekintés és heti tervező' : 'Tagesübersicht und Wochenplaner' },
     { key: 'shopping', icon: NAV_ICONS.shopping, title: isHu ? 'Bevásárlás' : 'Einkauf', sub: isHu ? 'Bevásárlólista' : 'Einkaufsliste' },
-    { key: 'shop', icon: NAV_ICONS.shop, title: isHu ? 'Shop' : 'Shop', sub: isHu ? 'Hamarosan' : 'Bald verfügbar' }
+    { key: 'shop', icon: NAV_ICONS.shop, title: isHu ? 'Shop' : 'Shop', sub: isHu ? 'Hamarosan' : 'Bald verfügbar' },
+    { key: 'chat', icon: NAV_ICONS.chat, title: isHu ? 'Közösségi Chat' : 'Community-Chat', sub: isHu ? 'Beszélgess a többiekkel' : 'Austausch mit anderen Jumphoria-Frauen' }
   ];
   return `<div style="max-width:520px; margin:0 auto;">
     ${items.map(item => `<button type="button" class="menu-list-item" data-menu-key="${item.key}">
@@ -3275,6 +3421,7 @@ function renderDetail(){
 function bindAppEvents(){
   const logoutBtn = document.getElementById("logout-btn");
   if(logoutBtn) logoutBtn.addEventListener("click", async ()=>{
+    unsubscribeChatRealtime();
     await sb.auth.signOut();
     state.user = null; state.recipes = []; state.view = "login"; render();
   });
@@ -3285,6 +3432,7 @@ function bindAppEvents(){
 
   document.querySelectorAll(".main-tab").forEach(tab=>{
     tab.addEventListener("click", ()=>{
+      if(!(state.mainTab === "menu" && state.menuSubView === "chat" && tab.dataset.tab === "menu")) unsubscribeChatRealtime();
       state.mainTab = tab.dataset.tab;
       state.menuSubView = null;
       if(state.mainTab === "home"){ loadWeekLog(); calcProfil(); }
@@ -3300,12 +3448,22 @@ function bindAppEvents(){
       if(key === "today") loadWeekLog();
       if(key === "shopping") loadShoppingItems();
       if(key === "profil") calcProfil();
+      if(key === "chat") loadChatMessages();
       render();
     });
   });
 
   const menuBackBtn = document.getElementById("menu-back-btn");
-  if(menuBackBtn) menuBackBtn.addEventListener("click", ()=>{ state.menuSubView = null; render(); });
+  if(menuBackBtn) menuBackBtn.addEventListener("click", ()=>{
+    if(state.menuSubView === "chat") unsubscribeChatRealtime();
+    state.menuSubView = null; render();
+  });
+
+  const chatForm = document.getElementById("chat-form");
+  if(chatForm) chatForm.addEventListener("submit", (e)=>{ e.preventDefault(); sendChatMessageFromInput(); });
+  document.querySelectorAll(".chat-delete-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ deleteChatMessageById(btn.dataset.chatId); });
+  });
 
   const challengeToggleTodayTab = document.getElementById("challenge-toggle-today");
   if(challengeToggleTodayTab) challengeToggleTodayTab.addEventListener("click", ()=>{ toggleChallengeDay(parseInt(challengeToggleTodayTab.dataset.day, 10)); });
