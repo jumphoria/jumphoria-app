@@ -438,6 +438,7 @@
   .tag-badge.tag-gray{ background:rgba(140,133,119,0.20); color:#7A7365; }
   .tag-badge.tag-pink{ background:var(--terracotta-soft); color:var(--terracotta); }
   .tag-badge.tag-peach{ background:rgba(212,150,102,0.22); color:#B4703F; }
+  .tag-badge.tag-sand{ background:rgba(201,164,92,0.20); color:var(--pine-dark); }
   .empty-state{
     text-align:center; padding:60px 20px; color:var(--ink-soft);
   }
@@ -838,21 +839,23 @@ const ADMIN_USER_ID = "55eaffe1-6a42-42ec-8888-708f31210c4c";
 const REGISTRATION_CLOSED = false;
 // Debug: zeigt die eingeloggte User-ID in der Konsole
 function debugUserId(){ if(state.user) console.log("Eingeloggt als:", state.user.id, "| Admin?", state.user.id === ADMIN_USER_ID); }
-const ALL_TAGS = ["Vegan","Vegetarisch","Frühstück","Hauptgericht","Snack","Dessert","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein","Meal Prep","Schnell","Airfryer","Pre Workout","Post Workout","IR","Reis","Kartoffel","Nudeln","Pommes"];
+const ALL_TAGS = ["Vegan","Vegetarisch","Frühstück","Hauptgericht","Snack","Dessert","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein","Laktosefrei","Glutenfrei","Meal Prep","Schnell","Airfryer","Pre Workout","Post Workout","IR","Reis","Kartoffel","Nudeln","Pommes","Winter","Sommer"];
 const KCAL_BANDS = ["100 kcal","200 kcal","300 kcal","400 kcal"];
 const FILTER_GROUPS = [
-  { labelKey: "de_ernaehrung", label: "Ern\u00e4hrung", tags: ["Vegan","Vegetarisch","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein"] },
+  { labelKey: "de_ernaehrung", label: "Ern\u00e4hrung", tags: ["Vegan","Vegetarisch","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein","Laktosefrei","Glutenfrei"] },
   { labelKey: "de_mahlzeit", label: "Mahlzeit", tags: ["Fr\u00fchst\u00fcck","Hauptgericht","Snack","Dessert"] },
   { labelKey: "de_beilage", label: "Beilage", tags: ["Reis","Kartoffel","Nudeln","Pommes"] },
   { labelKey: "de_zubereitung", label: "Zubereitung", tags: ["Meal Prep","Schnell","Airfryer"] },
-  { labelKey: "de_timing", label: "Timing", tags: ["Pre Workout","Post Workout"] }
+  { labelKey: "de_timing", label: "Timing", tags: ["Pre Workout","Post Workout"] },
+  { labelKey: "de_saison", label: "Saison", tags: ["Winter","Sommer"] }
 ];
 const FILTER_GROUP_LABELS_HU = {
   de_ernaehrung: "Étkezés",
   de_mahlzeit: "Étkezés típusa",
   de_beilage: "Köret",
   de_zubereitung: "Elkészítés",
-  de_timing: "Időzítés"
+  de_timing: "Időzítés",
+  de_saison: "Évszak"
 };
 function trFilterGroupLabel(group){
   if(currentLang === "hu" && FILTER_GROUP_LABELS_HU[group.labelKey]) return FILTER_GROUP_LABELS_HU[group.labelKey];
@@ -986,20 +989,26 @@ const TAG_TRANSLATIONS_HU = {
   "Reis": "Rizs",
   "Kartoffel": "Krumpli",
   "Nudeln": "Tészta",
-  "Pommes": "Hasábburgonya"
+  "Pommes": "Hasábburgonya",
+  "Laktosefrei": "Laktózmentes",
+  "Glutenfrei": "Gluténmentes",
+  "Winter": "Tél",
+  "Sommer": "Nyár"
 };
 function trTag(tag){
   if(currentLang === "hu" && TAG_TRANSLATIONS_HU[tag]) return TAG_TRANSLATIONS_HU[tag];
   return tag;
 }
 
-const TAG_GREEN = new Set(["Vegan","Vegetarisch","Wenig Carbs","Wenig Fett","Balanced Macros","IR"]);
+const TAG_GREEN = new Set(["Vegan","Vegetarisch","Wenig Carbs","Wenig Fett","Balanced Macros","IR","Laktosefrei","Glutenfrei"]);
 const TAG_PINK = new Set(["Dessert"]);
 const TAG_PEACH = new Set(["High Protein","Pre Workout","Post Workout"]);
+const TAG_SAND = new Set(["Winter","Sommer"]);
 function tagColorClass(tag){
   if(TAG_GREEN.has(tag)) return "tag-green";
   if(TAG_PINK.has(tag)) return "tag-pink";
   if(TAG_PEACH.has(tag)) return "tag-peach";
+  if(TAG_SAND.has(tag)) return "tag-sand";
   return "tag-gray";
 }
 
