@@ -24,8 +24,8 @@
     --ink-soft:#E8E4D0;
     --pine:#D4AF37;
     --pine-dark:#B8912E;
-    --terracotta:#D97B5E;
-    --terracotta-soft:rgba(217,123,94,0.16);
+    --terracotta:#C7AD7C;
+    --terracotta-soft:rgba(199,173,124,0.18);
     --line:rgba(212,175,55,0.22);
     --shadow: 0 10px 26px rgba(0,0,0,0.55), 0 1px 3px rgba(212,175,55,0.06);
     /* Auth/Login-Fenster: eigenes Schwarz-Gold-Thema, passend zur neuen Webador-Startseite */
@@ -144,30 +144,26 @@
     font-size:13.5px; line-height:1.5; margin-bottom:16px; text-align:left;
   }
 
-  /* ====== MAIN TABS (untere Menüleiste, fix am Bildschirmrand) ====== */
+  /* ====== MAIN TABS (obere Menüleiste) ====== */
   .main-tabs{
-    position:fixed; left:0; right:0; bottom:0; z-index:60;
-    display:grid; grid-template-columns:repeat(4, 1fr);
-    background:#0B0B0A; border-top:1px solid rgba(212,175,55,0.18);
-    padding:10px 6px calc(10px + env(safe-area-inset-bottom, 0px));
-    max-width:1000px; margin:0 auto;
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:3px;
+    margin-bottom:22px;
+    background:var(--accent-box-bg); border-radius:14px; padding:5px;
   }
   .main-tab{
-    background:none; border:none; padding:4px 3px;
-    font-size:9.5px; font-weight:600; color:#6C6656; opacity:1; cursor:pointer;
+    background:none; border:none; padding:9px 3px;
+    font-size:10.5px; font-weight:700; color:var(--paper); opacity:0.6; cursor:pointer;
     border-radius:10px; font-family:inherit; text-align:center; transition:all .15s;
-    white-space:nowrap; display:flex; flex-direction:column; align-items:center; gap:4px;
-    min-width:0; letter-spacing:.2px;
+    white-space:nowrap; display:flex; flex-direction:column; align-items:center; gap:2px;
+    min-width:0;
   }
   .main-tab-icon{ display:flex; align-items:center; justify-content:center; }
   .main-tab-icon svg{ width:19px; height:19px; transition:transform .2s ease; }
   .main-tab.active .main-tab-icon svg{ transform:scale(1.08); }
   .main-tab.active{
-    color:var(--pine);
-    background:none;
+    opacity:1; color:var(--pine);
+    background:rgba(212,175,55,0.14);
   }
-  /* Platz für die fixe untere Leiste, damit der letzte Inhalt nicht verdeckt wird */
-  .app{ padding-bottom:92px !important; }
 
   /* ====== TODAY VIEW ====== */
   .today-summary{
@@ -1437,14 +1433,14 @@ function renderAppShell(){
         <button class="btn-ghost" id="logout-btn">${t("logout")}</button>
       </div>
     </div>
-    ${state.mainTab==='home' ? renderHomeTab() : state.mainTab==='training' ? renderRise() : state.mainTab==='menu' ? renderMenuTab() : renderRecipesTab()}
     <div class="main-tabs">
       <button class="main-tab ${state.mainTab==='home'?'active':''}" data-tab="home"><span class="main-tab-icon">${NAV_ICONS.home}</span>${currentLang==='hu' ? 'Kezdőlap' : 'Start'}</button>
       <button class="main-tab ${state.mainTab==='recipes'?'active':''}" data-tab="recipes"><span class="main-tab-icon">${NAV_ICONS.recipes}</span>${t("nav_recipes")}</button>
       <button class="main-tab ${state.mainTab==='training'?'active':''}" data-tab="training"><span class="main-tab-icon">${NAV_ICONS.reise}</span>${t("nav_training")}</button>
       <button class="main-tab ${state.mainTab==='menu'?'active':''}" data-tab="menu"><span class="main-tab-icon">${NAV_ICONS.menu}</span>${t("nav_profil")}</button>
     </div>
-    ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="fab" id="add-fab" title="Neues Rezept" style="bottom:96px;">+</button>` : ""}
+    ${state.mainTab==='home' ? renderHomeTab() : state.mainTab==='training' ? renderRise() : state.mainTab==='menu' ? renderMenuTab() : renderRecipesTab()}
+    ${state.user && state.user.id === ADMIN_USER_ID ? `<button class="fab" id="add-fab" title="Neues Rezept">+</button>` : ""}
     ${state.modalOpen ? renderModal() : ""}
     ${state.planRecipeId ? renderPlanPopup() : ""}
     ${state.dayAddTarget ? renderDayAddPopup() : ""}
