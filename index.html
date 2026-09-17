@@ -17,16 +17,16 @@
     --cream:#0B0B0A;
     --paper:#EFE3BE;
     --ink:#F7F3E8;
-    --ink-on-paper:#F0EAD8;
+    --ink-on-paper:#332E1F;
     --accent-box-bg:#1D170D;
-    --card-bg:#14120D;
+    --card-bg:#F1E7D0;
     --input-ink:#2B2A22;
     --ink-soft:#E8E4D0;
     --pine:#D4AF37;
     --pine-dark:#B8912E;
-    --terracotta:#C7AD7C;
-    --terracotta-soft:rgba(199,173,124,0.18);
-    --line:rgba(212,175,55,0.22);
+    --terracotta:#9C6B3E;
+    --terracotta-soft:rgba(156,107,62,0.22);
+    --line:rgba(176,133,45,0.35);
     --shadow: 0 10px 26px rgba(0,0,0,0.55), 0 1px 3px rgba(212,175,55,0.06);
     /* Auth/Login-Fenster: eigenes Schwarz-Gold-Thema, passend zur neuen Webador-Startseite */
     --auth-bg:#0B0B0B;
@@ -185,7 +185,7 @@
   .today-entry-info{ display:flex; flex-direction:column; gap:3px; }
   .today-entry-info.today-entry-clickable{ cursor:pointer; }
   .today-entry-info.today-entry-clickable strong{
-    color:var(--terracotta); text-decoration:underline; text-decoration-color:rgba(217,123,94,0.4);
+    color:var(--terracotta); text-decoration:underline; text-decoration-color:rgba(156,107,62,0.4);
     text-underline-offset:2px;
   }
   .today-entry-info.today-entry-clickable:active strong{ color:var(--pine-dark); }
@@ -567,8 +567,9 @@
   }
   .side-gram-btn.active{ background:var(--pine); border-color:var(--pine); color:#fff; }
   .side-extra-entry{
-    background:var(--cream); border-radius:12px; padding:10px 14px;
+    background:var(--card-bg); border-radius:12px; padding:10px 14px;
     display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; font-size:13.5px;
+    color:var(--ink-on-paper); border:1px solid var(--line);
   }
   .menu-list-item{
     display:flex; align-items:center; gap:14px; width:100%; text-align:left;
