@@ -437,6 +437,7 @@
   .tag-badge.tag-green{ background:rgba(138,155,110,0.22); color:#6E7C56; }
   .tag-badge.tag-gray{ background:rgba(140,133,119,0.20); color:#7A7365; }
   .tag-badge.tag-pink{ background:var(--terracotta-soft); color:var(--terracotta); }
+  .tag-badge.tag-peach{ background:rgba(212,150,102,0.22); color:#B4703F; }
   .empty-state{
     text-align:center; padding:60px 20px; color:var(--ink-soft);
   }
@@ -993,10 +994,12 @@ function trTag(tag){
 }
 
 const TAG_GREEN = new Set(["Vegan","Vegetarisch","Wenig Carbs","Wenig Fett","Balanced Macros","IR"]);
-const TAG_PINK = new Set(["Dessert","High Protein","Pre Workout","Post Workout"]);
+const TAG_PINK = new Set(["Dessert"]);
+const TAG_PEACH = new Set(["High Protein","Pre Workout","Post Workout"]);
 function tagColorClass(tag){
   if(TAG_GREEN.has(tag)) return "tag-green";
   if(TAG_PINK.has(tag)) return "tag-pink";
+  if(TAG_PEACH.has(tag)) return "tag-peach";
   return "tag-gray";
 }
 
