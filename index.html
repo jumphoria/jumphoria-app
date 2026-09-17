@@ -644,6 +644,14 @@
     color:var(--terracotta); opacity:0.6; font-size:12px; padding:4px;
   }
   .chat-delete-btn:hover{ opacity:1; }
+  .chat-translate-note{ font-size:10.5px; color:var(--ink-on-paper); opacity:0.55; font-style:italic; margin-top:2px; }
+  .chat-bubble-actions{ margin-top:5px; }
+  .chat-translate-btn{
+    background:none; border:none; padding:0; cursor:pointer; font-family:inherit;
+    font-size:11.5px; font-weight:700; color:var(--pine-dark); text-decoration:underline;
+  }
+  .chat-translate-loading{ font-size:11px; color:var(--ink-on-paper); opacity:0.6; }
+  .chat-translate-error{ font-size:11px; color:var(--terracotta); margin-left:6px; }
   .chat-form{ display:flex; gap:8px; padding-top:8px; }
   .chat-form input{
     flex:1; padding:11px 14px; border-radius:22px; border:1.5px solid var(--line);
@@ -1419,7 +1427,8 @@ let state = {
   autoWeekIROnly: false,
   chatMessages: [],
   chatLoading: false,
-  chatLastSentAt: 0
+  chatLastSentAt: 0,
+  chatTranslations: {}
 };
 
 function render(){
@@ -2362,13 +2371,22 @@ function renderChatTab(){
     ? `<div class="empty-state"><h3>${isHu ? 'Még nincs üzenet – írj elsőként!' : 'Noch keine Nachricht – schreib die erste!'}</h3></div>`
     : state.chatMessages.map(m => {
         const isOwn = state.user && m.user_id === state.user.id;
+        const tr = state.chatTranslations[m.id];
+        const showingTranslation = tr && tr.showing && tr.text;
+        const bodyText = showingTranslation ? escapeHtml(tr.text) : escapeHtml(m.message);
+        const translateLabel = showingTranslation ? (isHu ? 'Eredeti szöveg' : 'Original anzeigen') : (isHu ? 'Fordítás' : 'Übersetzen');
         return `<div class="chat-bubble-row ${isOwn ? 'is-own' : ''}">
           <div class="chat-bubble">
             <div class="chat-bubble-head">
               <span class="chat-bubble-name">${escapeHtml(m.display_name || (isHu ? 'Jumphoria-tag' : 'Jumphoria-Mitglied'))}</span>
               <span class="chat-bubble-time">${formatChatTime(m.created_at)}</span>
             </div>
-            <div class="chat-bubble-text">${escapeHtml(m.message)}</div>
+            <div class="chat-bubble-text">${bodyText}</div>
+            ${showingTranslation ? `<div class="chat-translate-note">${isHu ? 'Automatikus fordítás' : 'Automatische Übersetzung'}</div>` : ""}
+            <div class="chat-bubble-actions">
+              ${tr && tr.loading ? `<span class="chat-translate-loading">${isHu ? 'Fordítás…' : 'Übersetze…'}</span>` : `<button type="button" class="chat-translate-btn" data-chat-id="${m.id}" data-text="${escapeAttr(m.message)}">${translateLabel}</button>`}
+              ${tr && tr.error ? `<span class="chat-translate-error">${isHu ? 'Sikertelen' : 'Fehlgeschlagen'}</span>` : ""}
+            </div>
             ${isAdmin ? `<button type="button" class="chat-delete-btn" data-chat-id="${m.id}" title="${isHu ? 'Törlés' : 'Löschen'}">✕</button>` : ""}
           </div>
         </div>`;
@@ -2441,6 +2459,33 @@ async function sendChatMessageFromInput(){
   const displayName = getUserFirstName() || "Jumphoria-Mitglied";
   const { error } = await sb.from("chat_messages").insert({ user_id: state.user.id, display_name: displayName, message: text });
   if(error) console.log("Chat send error:", error.message);
+}
+
+async function toggleChatTranslation(id, originalText){
+  const existing = state.chatTranslations[id];
+  if(existing && (existing.text || existing.loading)){
+    existing.showing = !existing.showing;
+    render();
+    return;
+  }
+  state.chatTranslations[id] = { text: null, showing: true, loading: true, error: false };
+  render();
+  const targetLang = currentLang === 'hu' ? 'hu' : 'de';
+  const sourceLang = targetLang === 'hu' ? 'de' : 'hu';
+  try {
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(originalText)}&langpair=${sourceLang}|${targetLang}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const translated = data && data.responseData && data.responseData.translatedText ? data.responseData.translatedText : null;
+    if(translated){
+      state.chatTranslations[id] = { text: translated, showing: true, loading: false, error: false };
+    } else {
+      state.chatTranslations[id] = { text: null, showing: false, loading: false, error: true };
+    }
+  } catch(e){
+    state.chatTranslations[id] = { text: null, showing: false, loading: false, error: true };
+  }
+  render();
 }
 
 async function deleteChatMessageById(id){
@@ -3463,6 +3508,9 @@ function bindAppEvents(){
   if(chatForm) chatForm.addEventListener("submit", (e)=>{ e.preventDefault(); sendChatMessageFromInput(); });
   document.querySelectorAll(".chat-delete-btn").forEach(btn=>{
     btn.addEventListener("click", ()=>{ deleteChatMessageById(btn.dataset.chatId); });
+  });
+  document.querySelectorAll(".chat-translate-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ toggleChatTranslation(btn.dataset.chatId, btn.dataset.text); });
   });
 
   const challengeToggleTodayTab = document.getElementById("challenge-toggle-today");
