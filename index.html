@@ -2568,23 +2568,6 @@ function renderRise(){
         }).join("")}
       </div>`}
 
-      <div class="training-intro">
-        <h3>BODY RESET</h3>
-        <p>${currentLang==='hu' ? 'Kis rituálék a testednek és a fejednek — koppints egy kártyára a leírásért.' : 'Kleine Rituale für Körper und Kopf – tippe auf eine Karte für die Beschreibung.'}</p>
-      </div>
-      <div class="workout-grid">
-        ${[...BODY_TREATMENTS, ...MIND_NERVOUS_PRACTICES].map(bt => {
-          const doneToday = state.riseTodayWorkoutIds.includes(bt.id);
-          return `<div class="workout-card" data-body-treatment-id="${bt.id}">
-            ${renderWorkoutCoverInner(bodyTreatmentTitle(bt), "")}
-            <div class="workout-card-overlay">
-              <div class="workout-card-title">${escapeHtml(bodyTreatmentTitle(bt))}</div>
-              <div class="workout-card-meta">${bt.duration} \u00b7 ${escapeHtml(bodyTreatmentCategory(bt))}</div>
-            </div>
-            ${doneToday ? `<div class="workout-card-done-badge">\u2713</div>` : ""}
-          </div>`;
-        }).join("")}
-      </div>
     </div>
   `;
 }
