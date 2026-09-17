@@ -582,6 +582,9 @@
   .today-macro-compact-item:not(:last-child){ border-right:1px solid var(--line); }
   .today-macro-compact-item strong{ font-size:14px; color:var(--ink-on-paper); font-family:Georgia,serif; }
   .today-macro-compact-item span{ font-size:9.5px; color:var(--ink-on-paper); opacity:0.6; text-transform:uppercase; letter-spacing:.02em; }
+  .today-macro-compact-track{ width:100%; height:4px; border-radius:4px; background:rgba(201,164,92,0.18); overflow:hidden; margin-top:4px; }
+  .today-macro-compact-fill{ height:100%; border-radius:4px; background:var(--pine); transition:width .3s ease; }
+  .today-macro-compact-fill.is-over{ background:var(--terracotta); }
   .today-macro-fill.is-over{ background:var(--terracotta); }
   .side-pick-item{
     display:flex; justify-content:space-between; align-items:center; width:100%;
@@ -842,7 +845,7 @@ function debugUserId(){ if(state.user) console.log("Eingeloggt als:", state.user
 const ALL_TAGS = ["Vegan","Vegetarisch","Frühstück","Hauptgericht","Snack","Dessert","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein","Laktosefrei","Glutenfrei","Meal Prep","Schnell","Airfryer","Pre Workout","Post Workout","IR","Reis","Kartoffel","Nudeln","Pommes","Winter","Sommer"];
 const KCAL_BANDS = ["100 kcal","200 kcal","300 kcal","400 kcal"];
 const FILTER_GROUPS = [
-  { labelKey: "de_ernaehrung", label: "Ern\u00e4hrung", tags: ["Vegan","Vegetarisch","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein","Laktosefrei","Glutenfrei"] },
+  { labelKey: "de_ernaehrung", label: "Ern\u00e4hrung", tags: ["Vegan","Vegetarisch","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein","Laktosefrei","Glutenfrei","IR"] },
   { labelKey: "de_mahlzeit", label: "Mahlzeit", tags: ["Fr\u00fchst\u00fcck","Hauptgericht","Snack","Dessert"] },
   { labelKey: "de_beilage", label: "Beilage", tags: ["Reis","Kartoffel","Nudeln","Pommes"] },
   { labelKey: "de_zubereitung", label: "Zubereitung", tags: ["Meal Prep","Schnell","Airfryer"] },
@@ -1741,8 +1744,13 @@ function renderTodayNutriCard(){
   const remaining = targetKcal - kcalSum;
   const pctEaten = Math.max(0, Math.min(100, Math.round((kcalSum / targetKcal) * 100)));
 
-  function macroCompact(label, eaten){
-    return `<div class="today-macro-compact-item"><strong>${eaten} g</strong><span>${label}</span></div>`;
+  function macroCompact(label, eaten, target){
+    const pct = target > 0 ? Math.min(100, Math.round((eaten/target)*100)) : 0;
+    const over = target > 0 && eaten > target;
+    return `<div class="today-macro-compact-item">
+      <strong>${eaten} g</strong><span>${label}</span>
+      <div class="today-macro-compact-track"><div class="today-macro-compact-fill ${over ? 'is-over' : ''}" style="width:${pct}%;"></div></div>
+    </div>`;
   }
 
   return `<div class="today-nutri-card today-nutri-card-compact">
@@ -1759,9 +1767,9 @@ function renderTodayNutriCard(){
       </div>
     </div>
     <div class="today-macro-compact-row">
-      ${macroCompact(isHu ? 'Szénhidrát' : 'Kohlenhydrate', carbsSum)}
-      ${macroCompact(isHu ? 'Fehérje' : 'Eiweiß', proteinSum)}
-      ${macroCompact(isHu ? 'Zsír' : 'Fett', fatSum)}
+      ${macroCompact(isHu ? 'Szénhidrát' : 'Kohlenhydrate', carbsSum, targetMakros.carbs)}
+      ${macroCompact(isHu ? 'Fehérje' : 'Eiweiß', proteinSum, targetMakros.protein)}
+      ${macroCompact(isHu ? 'Zsír' : 'Fett', fatSum, targetMakros.fat)}
     </div>
   </div>`;
 }
@@ -2302,7 +2310,6 @@ function renderMenuTab(){
   }
   const items = [
     { key: 'profil', icon: NAV_ICONS.profil, title: isHu ? 'Profil' : 'Profil', sub: isHu ? 'Kalóriaszükséglet kiszámítása' : 'Kalorienbedarf berechnen' },
-    { key: 'ir', icon: NAV_ICONS.ir, title: isHu ? 'IR-barát receptajánlások' : 'IR-freundliche Rezeptempfehlungen', sub: isHu ? 'Kiegyensúlyozott, fehérjében gazdag ételek' : 'Ausgewogene, eiweißreiche Gerichte' },
     { key: 'today', icon: NAV_ICONS.today, title: isHu ? 'Hét' : 'Woche', sub: isHu ? 'Napi áttekintés és heti tervező' : 'Tagesübersicht und Wochenplaner' },
     { key: 'shopping', icon: NAV_ICONS.shopping, title: isHu ? 'Bevásárlás' : 'Einkauf', sub: isHu ? 'Bevásárlólista' : 'Einkaufsliste' }
   ];
