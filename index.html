@@ -2461,6 +2461,27 @@ async function sendChatMessageFromInput(){
   if(error) console.log("Chat send error:", error.message);
 }
 
+async function translateViaGoogle(text, sourceLang, targetLang){
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+  const res = await fetch(url);
+  if(!res.ok) throw new Error("Google translate HTTP " + res.status);
+  const data = await res.json();
+  if(!Array.isArray(data) || !Array.isArray(data[0])) throw new Error("Unerwartetes Antwortformat (Google)");
+  const translated = data[0].map(seg => seg[0]).join("");
+  if(!translated) throw new Error("Leere Übersetzung (Google)");
+  return translated;
+}
+
+async function translateViaMyMemory(text, sourceLang, targetLang){
+  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceLang}|${targetLang}`;
+  const res = await fetch(url);
+  if(!res.ok) throw new Error("MyMemory HTTP " + res.status);
+  const data = await res.json();
+  const translated = data && data.responseData && data.responseData.translatedText;
+  if(!translated) throw new Error("Leere Übersetzung (MyMemory)");
+  return translated;
+}
+
 async function toggleChatTranslation(id, originalText){
   const existing = state.chatTranslations[id];
   if(existing && (existing.text || existing.loading)){
@@ -2472,17 +2493,20 @@ async function toggleChatTranslation(id, originalText){
   render();
   const targetLang = currentLang === 'hu' ? 'hu' : 'de';
   const sourceLang = targetLang === 'hu' ? 'de' : 'hu';
+  let translated = null;
   try {
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(originalText)}&langpair=${sourceLang}|${targetLang}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    const translated = data && data.responseData && data.responseData.translatedText ? data.responseData.translatedText : null;
-    if(translated){
-      state.chatTranslations[id] = { text: translated, showing: true, loading: false, error: false };
-    } else {
-      state.chatTranslations[id] = { text: null, showing: false, loading: false, error: true };
+    translated = await translateViaGoogle(originalText, sourceLang, targetLang);
+  } catch(e1){
+    console.log("Chat-Übersetzung: Google fehlgeschlagen –", e1.message, "– versuche MyMemory…");
+    try {
+      translated = await translateViaMyMemory(originalText, sourceLang, targetLang);
+    } catch(e2){
+      console.log("Chat-Übersetzung: MyMemory ebenfalls fehlgeschlagen –", e2.message);
     }
-  } catch(e){
+  }
+  if(translated){
+    state.chatTranslations[id] = { text: translated, showing: true, loading: false, error: false };
+  } else {
     state.chatTranslations[id] = { text: null, showing: false, loading: false, error: true };
   }
   render();
