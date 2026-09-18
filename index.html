@@ -1375,7 +1375,7 @@ let state = {
   view: "loading",
   recipes: [],
   search: "",
-  activeTag: null,
+  activeTags: [],
   activeKcalBand: null,
   filterSheetOpen: false,
   modalOpen: false,
@@ -1426,7 +1426,7 @@ let state = {
   // Rezept direkt zu einem Tag im Wochenplan hinzufügen
   dayAddTarget: null,
   dayAddSearch: "",
-  dayAddTag: null,
+  dayAddTags: [],
   dayAddKcalBand: null,
   dayAddStage: "filter",
   irSearch: "",
@@ -1618,7 +1618,7 @@ function renderIRGrid(list){
 }
 
 function renderRecipesTab(){
-  const activeFilterCount = (state.activeTag ? 1 : 0) + (state.activeKcalBand ? 1 : 0);
+  const activeFilterCount = state.activeTags.length + (state.activeKcalBand ? 1 : 0);
   return `
     <div class="toolbar">
       <input class="search-input" id="search-input" placeholder="${currentLang==='hu' ? 'Recept keresése …' : 'Rezept suchen …'}" value="${escapeAttr(state.search)}">
@@ -1640,7 +1640,7 @@ function renderFilterSheet(){
         <div class="filter-group">
           <h4 class="filter-group-label">${trFilterGroupLabel(group)}</h4>
           <div class="tag-filters" id="tag-filters">
-            ${group.tags.map(tg => `<span class="tag-chip ${state.activeTag===tg?'active':''}" data-tag="${tg}">${trTag(tg)}</span>`).join("")}
+            ${group.tags.map(tg => `<span class="tag-chip ${state.activeTags.includes(tg)?'active':''}" data-tag="${tg}">${trTag(tg)}</span>`).join("")}
           </div>
         </div>
       `).join("")}
@@ -1687,7 +1687,7 @@ function renderHomeTab(){
       </div>`
     : `<div style="margin-bottom:18px;">
     <h2 style="font-family:Georgia,serif; color:var(--paper); font-size:22px; margin:0 0 4px; display:flex; align-items:center; gap:8px;">${isHu ? `Szia ${firstName}! \u2728` : `Hallo ${firstName}! \u2728`}<button type="button" id="edit-name-btn" title="${isHu ? 'Név szerkesztése' : 'Namen ändern'}" style="background:none; border:none; color:var(--paper); opacity:0.6; font-size:15px; cursor:pointer; padding:2px;">\u270f\ufe0f</button></h2>
-    <p style="color:var(--paper); opacity:0.85; font-size:14px; margin:0;">${isHu ? 'Ma mit teszel az álomalakodért?' : 'Was tust du heute für deine Traumfigur?'}</p>
+    <p style="color:var(--paper); opacity:0.85; font-size:14px; margin:0;">${isHu ? 'Mit teszel ma magadért?' : 'Was tust du heute für dich?'}</p>
   </div>`;
 
   const nutriCard = renderTodayNutriCard();
@@ -2087,7 +2087,7 @@ function renderDayAddPopup(){
         <div class="filter-group">
           <h4 class="filter-group-label">${trFilterGroupLabel(group)}</h4>
           <div class="tag-filters">
-            ${group.tags.map(tg => `<span class="tag-chip dayadd-tag-chip ${state.dayAddTag===tg?'active':''}" data-tag="${tg}">${trTag(tg)}</span>`).join("")}
+            ${group.tags.map(tg => `<span class="tag-chip dayadd-tag-chip ${state.dayAddTags.includes(tg)?'active':''}" data-tag="${tg}">${trTag(tg)}</span>`).join("")}
           </div>
         </div>
       `).join("")}
@@ -2108,10 +2108,10 @@ function renderDayAddPopup(){
   const search = state.dayAddSearch || "";
   const filtered = state.recipes.filter(r =>
     recipeMatchesSearch(r, search) &&
-    (!state.dayAddTag || (r.tags||[]).includes(state.dayAddTag)) &&
+    state.dayAddTags.every(tag => (r.tags||[]).includes(tag)) &&
     (!state.dayAddKcalBand || getKcalBand(r.kcal, r.servings) === state.dayAddKcalBand)
   );
-  const activeFilterCount = (state.dayAddTag ? 1 : 0) + (state.dayAddKcalBand ? 1 : 0);
+  const activeFilterCount = state.dayAddTags.length + (state.dayAddKcalBand ? 1 : 0);
   return `<div class="overlay" id="dayadd-overlay"><div class="modal plan-modal">
     <button class="modal-close" id="dayadd-close">\u2715</button>
     <h2>Rezept hinzuf\u00fcgen \u2013 ${label}</h2>
@@ -3237,7 +3237,7 @@ function bindWalkTimerEvents(){
 function renderGrid(){
   const filtered = state.recipes.filter(r=>{
     const matchesSearch = recipeMatchesSearch(r, state.search);
-    const matchesTag = !state.activeTag || (r.tags||[]).includes(state.activeTag);
+    const matchesTag = state.activeTags.every(tag => (r.tags||[]).includes(tag));
     const matchesKcalBand = !state.activeKcalBand || getKcalBand(r.kcal, r.servings) === state.activeKcalBand;
     return matchesSearch && matchesTag && matchesKcalBand;
   });
@@ -3570,10 +3570,15 @@ function bindAppEvents(){
   }
 
   document.querySelectorAll("#tag-filters .tag-chip[data-tag]").forEach(chip=>{
-    chip.addEventListener("click", ()=>{ state.activeTag = state.activeTag === chip.dataset.tag ? null : chip.dataset.tag; render(); });
+    chip.addEventListener("click", ()=>{
+      const tag = chip.dataset.tag;
+      if(state.activeTags.includes(tag)){ state.activeTags = state.activeTags.filter(x=>x!==tag); }
+      else { state.activeTags.push(tag); }
+      render();
+    });
   });
   const clearBtn = document.getElementById("clear-tag-filter");
-  if(clearBtn) clearBtn.addEventListener("click", ()=>{ state.activeTag=null; render(); });
+  if(clearBtn) clearBtn.addEventListener("click", ()=>{ state.activeTags=[]; render(); });
 
   document.querySelectorAll("#kcal-filters .kcal-chip[data-band]").forEach(chip=>{
     chip.addEventListener("click", ()=>{ state.activeKcalBand = state.activeKcalBand === chip.dataset.band ? null : chip.dataset.band; render(); });
@@ -3588,7 +3593,7 @@ function bindAppEvents(){
   const filterSheetApply = document.getElementById("filter-sheet-apply");
   if(filterSheetApply) filterSheetApply.addEventListener("click", ()=>{ state.filterSheetOpen = false; render(); });
   const filterSheetReset = document.getElementById("filter-sheet-reset");
-  if(filterSheetReset) filterSheetReset.addEventListener("click", ()=>{ state.activeTag = null; state.activeKcalBand = null; render(); });
+  if(filterSheetReset) filterSheetReset.addEventListener("click", ()=>{ state.activeTags = []; state.activeKcalBand = null; render(); });
   const filterSheetOverlay = document.getElementById("filter-sheet-overlay");
   if(filterSheetOverlay) filterSheetOverlay.addEventListener("click", (e)=>{ if(e.target.id==="filter-sheet-overlay"){ state.filterSheetOpen=false; render(); } });
 
@@ -3775,7 +3780,7 @@ function bindAppEvents(){
     btn.addEventListener("click", ()=>{
       state.dayAddTarget = btn.dataset.date;
       state.dayAddSearch = "";
-      state.dayAddTag = null;
+      state.dayAddTags = [];
       state.dayAddKcalBand = null;
       state.dayAddStage = "filter";
       render();
@@ -4253,7 +4258,7 @@ function bindSideAddEvents(){
 function closeDayAddPopup(){
   state.dayAddTarget = null;
   state.dayAddSearch = "";
-  state.dayAddTag = null;
+  state.dayAddTags = [];
   state.dayAddKcalBand = null;
   state.dayAddStage = "filter";
   render();
@@ -4268,7 +4273,9 @@ function bindDayAddEvents(){
   if(state.dayAddStage === "filter"){
     document.querySelectorAll(".dayadd-tag-chip").forEach(chip=>{
       chip.addEventListener("click", ()=>{
-        state.dayAddTag = state.dayAddTag === chip.dataset.tag ? null : chip.dataset.tag;
+        const tag = chip.dataset.tag;
+        if(state.dayAddTags.includes(tag)){ state.dayAddTags = state.dayAddTags.filter(x=>x!==tag); }
+        else { state.dayAddTags.push(tag); }
         render();
       });
     });
@@ -4280,7 +4287,7 @@ function bindDayAddEvents(){
     });
     const resetBtn = document.getElementById("dayadd-filter-reset");
     if(resetBtn) resetBtn.addEventListener("click", ()=>{
-      state.dayAddTag = null;
+      state.dayAddTags = [];
       state.dayAddKcalBand = null;
       render();
     });
