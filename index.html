@@ -4166,22 +4166,30 @@ function bindAutoWeekEvents(){
       const fatHauptAvg = totalFatTarget != null ? Math.round(totalFatTarget * 0.325) : null; // (35%+30%)/2
       const fatSnack = totalFatTarget != null ? Math.round(totalFatTarget * 0.10) : null;
 
-      // Meal-Prep-Prinzip: mehrere Hauptgerichte für die GANZE Woche fix wählen.
-      // 5 Gerichte auf 14 Mahlzeiten (7 Tage × Mittag+Abend) verteilt = max. 3 Wiederholungen pro Gericht,
-      // und zwar in zusammenhängenden Blöcken (nicht zufällig zwischen den Tagen gemischt).
-      const MAIN_DISH_COUNT = 5;
+      // Meal-Prep-Prinzip: wenige Hauptgerichte für die GANZE Woche fix wählen, in
+      // zusammenhängenden, ganzen Tagesblöcken (kein Wechsel mitten am Tag, keine
+      // verstreuten Einzeltage). 3 statt vorher 5 Gerichte, damit die Blöcke spürbar
+      // größer/ruhiger werden statt sich über die Woche zu verteilen.
+      const MAIN_DISH_COUNT = 3;
       const avgHauptTarget = Math.round((kcalMittag + kcalAbend) / 2);
       const hauptSourcePool = hauptPool.length ? hauptPool : fallback;
       const mainDishes = [...hauptSourcePool]
         .sort((a,b)=>combinedScore(a, avgHauptTarget, fatHauptAvg) - combinedScore(b, avgHauptTarget, fatHauptAvg))
         .slice(0, Math.min(MAIN_DISH_COUNT, hauptSourcePool.length));
+      // "Schwer" = sehr kalorien-/fettdicht (z.B. Gulasch, Töltött Káposzta) – zwei solche
+      // Gerichte sollen nicht am selben Tag (Mittag+Abend) aufeinandertreffen.
+      function isHeavyDish(r){
+        if(!r) return false;
+        const perServingKcal = r.kcal / (r.servings || 1);
+        const perServingFat = r.fat != null ? r.fat / (r.servings || 1) : 0;
+        return perServingKcal >= 550 || perServingFat >= 28;
+      }
       // Ein Gericht pro TAG (nicht pro einzelner Mahlzeit) – so bleibt der Block immer an
       // ganzen Tagesgrenzen ausgerichtet und Mittag/Abend eines Tages gehören zusammen,
       // statt dass ein Gericht mitten am Tag wechselt.
-      function mainDishForSlot(dayIndex){
-        if(mainDishes.length === 0) return null;
-        const idx = Math.min(mainDishes.length - 1, Math.floor(dayIndex * mainDishes.length / weekDates.length));
-        return mainDishes[idx];
+      function mainDishIndexForDay(dayIndex){
+        if(mainDishes.length === 0) return -1;
+        return Math.min(mainDishes.length - 1, Math.floor(dayIndex * mainDishes.length / weekDates.length));
       }
 
       const rows = [];
@@ -4198,7 +4206,13 @@ function bindAutoWeekEvents(){
         blocks.forEach(blockDates => {
           const frueh = pickClosest(fruehstueckPool.length ? fruehstueckPool : fallback, kcalFrueh, fatFrueh, usedFrueh);
           const mittag = pickClosest(hauptSourcePool, kcalMittag, fatHauptAvg, usedHaupt);
-          const restHauptPool = hauptSourcePool.filter(r => !mittag || r.id !== mittag.id);
+          let restHauptPool = hauptSourcePool.filter(r => !mittag || r.id !== mittag.id);
+          // Wenn das Mittagsgericht schwer ist, für den Abend nach Möglichkeit ein leichteres wählen,
+          // damit nicht zwei schwere Gerichte auf denselben Tag fallen.
+          if(isHeavyDish(mittag)){
+            const lighterPool = restHauptPool.filter(r => !isHeavyDish(r));
+            if(lighterPool.length > 0) restHauptPool = lighterPool;
+          }
           const abend = pickClosest(restHauptPool.length ? restHauptPool : hauptSourcePool, kcalAbend, fatHauptAvg, usedHaupt);
 
           blockDates.forEach(date => {
@@ -4231,12 +4245,20 @@ function bindAutoWeekEvents(){
           }
 
           if(mainDishes.length > 0){
-            const mittag = mainDishForSlot(dayIndex);
+            const mittagIdx = mainDishIndexForDay(dayIndex);
+            let abendIdx = mainDishes.length > 1 ? (mittagIdx + 1) % mainDishes.length : mittagIdx;
+            // Zwei schwere Gerichte nicht am selben Tag: falls Mittag+Abend beide schwer wären,
+            // auf ein leichteres Gericht aus dem Pool ausweichen (falls eins existiert).
+            if(isHeavyDish(mainDishes[mittagIdx]) && isHeavyDish(mainDishes[abendIdx])){
+              const lighterIdx = mainDishes.findIndex((d, i) => i !== mittagIdx && !isHeavyDish(d));
+              if(lighterIdx !== -1) abendIdx = lighterIdx;
+            }
+            const mittag = mainDishes[mittagIdx];
             const mittagServings = computeServingsForTarget(mittag, kcalMittag);
             rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: mittagServings });
             tagesKcal += (mittag.kcal / (mittag.servings || 1)) * mittagServings;
 
-            const abend = mainDishForSlot(dayIndex);
+            const abend = mainDishes[abendIdx];
             const abendServings = computeServingsForTarget(abend, kcalAbend);
             rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: abendServings });
             tagesKcal += (abend.kcal / (abend.servings || 1)) * abendServings;
