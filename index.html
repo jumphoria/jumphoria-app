@@ -260,6 +260,11 @@
   .week-day-kcal{ color:var(--ink-on-paper); opacity:0.7; font-size:12.5px; font-weight:600; }
   .week-day-macros{ display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
   .week-day-macro-detail{ color:var(--ink-on-paper); opacity:0.55; font-size:11px; font-weight:500; }
+  .week-day-macros-row{
+    display:flex; align-items:center; flex-wrap:wrap; gap:4px;
+    color:var(--ink-on-paper); opacity:0.7; font-size:12.5px; font-weight:600;
+    background:rgba(0,0,0,0.04); border-radius:8px; padding:6px 10px;
+  }
   .week-day-empty{ color:var(--ink-on-paper); opacity:0.5; font-size:13px; margin:0; font-style:italic; }
 
   /* ====== PLAN POPUP ====== */
@@ -1011,6 +1016,8 @@ function isQuickDrink(item){ return !!item && QUICK_DRINKS.some(d => d.key === i
 function quickExtraUnit(item){ return isQuickDrink(item) ? "ml" : "g"; }
 
 const WEEKDAY_NAMES = ["Mo","Di","Mi","Do","Fr","Sa","So"];
+const WEEKDAY_NAMES_HU = ["H","K","Sze","Cs","P","Szo","V"];
+function weekdayName(idx){ return currentLang === 'hu' ? WEEKDAY_NAMES_HU[idx] : WEEKDAY_NAMES[idx]; }
 
 /* ============================================================
    i18n — SPRACHUMSCHALTER (DE / HU)
@@ -1886,6 +1893,7 @@ function renderTodayNutriCard(){
 }
 
 function renderWeek(){
+  const isHu = currentLang === 'hu';
   const entries = state.weekLog || [];
   const weekDates = getCurrentWeekDates();
   const nutriCard = renderTodayNutriCard();
@@ -1923,17 +1931,19 @@ function renderWeek(){
       fatSum += Number(x.fat) || 0;
     });
     const dateObj = new Date(date + "T00:00:00");
-    const dayLabel = WEEKDAY_NAMES[idx] + ", " + dateObj.getDate() + "." + (dateObj.getMonth()+1) + ".";
+    const dayLabel = weekdayName(idx) + ", " + dateObj.getDate() + "." + (dateObj.getMonth()+1) + ".";
     const isToday = date === new Date().toISOString().slice(0,10);
     return `
       <div class="week-day ${isToday?'is-today':''}">
-        <div class="week-day-header">
-          <h4>${dayLabel}${isToday?' \u2022 heute':''}</h4>
-          <div style="display:flex; align-items:center; gap:8px;">
-            ${(dayEntries.length > 0 || dayExtras.length > 0) ? `<div class="week-day-macros"><span class="week-day-kcal">${Math.round(kcalSum)} kcal</span><span class="week-day-macro-detail">E ${Math.round(proteinSum)}g \u00b7 KH ${Math.round(carbsSum)}g \u00b7 F ${Math.round(fatSum)}g</span></div>` : ""}
-            <button type="button" class="btn-outline day-add-btn" data-date="${date}" style="font-size:12px; padding:5px 10px; white-space:nowrap;">+ Rezept</button>
-            <button type="button" class="btn-outline side-add-btn" data-date="${date}" style="font-size:12px; padding:5px 10px; white-space:nowrap;">+ ${currentLang==='hu' ? 'Kiegészítés' : 'Extra'}</button>
+        <div class="week-day-header" style="flex-direction:column; align-items:stretch; gap:8px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+            <h4 style="margin:0;">${dayLabel}${isToday?(' \u2022 ' + (isHu ? 'ma' : 'heute')):''}</h4>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button type="button" class="btn-outline day-add-btn" data-date="${date}" style="font-size:12px; padding:5px 10px; white-space:nowrap;">+ ${isHu ? 'Recept' : 'Rezept'}</button>
+              <button type="button" class="btn-outline side-add-btn" data-date="${date}" style="font-size:12px; padding:5px 10px; white-space:nowrap;">+ ${isHu ? 'Kiegészítés' : 'Extra'}</button>
+            </div>
           </div>
+          ${(dayEntries.length > 0 || dayExtras.length > 0) ? `<div class="week-day-macros-row">${Math.round(kcalSum)} kcal \u00b7 E ${Math.round(proteinSum)}g \u00b7 KH ${Math.round(carbsSum)}g \u00b7 F ${Math.round(fatSum)}g</div>` : ""}
         </div>
         ${(dayEntries.length === 0 && dayExtras.length === 0) ? `<p class="week-day-empty">Nichts geplant</p>` : `
           <div class="today-list">
@@ -2197,7 +2207,7 @@ function renderPlanPopup(){
     <h2>${escapeHtml(getRecipeTitle(recipe))}</h2>
     <p style="color:var(--ink-on-paper); opacity:0.75; font-size:14px; margin:0 0 16px;">F\u00fcr welche Tage einplanen?</p>
     <div class="day-pick-row">
-      ${WEEKDAY_NAMES.map((name, idx) => `<button type="button" class="day-pick ${state.planSelectedDays.includes(weekDates[idx])?'active':''}" data-date="${weekDates[idx]}">${name}</button>`).join("")}
+      ${WEEKDAY_NAMES.map((_, idx) => `<button type="button" class="day-pick ${state.planSelectedDays.includes(weekDates[idx])?'active':''}" data-date="${weekDates[idx]}">${weekdayName(idx)}</button>`).join("")}
     </div>
     <div class="modal-actions"><button type="button" class="btn" id="plan-confirm">Hinzuf\u00fcgen</button></div>
   </div></div>`;
@@ -2208,7 +2218,7 @@ function renderDayAddPopup(){
   if(!date) return "";
   const dateObj = new Date(date + "T00:00:00");
   const dayIdxInWeek = getCurrentWeekDates().indexOf(date);
-  const dayName = dayIdxInWeek >= 0 ? WEEKDAY_NAMES[dayIdxInWeek] : "";
+  const dayName = dayIdxInWeek >= 0 ? weekdayName(dayIdxInWeek) : "";
   const label = `${dayName}, ${dateObj.getDate()}.${dateObj.getMonth()+1}.`;
 
   if(state.dayAddStage === "filter"){
@@ -4165,10 +4175,12 @@ function bindAutoWeekEvents(){
       const mainDishes = [...hauptSourcePool]
         .sort((a,b)=>combinedScore(a, avgHauptTarget, fatHauptAvg) - combinedScore(b, avgHauptTarget, fatHauptAvg))
         .slice(0, Math.min(MAIN_DISH_COUNT, hauptSourcePool.length));
-      const totalMainSlots = weekDates.length * 2; // Mittag + Abend pro Tag
-      function mainDishForSlot(slotIndex){
+      // Ein Gericht pro TAG (nicht pro einzelner Mahlzeit) – so bleibt der Block immer an
+      // ganzen Tagesgrenzen ausgerichtet und Mittag/Abend eines Tages gehören zusammen,
+      // statt dass ein Gericht mitten am Tag wechselt.
+      function mainDishForSlot(dayIndex){
         if(mainDishes.length === 0) return null;
-        const idx = Math.min(mainDishes.length - 1, Math.floor(slotIndex * mainDishes.length / totalMainSlots));
+        const idx = Math.min(mainDishes.length - 1, Math.floor(dayIndex * mainDishes.length / weekDates.length));
         return mainDishes[idx];
       }
 
@@ -4219,12 +4231,12 @@ function bindAutoWeekEvents(){
           }
 
           if(mainDishes.length > 0){
-            const mittag = mainDishForSlot(dayIndex * 2);
+            const mittag = mainDishForSlot(dayIndex);
             const mittagServings = computeServingsForTarget(mittag, kcalMittag);
             rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: mittagServings });
             tagesKcal += (mittag.kcal / (mittag.servings || 1)) * mittagServings;
 
-            const abend = mainDishForSlot(dayIndex * 2 + 1);
+            const abend = mainDishForSlot(dayIndex);
             const abendServings = computeServingsForTarget(abend, kcalAbend);
             rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: abendServings });
             tagesKcal += (abend.kcal / (abend.servings || 1)) * abendServings;
@@ -4333,7 +4345,7 @@ function renderSideAddPopup(){
   const isHu = currentLang === 'hu';
   const dateObj = new Date(date + "T00:00:00");
   const dayIdxInWeek = getCurrentWeekDates().indexOf(date);
-  const dayName = dayIdxInWeek >= 0 ? WEEKDAY_NAMES[dayIdxInWeek] : "";
+  const dayName = dayIdxInWeek >= 0 ? weekdayName(dayIdxInWeek) : "";
   const label = `${dayName}, ${dateObj.getDate()}.${dateObj.getMonth()+1}.`;
 
   if(state.sideAddStage === "pick"){
