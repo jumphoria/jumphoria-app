@@ -1855,7 +1855,7 @@ function renderHomeTab(){
     ${addButtons}
     <div style="background:var(--card-bg, rgba(255,255,255,0.06)); border-radius:16px; padding:14px 14px 8px; margin-bottom:8px;">
       <div style="display:flex; align-items:center; justify-content:space-between; margin:0 0 8px;">
-        <h3 style="font-family:Georgia,serif; color:var(--paper); font-size:15px; margin:0;">${isHu ? 'Mai étkezéseid' : 'Deine heutigen Mahlzeiten'}</h3>
+        <h3 style="font-family:Georgia,serif; color:var(--pine-dark); font-size:15px; margin:0;">${isHu ? 'Mai étkezéseid' : 'Deine heutigen Mahlzeiten'}</h3>
         <button type="button" id="home-view-all-btn" style="background:none; border:none; color:var(--terracotta); font-size:12px; font-weight:600; cursor:pointer; padding:2px;">${isHu ? 'Összes megtekintése' : 'Alle anzeigen'} ›</button>
       </div>
       ${hasPlan ? `<div class="week-day-macros-row" style="margin-bottom:10px;">${planKcal} kcal · E ${planProtein}g · KH ${planCarbs}g · F ${planFat}g</div>` : ""}
