@@ -998,6 +998,16 @@ const QUICK_FRUITS = [
   { key: "gorogdinnye",name_de: "Wassermelone",  name_hu: "Görögdinnye",   kcal: 30, protein: 0.6, carbs: 8,  fat: 0.2 },
   { key: "ananasz",    name_de: "Ananas",        name_hu: "Ananász",       kcal: 50, protein: 0.5, carbs: 13, fat: 0.1 }
 ];
+// ── Zöldség gyors hozzáadása (Gemüse-Schnellzugriff) — Nährwerte pro 100g (roh) ──
+const QUICK_VEGGIES = [
+  { key: "gurke",    name_de: "Gurke",     name_hu: "Uborka",       kcal: 15, protein: 0.7, carbs: 3.6, fat: 0.1 },
+  { key: "paprika",  name_de: "Paprika",   name_hu: "Paprika",      kcal: 31, protein: 1.0, carbs: 6,   fat: 0.3 },
+  { key: "tomate",   name_de: "Tomate",    name_hu: "Paradicsom",   kcal: 18, protein: 0.9, carbs: 3.9, fat: 0.2 },
+  { key: "karotte",  name_de: "Karotten",  name_hu: "Sárgarépa",    kcal: 41, protein: 0.9, carbs: 10,  fat: 0.2 },
+  { key: "erbsen",   name_de: "Erbsen",    name_hu: "Zöldborsó",    kcal: 81, protein: 5.4, carbs: 14,  fat: 0.4 },
+  { key: "bohnen",   name_de: "Bohnen (grün)", name_hu: "Zöldbab",  kcal: 31, protein: 1.8, carbs: 7,   fat: 0.1 },
+  { key: "avocado",  name_de: "Avocado",   name_hu: "Avokádó",      kcal: 160,protein: 2,   carbs: 9,   fat: 15 }
+];
 // ── Getränke-Schnellzugriff — Nährwerte pro 100ml (fertig zubereitet, ungesüßt) ──
 const QUICK_DRINKS = [
   { key: "kaffee_milch",     name_de: "Kaffee mit Milch",            name_hu: "Tejeskávé",                kcal: 15, protein: 0.7, carbs: 1.1, fat: 0.8 },
@@ -1009,7 +1019,7 @@ const QUICK_DRINKS = [
 ];
 // Sucht ein Element (Beilage, Frucht oder Getränk) anhand des gespeicherten Keys — für Anzeige & Auswahl
 function findQuickExtraItem(key){
-  return QUICK_SIDES.find(s => s.key === key) || QUICK_FRUITS.find(f => f.key === key) || QUICK_DRINKS.find(d => d.key === key);
+  return QUICK_SIDES.find(s => s.key === key) || QUICK_FRUITS.find(f => f.key === key) || QUICK_VEGGIES.find(v => v.key === key) || QUICK_DRINKS.find(d => d.key === key);
 }
 // Getränke werden in ml statt g gemessen — zentral geregelt, wo Menge & Einheit angezeigt werden
 function isQuickDrink(item){ return !!item && QUICK_DRINKS.some(d => d.key === item.key); }
@@ -4430,6 +4440,12 @@ function renderSideAddPopup(){
       <div>
         ${QUICK_FRUITS.map(f => `<button type="button" class="side-pick-item" data-side-key="${f.key}">
           <span>${quickSideName(f)}</span><span style="color:var(--pine-dark); font-size:12px; font-weight:700;">${f.kcal} kcal/100g</span>
+        </button>`).join("")}
+      </div>
+      <p style="color:var(--ink-on-paper); opacity:0.6; font-size:11px; text-transform:uppercase; letter-spacing:.05em; margin:18px 0 8px;">${isHu ? 'Zöldség' : 'Gemüse'}</p>
+      <div>
+        ${QUICK_VEGGIES.map(v => `<button type="button" class="side-pick-item" data-side-key="${v.key}">
+          <span>${quickSideName(v)}</span><span style="color:var(--pine-dark); font-size:12px; font-weight:700;">${v.kcal} kcal/100g</span>
         </button>`).join("")}
       </div>
       <p style="color:var(--ink-on-paper); opacity:0.6; font-size:11px; text-transform:uppercase; letter-spacing:.05em; margin:18px 0 8px;">${isHu ? 'Ital' : 'Getränke'}</p>
