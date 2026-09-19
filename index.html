@@ -1493,6 +1493,8 @@ let state = {
   dayAddStage: "filter",
   irSearch: "",
   autoWeekIROnly: false,
+  autoWeekGlutenfrei: false,
+  autoWeekLaktosefrei: false,
   autoWeekMealPrep: false,
   oracleOpen: false,
   oracleContent: null,
@@ -2167,9 +2169,19 @@ function maybeShowDailyOracle(){
 function renderAutoWeekPopup(){
   const profilKcal = state.profilKcal;
   const irLabel = currentLang==='hu' ? 'Csak IR receptekből' : 'Nur aus IR-Rezepten';
-  const irCheckbox = `<label style="display:flex; align-items:center; gap:8px; margin-bottom:16px; font-size:13.5px; color:var(--ink-on-paper); opacity:0.85; cursor:pointer;">
+  const irCheckbox = `<label style="display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:13.5px; color:var(--ink-on-paper); opacity:0.85; cursor:pointer;">
     <input type="checkbox" id="autoweek-ir-only" ${state.autoWeekIROnly ? 'checked' : ''} style="width:16px; height:16px;">
     ${irLabel}
+  </label>`;
+  const glutenfreiLabel = currentLang==='hu' ? 'Csak gluténmentes receptekből' : 'Nur aus glutenfreien Rezepten';
+  const glutenfreiCheckbox = `<label style="display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:13.5px; color:var(--ink-on-paper); opacity:0.85; cursor:pointer;">
+    <input type="checkbox" id="autoweek-glutenfrei" ${state.autoWeekGlutenfrei ? 'checked' : ''} style="width:16px; height:16px;">
+    ${glutenfreiLabel}
+  </label>`;
+  const laktosefreiLabel = currentLang==='hu' ? 'Csak laktózmentes receptekből' : 'Nur aus laktosefreien Rezepten';
+  const laktosefreiCheckbox = `<label style="display:flex; align-items:center; gap:8px; margin-bottom:16px; font-size:13.5px; color:var(--ink-on-paper); opacity:0.85; cursor:pointer;">
+    <input type="checkbox" id="autoweek-laktosefrei" ${state.autoWeekLaktosefrei ? 'checked' : ''} style="width:16px; height:16px;">
+    ${laktosefreiLabel}
   </label>`;
   const mealPrepLabel = currentLang==='hu' ? 'Meal-Prep-Mód (csak 6 recept az egész hétre)' : 'Meal-Prep-Modus (nur 6 Rezepte für die ganze Woche)';
   const mealPrepHint = currentLang==='hu' ? 'A hetet két félre osztjuk, mindegyikhez 1 fix reggeli, ebéd és vacsora recept – így csak 3 ételt kell főzni 3-4 napra.' : 'Die Woche wird in zwei Hälften geteilt, jede bekommt 1 festes Frühstücks-, Mittags- und Abendrezept – so musst du nur 3 Gerichte für 3-4 Tage kochen.';
@@ -2182,6 +2194,8 @@ function renderAutoWeekPopup(){
     <button class="modal-close" id="autoweek-close">✕</button>
     <h2>✨ Woche automatisch planen</h2>
     ${irCheckbox}
+    ${glutenfreiCheckbox}
+    ${laktosefreiCheckbox}
     ${mealPrepCheckbox}
     ${profilKcal ? `
       <p style="color:var(--ink-on-paper); opacity:0.75; font-size:14px; margin:0 0 16px;">Dein Profil empfiehlt:</p>
@@ -4084,6 +4098,16 @@ function bindAutoWeekEvents(){
     state.autoWeekIROnly = irOnlyCheckbox.checked;
   });
 
+  const glutenfreiCheckbox = document.getElementById("autoweek-glutenfrei");
+  if(glutenfreiCheckbox) glutenfreiCheckbox.addEventListener("change", ()=>{
+    state.autoWeekGlutenfrei = glutenfreiCheckbox.checked;
+  });
+
+  const laktosefreiCheckbox = document.getElementById("autoweek-laktosefrei");
+  if(laktosefreiCheckbox) laktosefreiCheckbox.addEventListener("change", ()=>{
+    state.autoWeekLaktosefrei = laktosefreiCheckbox.checked;
+  });
+
   const mealPrepCheckbox = document.getElementById("autoweek-meal-prep");
   if(mealPrepCheckbox) mealPrepCheckbox.addEventListener("change", ()=>{
     state.autoWeekMealPrep = mealPrepCheckbox.checked;
@@ -4096,10 +4120,22 @@ function bindAutoWeekEvents(){
       btn.disabled = true;
 
       const weekDates = getCurrentWeekDates();
-      const irOnly = state.autoWeekIROnly;
-      const baseRecipePool = irOnly ? state.recipes.filter(r => (r.tags||[]).includes('IR')) : state.recipes;
+      // Alle aktiven Ernährungsfilter (IR / glutenfrei / laktosefrei) werden mit UND verknüpft,
+      // damit sich Meal-Prep mit jeder Kategorie kombinieren lässt (z.B. IR + glutenfrei zusammen).
+      const activeDietTags = [];
+      if(state.autoWeekIROnly) activeDietTags.push('IR');
+      if(state.autoWeekGlutenfrei) activeDietTags.push('Glutenfrei');
+      if(state.autoWeekLaktosefrei) activeDietTags.push('Laktosefrei');
+      const baseRecipePool = activeDietTags.length > 0
+        ? state.recipes.filter(r => activeDietTags.every(tag => (r.tags||[]).includes(tag)))
+        : state.recipes;
       const allRecipes = baseRecipePool.filter(r => r.kcal != null && r.servings != null);
-      if(allRecipes.length === 0){ alert(irOnly ? (currentLang==='hu' ? "Nincs elég IR-jelölt recept kalóriaadatokkal." : "Keine IR-Rezepte mit Kalorienangaben gefunden.") : "Keine Rezepte mit Kalorienangaben gefunden."); return; }
+      if(allRecipes.length === 0){
+        alert(activeDietTags.length > 0
+          ? (currentLang==='hu' ? "Nincs elég recept, ami minden kiválasztott szűrőnek megfelel." : "Keine Rezepte gefunden, die alle gewählten Filter erfüllen.")
+          : "Keine Rezepte mit Kalorienangaben gefunden.");
+        return;
+      }
 
       // Fett-Zielwert aus dem Profil (falls vorhanden) – wird jetzt mit in die Auswahl einbezogen,
       // damit die Woche nicht strukturell zu fettarm wird, nur weil viele Rezepte kalorisch passen
