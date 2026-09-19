@@ -887,10 +887,10 @@ const ADMIN_USER_ID = "55eaffe1-6a42-42ec-8888-708f31210c4c";
 const REGISTRATION_CLOSED = false;
 // Debug: zeigt die eingeloggte User-ID in der Konsole
 function debugUserId(){ if(state.user) console.log("Eingeloggt als:", state.user.id, "| Admin?", state.user.id === ADMIN_USER_ID); }
-const ALL_TAGS = ["Vegan","Vegetarisch","Frühstück","Hauptgericht","Snack","Dessert","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein","Laktosefrei","Glutenfrei","Meal Prep","Schnell","Airfryer","Pre Workout","Post Workout","IR","Reis","Kartoffel","Nudeln","Pommes","Winter","Sommer"];
+const ALL_TAGS = ["Vegan","Vegetarisch","Fleisch","Frühstück","Hauptgericht","Snack","Dessert","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein","Laktosefrei","Glutenfrei","Meal Prep","Schnell","Airfryer","Pre Workout","Post Workout","IR","Reis","Kartoffel","Nudeln","Pommes","Winter","Sommer"];
 const KCAL_BANDS = ["100 kcal","200 kcal","300 kcal","400 kcal"];
 const FILTER_GROUPS = [
-  { labelKey: "de_ernaehrung", label: "Ern\u00e4hrung", tags: ["Vegan","Vegetarisch","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein","Laktosefrei","Glutenfrei","IR"] },
+  { labelKey: "de_ernaehrung", label: "Ern\u00e4hrung", tags: ["Vegan","Vegetarisch","Fleisch","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein","Laktosefrei","Glutenfrei","IR"] },
   { labelKey: "de_mahlzeit", label: "Mahlzeit", tags: ["Fr\u00fchst\u00fcck","Hauptgericht","Snack","Dessert"] },
   { labelKey: "de_beilage", label: "Beilage", tags: ["Reis","Kartoffel","Nudeln","Pommes"] },
   { labelKey: "de_zubereitung", label: "Zubereitung", tags: ["Meal Prep","Schnell","Airfryer"] },
@@ -1020,6 +1020,7 @@ const translations = {
 const TAG_TRANSLATIONS_HU = {
   "Vegan": "Vegán",
   "Vegetarisch": "Vegetáriánus",
+  "Fleisch": "Hús",
   "Frühstück": "Reggeli",
   "Hauptgericht": "Főétel",
   "Snack": "Snack",
@@ -1431,6 +1432,7 @@ let state = {
   dayAddStage: "filter",
   irSearch: "",
   autoWeekIROnly: false,
+  autoWeekMealPrep: false,
   chatMessages: [],
   chatLoading: false,
   chatLastSentAt: 0,
@@ -1687,7 +1689,7 @@ function renderHomeTab(){
       </div>`
     : `<div style="margin-bottom:18px;">
     <h2 style="font-family:Georgia,serif; color:var(--paper); font-size:22px; margin:0 0 4px; display:flex; align-items:center; gap:8px;">${isHu ? `Szia ${firstName}! \u2728` : `Hallo ${firstName}! \u2728`}<button type="button" id="edit-name-btn" title="${isHu ? 'Név szerkesztése' : 'Namen ändern'}" style="background:none; border:none; color:var(--paper); opacity:0.6; font-size:15px; cursor:pointer; padding:2px;">\u270f\ufe0f</button></h2>
-    <p style="color:var(--paper); opacity:0.85; font-size:14px; margin:0;">${isHu ? 'Ma mit teszel az álomalakodért?' : 'Was tust du heute für deine Traumfigur?'}</p>
+    <p style="color:var(--paper); opacity:0.85; font-size:14px; margin:0;">${isHu ? 'Mit teszel ma magadért?' : 'Was tust du heute für dich?'}</p>
   </div>`;
 
   const nutriCard = renderTodayNutriCard();
@@ -2037,10 +2039,18 @@ function renderAutoWeekPopup(){
     <input type="checkbox" id="autoweek-ir-only" ${state.autoWeekIROnly ? 'checked' : ''} style="width:16px; height:16px;">
     ${irLabel}
   </label>`;
+  const mealPrepLabel = currentLang==='hu' ? 'Meal-Prep-Mód (csak 6 recept az egész hétre)' : 'Meal-Prep-Modus (nur 6 Rezepte für die ganze Woche)';
+  const mealPrepHint = currentLang==='hu' ? 'A hetet két félre osztjuk, mindegyikhez 1 fix reggeli, ebéd és vacsora recept – így csak 3 ételt kell főzni 3-4 napra.' : 'Die Woche wird in zwei Hälften geteilt, jede bekommt 1 festes Frühstücks-, Mittags- und Abendrezept – so musst du nur 3 Gerichte für 3-4 Tage kochen.';
+  const mealPrepCheckbox = `<label style="display:flex; align-items:center; gap:8px; margin-bottom:6px; font-size:13.5px; color:var(--ink-on-paper); opacity:0.85; cursor:pointer;">
+    <input type="checkbox" id="autoweek-meal-prep" ${state.autoWeekMealPrep ? 'checked' : ''} style="width:16px; height:16px;">
+    ${mealPrepLabel}
+  </label>
+  <p style="color:var(--ink-on-paper); opacity:0.55; font-size:11.5px; margin:0 0 16px;">${mealPrepHint}</p>`;
   return `<div class="overlay" id="autoweek-overlay"><div class="modal plan-modal">
     <button class="modal-close" id="autoweek-close">✕</button>
     <h2>✨ Woche automatisch planen</h2>
     ${irCheckbox}
+    ${mealPrepCheckbox}
     ${profilKcal ? `
       <p style="color:var(--ink-on-paper); opacity:0.75; font-size:14px; margin:0 0 16px;">Dein Profil empfiehlt:</p>
       <div style="background:var(--pine); color:#fff; border-radius:14px; padding:20px; margin-bottom:18px; text-align:center;">
@@ -3941,6 +3951,11 @@ function bindAutoWeekEvents(){
     state.autoWeekIROnly = irOnlyCheckbox.checked;
   });
 
+  const mealPrepCheckbox = document.getElementById("autoweek-meal-prep");
+  if(mealPrepCheckbox) mealPrepCheckbox.addEventListener("change", ()=>{
+    state.autoWeekMealPrep = mealPrepCheckbox.checked;
+  });
+
   document.querySelectorAll("[data-kcal]").forEach(btn=>{
     btn.addEventListener("click", async ()=>{
       const targetKcal = parseInt(btn.dataset.kcal);
@@ -4034,44 +4049,83 @@ function bindAutoWeekEvents(){
         return mainDishes[idx];
       }
 
-      const usedFrueh = new Map();
-      const usedSnack = new Map();
-
       const rows = [];
-      weekDates.forEach((date, dayIndex) => {
-        let tagesKcal = 0;
 
-        const frueh = pickClosest(fruehstueckPool.length ? fruehstueckPool : fallback, kcalFrueh, fatFrueh, usedFrueh);
-        if(frueh){
-          const freuhServings = computeServingsForTarget(frueh, kcalFrueh);
-          rows.push({ user_id: state.user.id, recipe_id: frueh.id, log_date: date, servings_logged: freuhServings });
-          tagesKcal += (frueh.kcal / (frueh.servings || 1)) * freuhServings;
-        }
+      if(state.autoWeekMealPrep){
+        // Meal-Prep-Modus: Woche in 2 Blöcke teilen, pro Block je 1 fixes Frühstück/
+        // Mittag/Abendessen wählen und für alle Tage des Blocks wiederholen.
+        // Ergebnis: nur 6 Rezepte insgesamt für die ganze Woche (statt bis zu ~5-8 wechselnden).
+        const half = Math.ceil(weekDates.length / 2);
+        const blocks = [weekDates.slice(0, half), weekDates.slice(half)].filter(b => b.length > 0);
+        const usedFrueh = new Map();
+        const usedHaupt = new Map();
 
-        if(mainDishes.length > 0){
-          const mittag = mainDishForSlot(dayIndex * 2);
-          const mittagServings = computeServingsForTarget(mittag, kcalMittag);
-          rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: mittagServings });
-          tagesKcal += (mittag.kcal / (mittag.servings || 1)) * mittagServings;
+        blocks.forEach(blockDates => {
+          const frueh = pickClosest(fruehstueckPool.length ? fruehstueckPool : fallback, kcalFrueh, fatFrueh, usedFrueh);
+          const mittag = pickClosest(hauptSourcePool, kcalMittag, fatHauptAvg, usedHaupt);
+          const restHauptPool = hauptSourcePool.filter(r => !mittag || r.id !== mittag.id);
+          const abend = pickClosest(restHauptPool.length ? restHauptPool : hauptSourcePool, kcalAbend, fatHauptAvg, usedHaupt);
 
-          const abend = mainDishForSlot(dayIndex * 2 + 1);
-          const abendServings = computeServingsForTarget(abend, kcalAbend);
-          rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: abendServings });
-          tagesKcal += (abend.kcal / (abend.servings || 1)) * abendServings;
-        }
+          blockDates.forEach(date => {
+            if(frueh){
+              const freuhServings = computeServingsForTarget(frueh, kcalFrueh);
+              rows.push({ user_id: state.user.id, recipe_id: frueh.id, log_date: date, servings_logged: freuhServings });
+            }
+            if(mittag){
+              const mittagServings = computeServingsForTarget(mittag, kcalMittag);
+              rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: mittagServings });
+            }
+            if(abend){
+              const abendServings = computeServingsForTarget(abend, kcalAbend);
+              rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: abendServings });
+            }
+          });
+        });
+      } else {
+        const usedFrueh = new Map();
+        const usedSnack = new Map();
 
-        // Snack ergänzen, um die Lücke zum Tagesziel zu schließen
-        const restKcal = targetKcal - tagesKcal;
-        if(restKcal >= 50 && snackPool.length > 0){
-          const snack = pickClosest(snackPool, restKcal, fatSnack, usedSnack);
-          if(snack){
-            const snackServings = computeServingsForTarget(snack, restKcal);
-            rows.push({ user_id: state.user.id, recipe_id: snack.id, log_date: date, servings_logged: snackServings });
+        weekDates.forEach((date, dayIndex) => {
+          let tagesKcal = 0;
+
+          const frueh = pickClosest(fruehstueckPool.length ? fruehstueckPool : fallback, kcalFrueh, fatFrueh, usedFrueh);
+          if(frueh){
+            const freuhServings = computeServingsForTarget(frueh, kcalFrueh);
+            rows.push({ user_id: state.user.id, recipe_id: frueh.id, log_date: date, servings_logged: freuhServings });
+            tagesKcal += (frueh.kcal / (frueh.servings || 1)) * freuhServings;
           }
-        }
-      });
+
+          if(mainDishes.length > 0){
+            const mittag = mainDishForSlot(dayIndex * 2);
+            const mittagServings = computeServingsForTarget(mittag, kcalMittag);
+            rows.push({ user_id: state.user.id, recipe_id: mittag.id, log_date: date, servings_logged: mittagServings });
+            tagesKcal += (mittag.kcal / (mittag.servings || 1)) * mittagServings;
+
+            const abend = mainDishForSlot(dayIndex * 2 + 1);
+            const abendServings = computeServingsForTarget(abend, kcalAbend);
+            rows.push({ user_id: state.user.id, recipe_id: abend.id, log_date: date, servings_logged: abendServings });
+            tagesKcal += (abend.kcal / (abend.servings || 1)) * abendServings;
+          }
+
+          // Snack ergänzen, um die Lücke zum Tagesziel zu schließen
+          const restKcal = targetKcal - tagesKcal;
+          if(restKcal >= 50 && snackPool.length > 0){
+            const snack = pickClosest(snackPool, restKcal, fatSnack, usedSnack);
+            if(snack){
+              const snackServings = computeServingsForTarget(snack, restKcal);
+              rows.push({ user_id: state.user.id, recipe_id: snack.id, log_date: date, servings_logged: snackServings });
+            }
+          }
+        });
+      }
 
       if(rows.length === 0){ alert("Keine passenden Rezepte gefunden."); return; }
+
+      // Erst bestehende (noch nicht gegessene) Planungseinträge für diese Woche löschen,
+      // damit erneutes Planen nicht zu doppelten Einträgen und verdoppelten Kalorien führt.
+      const { error: delError } = await sb.from("daily_log").delete().eq("user_id", state.user.id).eq("eaten", false).in("log_date", weekDates);
+      if(delError){ alert("Fehler beim Zurücksetzen der Woche: " + delError.message); return; }
+
       const { error } = await sb.from("daily_log").insert(rows);
       if(error){ alert("Fehler: " + error.message); return; }
       await loadWeekLog();
