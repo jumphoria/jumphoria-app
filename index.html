@@ -1843,7 +1843,9 @@ function renderTodayNutriCard(){
   const isHu = currentLang === 'hu';
   calcProfil();
   const todayStr = new Date().toISOString().slice(0,10);
-  const entries = (state.weekLog || []).filter(e => e.log_date === todayStr && e.eaten);
+  // Zählt den ganzen heutigen Tagesplan (nicht nur "gegessen"-markierte Einträge) –
+  // konsistent mit der Wochenansicht, die ebenfalls den vollen Tagesplan summiert.
+  const entries = (state.weekLog || []).filter(e => e.log_date === todayStr);
   let kcalSum=0, proteinSum=0, carbsSum=0, fatSum=0;
   entries.forEach(e => {
     const recipe = state.recipes.find(r => r.id === e.recipe_id);
