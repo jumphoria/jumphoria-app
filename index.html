@@ -888,6 +888,60 @@ const REGISTRATION_CLOSED = false;
 // Debug: zeigt die eingeloggte User-ID in der Konsole
 function debugUserId(){ if(state.user) console.log("Eingeloggt als:", state.user.id, "| Admin?", state.user.id === ADMIN_USER_ID); }
 const ALL_TAGS = ["Vegan","Vegetarisch","Fleisch","Frühstück","Hauptgericht","Snack","Dessert","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein","Laktosefrei","Glutenfrei","Meal Prep","Schnell","Airfryer","Pre Workout","Post Workout","IR","Reis","Kartoffel","Nudeln","Pommes","Winter","Sommer"];
+
+// ── Fitness-Tages-Orakel: einmal täglich beim App-Öffnen eine schwarz-goldene Karte
+// mit einem Spruch (radikal ehrlich, Wellenmetapher, kein Fitness-Klischee) und optional
+// einer sofort umsetzbaren Mikro-Übung aus dem Alltag. ──
+const ORACLE_POOL = [
+  { spruch: "Du musst heute nicht performen. Du musst nur auftauchen.", uebung: "3 tiefe Atemzüge, bevor du das Handy das erste Mal aufmachst.",
+    spruch_hu: "Ma nem kell teljesítened. Csak meg kell jelenned.", uebung_hu: "3 mély levegő, mielőtt először a telefonod után nyúlsz." },
+  { spruch: "Perfekte Tage gibt's im Hochglanzmagazin. Du hast einen echten.", uebung: null,
+    spruch_hu: "Tökéletes napok a magazinokban léteznek. Neked egy valódi jutott.", uebung_hu: null },
+  { spruch: "Wellental heißt nicht Rückschritt. Es heißt: gleich kommt wieder Schwung.", uebung: "10 Kniebeugen, während der Kaffee kocht.",
+    spruch_hu: "A hullámvölgy nem visszaesés. Csak azt jelenti: mindjárt jön a lendület.", uebung_hu: "10 guggolás, amíg forr a kávé." },
+  { spruch: "Motivation ist überbewertet. Du hast schon öfter angefangen, ohne Lust zu haben.", uebung: "1 Minute auf der Stelle hüpfen – ja, auch im Pyjama.",
+    spruch_hu: "A motiváció túlértékelt. Már többször belevágtál akkor is, ha nem volt kedved.", uebung_hu: "1 perc szökdelés helyben – igen, pizsamában is." },
+  { spruch: "Du vergleichst dein Backstage mit fremden Bühnenauftritten. Hör auf damit.", uebung: null,
+    spruch_hu: "A saját kulisszáid mögötti életedet hasonlítod mások színpadi fellépéséhez. Hagyd abba.", uebung_hu: null },
+  { spruch: "Kein Training heute? Dann zählt der nächste bewusste Atemzug als Fortschritt.", uebung: "Schultern 5x kreisen, während du wartest, dass das Wasser kocht.",
+    spruch_hu: "Ma nincs edzés? Akkor a következő tudatos levegővétel is számít haladásnak.", uebung_hu: "5x vállkörzés, amíg a víz felforr." },
+  { spruch: "Du bist nicht undiszipliniert. Du bist ein Mensch mit einem vollen Leben.", uebung: null,
+    spruch_hu: "Nem vagy fegyelmezetlen. Csak tele van az életed.", uebung_hu: null },
+  { spruch: "Bewegung muss nicht schön aussehen. Sie muss nur passieren.", uebung: "20 Sekunden Wandsitz, während die Zähne geputzt werden.",
+    spruch_hu: "A mozgásnak nem kell szépnek lennie. Csak meg kell történnie.", uebung_hu: "20 másodperc fali szék fogmosás közben." },
+  { spruch: "Du brauchst keine 90 Minuten. Du brauchst 90 Sekunden Ehrlichkeit mit dir selbst.", uebung: "10 Ausfallschritte im Wohnzimmer, Chaos inklusive.",
+    spruch_hu: "Nem kell 90 perc. Csak 90 másodperc őszinteség önmagaddal.", uebung_hu: "10 kitörés a nappaliban, a káosszal együtt." },
+  { spruch: "Heute reicht 'genug'. Morgen darf wieder 'mehr' sein.", uebung: null,
+    spruch_hu: "Ma elég az 'elég'. Holnap megint lehet 'több'.", uebung_hu: null },
+  { spruch: "Dein Körper merkt sich nicht den einen ausgelassenen Tag. Er merkt sich, dass du wiedergekommen bist.", uebung: "5 Liegestütze an der Küchenarbeitsplatte.",
+    spruch_hu: "A tested nem az egy kihagyott napra emlékszik. Arra emlékszik, hogy visszatértél.", uebung_hu: "5 fekvőtámasz a konyhapultnál." },
+  { spruch: "Du musst nicht jeden Tag Wellenreiter sein. Manchmal reicht: Kopf über Wasser.", uebung: null,
+    spruch_hu: "Nem kell minden nap hullámlovasnak lenned. Néha elég: a fejed a víz felett.", uebung_hu: null },
+  { spruch: "Erschöpft ist kein Versagen. Erschöpft ist ein Signal, kein Charakterfehler.", uebung: "2 Minuten hinlegen, Beine hoch – ernsthaft, mach das.",
+    spruch_hu: "A kimerültség nem kudarc. Jelzés, nem jellemhiba.", uebung_hu: "2 perc fekvés, lábak felpolcolva – komolyan, csináld meg." },
+  { spruch: "Du bist nicht zu alt, zu müde oder zu spät dran. Du bist einfach dran.", uebung: "10 Kniebeugen mit dem Wäschekorb in der Hand – Multitasking-Training.",
+    spruch_hu: "Nem vagy se túl öreg, se túl fáradt, se túl késő. Csak most van rád sor.", uebung_hu: "10 guggolás a szennyeskosárral a kezedben – multitasking edzés." },
+  { spruch: "Kleine Bewegung schlägt keine Bewegung. Immer.", uebung: "30 Sekunden Plank, gerne mit Kind, das draufklettert.",
+    spruch_hu: "A kevés mozgás mindig többet ér, mint a semennyi.", uebung_hu: "30 másodperc plank, gyerekkel a háton, ha éppen arra mászik." },
+  { spruch: "Du musst dich nicht motiviert fühlen, um loszulegen. Du musst nur den ersten Schritt machen.", uebung: null,
+    spruch_hu: "Nem kell motiváltnak érezned magad ahhoz, hogy elkezdd. Csak az első lépés kell.", uebung_hu: null },
+  { spruch: "Dein Tagesplan hat sich geändert? Dein Wert als Mensch nicht.", uebung: "10x Treppensteigen, wenn eine in der Nähe ist.",
+    spruch_hu: "Megváltozott a napi terved? Az értéked nem.", uebung_hu: "10x lépcsőzés, ha van a közelben." },
+  { spruch: "Konsequenz schlägt Intensität. Immer wieder auftauchen zählt mehr als einmal glänzen.", uebung: "1 Minute Seilspringen ohne Seil – ja, das ist ein Ding.",
+    spruch_hu: "A kitartás többet ér, mint az intenzitás. Az számít, hogy újra és újra megjelensz.", uebung_hu: "1 perc kötél nélküli kötélugrás – igen, ez létezik." },
+  { spruch: "Du bist kein Projekt, das fertig werden muss. Du bist ein Mensch, der sich weiterentwickelt.", uebung: null,
+    spruch_hu: "Nem egy befejezendő projekt vagy. Egy fejlődő ember vagy.", uebung_hu: null },
+  { spruch: "Schuldgefühle verbrennen keine Kalorien. Aber sie klauen dir Energie.", uebung: "3x tief durchatmen, Schultern lockern, weiter geht's.",
+    spruch_hu: "A bűntudat nem éget kalóriát. De elveszi az energiádat.", uebung_hu: "3x mély levegő, vállak lazítása, és mehet tovább." },
+  { spruch: "Du darfst auch einfach nur müde sein heute. Morgen ist wieder ein neuer Tag.", uebung: null,
+    spruch_hu: "Ma szabad egyszerűen csak fáradtnak lenned. Holnap új nap.", uebung_hu: null },
+  { spruch: "Bewegung ist keine Bestrafung fürs Essen. Sie ist ein Geschenk an deinen Körper.", uebung: "10 Hampelmänner, mitten im Wohnzimmer.",
+    spruch_hu: "A mozgás nem büntetés az evésért. Ajándék a testednek.", uebung_hu: "10 szétugrás középen a nappaliban." },
+  { spruch: "Du brauchst keine perfekte Ausrüstung. Du brauchst 5 freie Minuten und einen Boden.", uebung: "20 Sekunden Unterarmstütz, egal wie krumm.",
+    spruch_hu: "Nem kell tökéletes felszerelés. Csak 5 szabad perc és egy padló.", uebung_hu: "20 másodperc alkartámasz, mindegy, mennyire görbén." },
+  { spruch: "Heute zählt nicht, was du nicht geschafft hast. Heute zählt, dass du wieder hier bist.", uebung: null,
+    spruch_hu: "Ma nem az számít, amit nem sikerült megcsinálnod. Az számít, hogy megint itt vagy.", uebung_hu: null }
+];
 const KCAL_BANDS = ["100 kcal","200 kcal","300 kcal","400 kcal"];
 const FILTER_GROUPS = [
   { labelKey: "de_ernaehrung", label: "Ern\u00e4hrung", tags: ["Vegan","Vegetarisch","Fleisch","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein","Laktosefrei","Glutenfrei","IR"] },
@@ -1433,6 +1487,8 @@ let state = {
   irSearch: "",
   autoWeekIROnly: false,
   autoWeekMealPrep: false,
+  oracleOpen: false,
+  oracleContent: null,
   chatMessages: [],
   chatLoading: false,
   chatLastSentAt: 0,
@@ -1559,6 +1615,7 @@ function renderAppShell(){
     ${state.bodyTreatmentOpen ? renderBodyTreatmentModal() : ""}
     ${state.progressPhotosOpen ? renderProgressPhotosPopup() : ""}
     ${state.walkTimer && state.walkTimer.open ? renderWalkTimerModal() : ""}
+    ${state.oracleOpen ? renderOracleCard() : ""}
   `;
 }
 
@@ -2030,6 +2087,71 @@ function renderSwapPopup(){
       ${alternatives.length === 0 ? `<p style="color:var(--ink-on-paper); opacity:0.6;">Keine passenden Alternativen gefunden.</p>` : ""}
     </div>
   </div></div>`;
+}
+
+function renderOracleCard(){
+  const c = state.oracleContent;
+  if(!c) return "";
+  const isHu = currentLang === 'hu';
+  const spruch = isHu ? (c.spruch_hu || c.spruch) : c.spruch;
+  const uebung = isHu ? (c.uebung_hu || c.uebung) : c.uebung;
+  const eyebrow = isHu ? "A MAI FITNESZ-ORÁKULUMOD" : "DEIN HEUTIGES FITNESS-ORAKEL";
+  const uebungLabel = isHu ? "MOST AZONNAL" : "SOFORT UMSETZEN";
+  const closeLabel = isHu ? "Rendben, mehetünk" : "Alles klar, los geht's";
+  return `<div class="overlay" id="oracle-overlay" style="align-items:center; background:rgba(10,8,5,0.72); z-index:200;">
+    <div id="oracle-card" style="
+        width:min(340px, 88vw); border-radius:20px; padding:34px 26px 28px;
+        background:linear-gradient(155deg, #171310 0%, #050403 70%);
+        border:1px solid rgba(212,175,55,0.45);
+        box-shadow:0 20px 60px rgba(0,0,0,0.5), inset 0 0 40px rgba(212,175,55,0.05);
+        text-align:center; position:relative;
+      ">
+      <div style="font-size:10.5px; letter-spacing:2.5px; color:#D4AF37; opacity:0.85; margin-bottom:18px; font-weight:700;">${eyebrow}</div>
+      <div style="width:34px; height:1px; background:linear-gradient(90deg, transparent, #D4AF37, transparent); margin:0 auto 22px;"></div>
+      <p style="color:#F3E9D2; font-size:18px; line-height:1.5; margin:0 0 ${uebung ? '22px' : '26px'}; font-weight:600;">${escapeHtml(spruch)}</p>
+      ${uebung ? `
+        <div style="border-top:1px solid rgba(212,175,55,0.25); padding-top:16px; margin-bottom:26px;">
+          <div style="font-size:10px; letter-spacing:1.8px; color:#D4AF37; opacity:0.75; margin-bottom:8px; font-weight:700;">${uebungLabel}</div>
+          <p style="color:#E9DFC8; opacity:0.9; font-size:14px; line-height:1.4; margin:0;">${escapeHtml(uebung)}</p>
+        </div>
+      ` : ""}
+      <button type="button" id="oracle-close" style="
+          width:100%; padding:13px; border-radius:12px; border:1px solid #D4AF37;
+          background:transparent; color:#D4AF37; font-size:14px; font-weight:700;
+          font-family:inherit; cursor:pointer; letter-spacing:0.3px;
+        ">${closeLabel}</button>
+    </div>
+  </div>`;
+}
+
+function bindOracleEvents(){
+  const overlay = document.getElementById("oracle-overlay");
+  if(!overlay) return;
+  const dismiss = ()=>{ state.oracleOpen = false; render(); };
+  overlay.addEventListener("click", (e)=>{ if(e.target.id==="oracle-overlay") dismiss(); });
+  const closeBtn = document.getElementById("oracle-close");
+  if(closeBtn) closeBtn.addEventListener("click", dismiss);
+}
+
+// Zeigt das Tages-Orakel maximal einmal pro Kalendertag (pro Gerät). Rezepte/Sprüche werden
+// erst wiederholt, wenn der ganze Pool einmal durch ist (wie bei der Rezeptauswahl im Autoplaner).
+function maybeShowDailyOracle(){
+  try{
+    const today = new Date().toISOString().slice(0,10);
+    if(localStorage.getItem("jumphoria_oracle_last") === today) return;
+    localStorage.setItem("jumphoria_oracle_last", today);
+    let used = [];
+    try{ used = JSON.parse(localStorage.getItem("jumphoria_oracle_used") || "[]"); }catch(e){ used = []; }
+    let available = ORACLE_POOL.map((_, i) => i).filter(i => !used.includes(i));
+    if(available.length === 0){ used = []; available = ORACLE_POOL.map((_, i) => i); }
+    const idx = available[Math.floor(Math.random() * available.length)];
+    used.push(idx);
+    localStorage.setItem("jumphoria_oracle_used", JSON.stringify(used));
+    state.oracleContent = ORACLE_POOL[idx];
+    state.oracleOpen = true;
+  }catch(err){
+    // localStorage kann in seltenen Fällen blockiert sein (privater Modus etc.) – dann einfach kein Orakel heute.
+  }
 }
 
 function renderAutoWeekPopup(){
@@ -3823,6 +3945,7 @@ function bindAppEvents(){
   });
 
   if(state.autoWeekOpen) bindAutoWeekEvents();
+  if(state.oracleOpen) bindOracleEvents();
   if(state.modalOpen) bindModalEvents();
 
   // Profil events
@@ -4791,6 +4914,8 @@ async function checkSession(){
       await loadRecipes();
       await loadWeekLog();
       calcProfil();
+      maybeShowDailyOracle();
+      render();
     debugUserId();
     } else if(error){
       state.view = "login";
@@ -4850,7 +4975,8 @@ function compressImageFile(file, maxDimension = 1200, quality = 0.78){
 /* ---------- INIT ---------- */
 sb.auth.onAuthStateChange((_event, session)=>{
   if(session && state.view !== "app"){
-    state.user = session.user; state.view = "app"; loadRecipes();
+    state.user = session.user; state.view = "app";
+    loadRecipes().then(()=>{ maybeShowDailyOracle(); render(); });
   }
 });
 
