@@ -948,6 +948,95 @@ const ORACLE_POOL = [
   { spruch: "Heute zählt nicht, was du nicht geschafft hast. Heute zählt, dass du wieder hier bist.", uebung: null,
     spruch_hu: "Ma nem az számít, amit nem sikerült megcsinálnod. Az számít, hogy megint itt vagy.", uebung_hu: null }
 ];
+const CHECKIN_STEPS = [
+  { key: 'sleep', title_hu: 'Hogy aludtál?', title_de: 'Wie hast du geschlafen?', options: [
+    { value: 0, label_hu: 'Rosszul', label_de: 'Schlecht' },
+    { value: 1, label_hu: 'Közepesen', label_de: 'Mittel' },
+    { value: 2, label_hu: 'Jól', label_de: 'Gut' }
+  ]},
+  { key: 'energy', title_hu: 'Mennyi az energiád ma?', title_de: 'Wie viel Energie hast du heute?', options: [
+    { value: 0, label_hu: 'Kevés', label_de: 'Wenig' },
+    { value: 1, label_hu: 'Közepes', label_de: 'Mittel' },
+    { value: 2, label_hu: 'Sok', label_de: 'Viel' }
+  ]},
+  { key: 'mood', title_hu: 'Milyen a hangulatod?', title_de: 'Wie ist deine Stimmung?', options: [
+    { value: 0, label_hu: 'Nehéz', label_de: 'Schwer' },
+    { value: 1, label_hu: 'Oké', label_de: 'Okay' },
+    { value: 2, label_hu: 'Jó', label_de: 'Gut' }
+  ]}
+];
+
+const CHECKIN_COPY = {
+  green: {
+    label_hu: 'Zöld nap', label_de: 'Grüner Tag',
+    text_hu: 'Ma megy a lendület. Használd ki, amíg tart.',
+    text_de: 'Heute läuft es. Nutz den Schwung, solange er da ist.',
+    food_hu: 'Mai recept: válassz bátran, akár újat is',
+    food_de: 'Heutiges Rezept: probier ruhig was Neues aus',
+    move_hu: 'Mai mozgás: a szokásos edzésed',
+    move_de: 'Heutiges Training: dein normales Programm'
+  },
+  orange: {
+    label_hu: 'Narancs nap', label_de: 'Oranger Tag',
+    text_hu: 'Félgáz nap — ez is belefér. Nem kell teljes gázzal menned ahhoz, hogy számítson.',
+    text_de: 'Halbgas-Tag — das gehört dazu. Es muss nicht Vollgas sein, damit es zählt.',
+    food_hu: 'Mai recept: egy gyors, kevés hozzávalós',
+    food_de: 'Heutiges Rezept: schnell, wenig Zutaten',
+    move_hu: 'Mai mozgás: rövidebb, könnyebb forma',
+    move_de: 'Heutiges Training: kürzer, leichter'
+  },
+  red: {
+    label_hu: 'Piros nap', label_de: 'Roter Tag',
+    text_hu: 'Ma alacsony fokozat. Az is oké. Nem kell ma többet nyújtanod magadból, mint amennyi belefér.',
+    text_de: 'Heute niedrige Stufe. Auch das ist okay. Du musst heute nicht mehr geben, als reinpasst.',
+    food_hu: 'Mai recept: a legegyszerűbb, amit most bírsz',
+    food_de: 'Heutiges Rezept: das Einfachste, was gerade geht',
+    move_hu: 'Mai mozgás: elég egy 15 perces séta',
+    move_de: 'Heutiges Training: ein 15-minütiger Spaziergang reicht'
+  }
+};
+
+const CHECKIN_COLOR_HEX = { green:'#6E7C56', orange:'#B4703F', red:'#A85C42', none:'#D8D2C4' };
+const CHECKIN_COLOR_Y   = { green: 22, orange: 46, red: 70, none: 46 };
+
+function checkinComputeColor(a){
+  const total = a.sleep + a.energy + a.mood;
+  let color = total >= 5 ? 'green' : (total >= 3 ? 'orange' : 'red');
+  if(a.sleep === 0 && a.mood === 0 && color === 'green') color = 'orange';
+  return color;
+}
+
+function smoothWavePath(points){
+  if(points.length < 2) return '';
+  let d = `M ${points[0].x} ${points[0].y}`;
+  for(let i=0; i<points.length-1; i++){
+    const p0 = points[i===0 ? 0 : i-1];
+    const p1 = points[i];
+    const p2 = points[i+1];
+    const p3 = points[i+2 < points.length ? i+2 : i+1];
+    const c1x = p1.x + (p2.x - p0.x)/6, c1y = p1.y + (p2.y - p0.y)/6;
+    const c2x = p2.x - (p3.x - p1.x)/6, c2y = p2.y - (p3.y - p1.y)/6;
+    d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2.x} ${p2.y}`;
+  }
+  return d;
+}
+
+function checkinLast14Points(overrideTodayColor){
+  const history = state.dayStatusHistory || [];
+  const todayStr = new Date().toISOString().slice(0,10);
+  const out = [];
+  for(let i=13; i>=0; i--){
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dStr = d.toISOString().slice(0,10);
+    if(dStr === todayStr && overrideTodayColor){ out.push(overrideTodayColor); continue; }
+    const row = history.find(r => r.log_date === dStr);
+    if(!row){ out.push('none'); continue; }
+    out.push(row.status === 'gruen' ? 'green' : (row.status === 'rot' ? 'red' : 'orange'));
+  }
+  return out;
+}
+
 const KCAL_BANDS = ["100 kcal","200 kcal","300 kcal","400 kcal"];
 const FILTER_GROUPS = [
   { labelKey: "de_ernaehrung", label: "Ern\u00e4hrung", tags: ["Vegan","Vegetarisch","Fleisch","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein","Laktosefrei","Glutenfrei","IR"] },
@@ -1512,6 +1601,10 @@ let state = {
   autoWeekVegetarisch: false,
   oracleOpen: false,
   oracleContent: null,
+  checkinOpen: false,
+  checkinStep: 0,
+  checkinAnswers: { sleep: null, energy: null, mood: null },
+  dayStatusHistory: [],
   chatMessages: [],
   chatLoading: false,
   chatLastSentAt: 0,
@@ -1639,6 +1732,7 @@ function renderAppShell(){
     ${state.progressPhotosOpen ? renderProgressPhotosPopup() : ""}
     ${state.walkTimer && state.walkTimer.open ? renderWalkTimerModal() : ""}
     ${state.oracleOpen ? renderOracleCard() : ""}
+    ${state.checkinOpen ? renderCheckinCard() : ""}
   `;
 }
 
@@ -1773,6 +1867,7 @@ function renderHomeTab(){
   </div>`;
 
   const nutriCard = renderTodayNutriCard();
+  const waveCard = renderWaveCard();
 
   const addButtons = `<div style="display:flex; gap:10px; margin:16px 0;">
     <button type="button" class="btn day-add-btn" data-date="${todayStr}" style="flex:1; display:flex; align-items:center; justify-content:center; gap:7px; color:#241C0C;">\u{1F374} + ${isHu ? 'Recept' : 'Rezept'}</button>
@@ -1852,6 +1947,7 @@ function renderHomeTab(){
 
   return `<div style="max-width:520px; margin:0 auto;">
     ${greeting}
+    ${waveCard}
     ${nutriCard}
     ${addButtons}
     <div style="background:var(--card-bg, rgba(255,255,255,0.06)); border-radius:16px; padding:14px 14px 8px; margin-bottom:8px;">
@@ -2203,6 +2299,179 @@ function maybeShowDailyOracle(){
   }catch(err){
     // localStorage kann in seltenen Fällen blockiert sein (privater Modus etc.) – dann einfach kein Orakel heute.
   }
+}
+
+// ── Hullám-check-in: napi 3 kérdés (alvás/energia/hangulat) → zöld/narancs/piros ──
+async function loadDayStatusHistory(){
+  if(!state.user) return;
+  const since = new Date();
+  since.setDate(since.getDate() - 13);
+  const sinceStr = since.toISOString().slice(0,10);
+  const { data, error } = await sb.from("day_status")
+    .select("log_date, status")
+    .eq("user_id", state.user.id)
+    .gte("log_date", sinceStr)
+    .order("log_date", { ascending: true });
+  if(error){ console.error(error); return; }
+  state.dayStatusHistory = data || [];
+}
+
+async function saveDayStatus(color, answers){
+  if(!state.user) return;
+  const todayStr = new Date().toISOString().slice(0,10);
+  const statusVal = color === 'green' ? 'gruen' : (color === 'red' ? 'rot' : 'orange');
+  const { error } = await sb.from("day_status").upsert({
+    user_id: state.user.id,
+    log_date: todayStr,
+    status: statusVal,
+    sleep: answers.sleep,
+    energy: answers.energy,
+    mood: answers.mood
+  }, { onConflict: "user_id,log_date" });
+  if(error) console.error(error);
+  else await loadDayStatusHistory();
+}
+
+// Zeigt den Tages-Check-in maximal einmal pro Kalendertag (pro Gerät), und nur wenn
+// für heute noch kein day_status-Eintrag existiert (z.B. von einem anderen Gerät).
+function maybeShowDailyCheckin(){
+  try{
+    const todayStr = new Date().toISOString().slice(0,10);
+    if(localStorage.getItem("jumphoria_checkin_last") === todayStr) return;
+    const alreadyLogged = (state.dayStatusHistory || []).some(r => r.log_date === todayStr);
+    if(alreadyLogged) return;
+    localStorage.setItem("jumphoria_checkin_last", todayStr);
+    state.checkinOpen = true;
+    state.checkinStep = 0;
+    state.checkinAnswers = { sleep: null, energy: null, mood: null };
+  }catch(err){
+    // wie beim Orakel: localStorage kann blockiert sein – dann einfach kein Check-in heute.
+  }
+}
+
+function renderCheckinCard(){
+  const isHu = currentLang === 'hu';
+  const step = state.checkinStep;
+  const isQuestion = step < 3;
+  let inner = '';
+
+  if(isQuestion){
+    const s = CHECKIN_STEPS[step];
+    const title = isHu ? s.title_hu : s.title_de;
+    const progressDots = [0,1,2].map(i => `<span style="width:8px;height:8px;border-radius:50%;display:inline-block;margin:0 4px;background:${i<=step ? '#D4AF37' : 'rgba(212,175,55,0.3)'};"></span>`).join('');
+    const optionsHtml = s.options.map(o => {
+      const label = isHu ? o.label_hu : o.label_de;
+      const dots = [1,2,3].map(n => `<span style="width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:3px;background:${n<=o.value+1 ? '#D4AF37' : 'rgba(212,175,55,0.3)'};"></span>`).join('');
+      return `<button type="button" class="checkin-option" data-key="${s.key}" data-value="${o.value}" style="
+          display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+          background:rgba(243,233,209,0.06); border:1px solid rgba(212,175,55,0.3);
+          border-radius:14px; padding:15px 18px; margin-bottom:10px; cursor:pointer;
+        ">
+        <span>${dots}</span>
+        <span style="color:#F3E9D2; font-size:15.5px; font-weight:600;">${escapeHtml(label)}</span>
+      </button>`;
+    }).join('');
+    inner = `
+      <div style="text-align:center; margin-bottom:18px;">${progressDots}</div>
+      <h3 style="color:#F3E9D2; font-family:Georgia,serif; font-size:19px; text-align:center; margin:0 0 20px;">${escapeHtml(title)}</h3>
+      <div>${optionsHtml}</div>
+    `;
+  } else {
+    const color = checkinComputeColor(state.checkinAnswers);
+    const c = CHECKIN_COPY[color];
+    const label = isHu ? c.label_hu : c.label_de;
+    const text = isHu ? c.text_hu : c.text_de;
+    const foodLabel = isHu ? c.food_hu : c.food_de;
+    const moveLabel = isHu ? c.move_hu : c.move_de;
+
+    const points14 = checkinLast14Points(color);
+    const width = 280, marginX = 12;
+    const stepX = (width - marginX*2) / (points14.length - 1);
+    const pts = points14.map((st, i) => ({ x: marginX + i*stepX, y: CHECKIN_COLOR_Y[st] || 46, fill: CHECKIN_COLOR_HEX[st] || '#8C8577' }));
+    const wavePath = smoothWavePath(pts);
+    const dotsHtml = pts.map(p => `<circle cx="${p.x}" cy="${p.y}" r="4.5" fill="${p.fill}" stroke="#171310" stroke-width="1.5"></circle>`).join('');
+    const resultBg = color === 'green' ? 'rgba(138,155,110,0.16)' : (color === 'orange' ? 'rgba(212,150,102,0.16)' : 'rgba(196,110,80,0.16)');
+
+    inner = `
+      <div style="background:${resultBg}; border-radius:16px; padding:22px 18px; margin-bottom:16px;">
+        <div style="font-family:Georgia,serif; font-size:20px; color:${CHECKIN_COLOR_HEX[color]}; margin-bottom:8px; text-align:center;">${escapeHtml(label)}</div>
+        <p style="color:#F3E9D2; font-size:14.5px; line-height:1.55; margin:0; text-align:center;">${escapeHtml(text)}</p>
+      </div>
+      <div style="background:rgba(243,233,209,0.06); border:1px solid rgba(212,175,55,0.2); border-radius:16px; padding:16px; margin-bottom:16px;">
+        <div style="font-size:10px; letter-spacing:1.5px; color:#D4AF37; opacity:0.8; text-transform:uppercase; margin-bottom:10px;">${isHu ? 'Az utolsó 14 nap' : 'Die letzten 14 Tage'}</div>
+        <svg viewBox="0 0 280 84" width="100%" height="70" style="display:block;">
+          <path d="${wavePath}" fill="none" stroke="#D4AF37" stroke-width="2.5" stroke-linecap="round"></path>
+          ${dotsHtml}
+        </svg>
+      </div>
+      <button type="button" class="checkin-food-btn" style="width:100%; text-align:left; background:rgba(243,233,209,0.06); border:1px solid rgba(212,175,55,0.3); border-radius:14px; padding:14px 16px; margin-bottom:10px; color:#F3E9D2; font-size:14.5px; font-weight:600; cursor:pointer;">${escapeHtml(foodLabel)}</button>
+      <button type="button" class="checkin-move-btn" style="width:100%; text-align:left; background:rgba(243,233,209,0.06); border:1px solid rgba(212,175,55,0.3); border-radius:14px; padding:14px 16px; margin-bottom:4px; color:#F3E9D2; font-size:14.5px; font-weight:600; cursor:pointer;">${escapeHtml(moveLabel)}</button>
+    `;
+  }
+
+  return `<div class="overlay" id="checkin-overlay" style="align-items:center; background:rgba(10,8,5,0.72); z-index:200;">
+    <div id="checkin-card" style="
+        width:min(360px, 90vw); border-radius:20px; padding:30px 24px 26px;
+        background:linear-gradient(155deg, #171310 0%, #050403 70%);
+        border:1px solid rgba(212,175,55,0.45);
+        box-shadow:0 20px 60px rgba(0,0,0,0.5), inset 0 0 40px rgba(212,175,55,0.05);
+        position:relative;
+      ">
+      ${inner}
+    </div>
+  </div>`;
+}
+
+function bindCheckinEvents(){
+  const overlay = document.getElementById("checkin-overlay");
+  if(!overlay) return;
+  const dismiss = ()=>{ state.checkinOpen = false; render(); };
+  overlay.addEventListener("click", (e)=>{ if(e.target.id==="checkin-overlay") dismiss(); });
+
+  document.querySelectorAll(".checkin-option").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const key = btn.dataset.key;
+      const value = Number(btn.dataset.value);
+      state.checkinAnswers[key] = value;
+      state.checkinStep += 1;
+      if(state.checkinStep >= 3){
+        const color = checkinComputeColor(state.checkinAnswers);
+        await saveDayStatus(color, state.checkinAnswers);
+      }
+      render();
+    });
+  });
+
+  const foodBtn = document.querySelector(".checkin-food-btn");
+  if(foodBtn) foodBtn.addEventListener("click", dismiss);
+  const moveBtn = document.querySelector(".checkin-move-btn");
+  if(moveBtn) moveBtn.addEventListener("click", dismiss);
+}
+
+function renderWaveCard(){
+  const isHu = currentLang === 'hu';
+  const points14 = checkinLast14Points(null);
+  const hasAny = points14.some(s => s !== 'none');
+  if(!hasAny) return '';
+
+  const width = 300, marginX = 12;
+  const stepX = (width - marginX*2) / (points14.length - 1);
+  const pts = points14.map((st, i) => ({ x: marginX + i*stepX, y: CHECKIN_COLOR_Y[st] || 46, fill: CHECKIN_COLOR_HEX[st] || '#D8D2C4' }));
+  const wavePath = smoothWavePath(pts);
+  const dotsHtml = pts.map(p => `<circle cx="${p.x}" cy="${p.y}" r="5" fill="${p.fill}" stroke="var(--card-bg,#F7F0E3)" stroke-width="2"></circle>`).join('');
+
+  return `<div style="background:var(--card-bg, #F7F0E3); border-radius:16px; padding:18px 16px; margin-bottom:14px;">
+    <div style="font-family:Georgia,serif; font-size:10.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--pine-dark); margin-bottom:10px;">${isHu ? 'Az utolsó 14 nap' : 'Die letzten 14 Tage'}</div>
+    <svg viewBox="0 0 300 84" width="100%" height="70" style="display:block;">
+      <path d="${wavePath}" fill="none" stroke="var(--pine,#C9A45C)" stroke-width="2.5" stroke-linecap="round"></path>
+      ${dotsHtml}
+    </svg>
+    <div style="display:flex; gap:14px; margin-top:10px; font-size:11px; color:var(--ink-soft,#8C8577);">
+      <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:#6E7C56;display:inline-block;"></span>${isHu ? 'Zöld' : 'Grün'}</span>
+      <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:#B4703F;display:inline-block;"></span>${isHu ? 'Narancs' : 'Orange'}</span>
+      <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:#A85C42;display:inline-block;"></span>${isHu ? 'Piros' : 'Rot'}</span>
+    </div>
+  </div>`;
 }
 
 function renderAutoWeekPopup(){
@@ -4015,6 +4284,7 @@ function bindAppEvents(){
 
   if(state.autoWeekOpen) bindAutoWeekEvents();
   if(state.oracleOpen) bindOracleEvents();
+  if(state.checkinOpen) bindCheckinEvents();
   if(state.modalOpen) bindModalEvents();
 
   // Profil events
@@ -4990,8 +5260,9 @@ async function checkSession(){
       await loadUserLanguage();
       await loadRecipes();
       await loadWeekLog();
+      await loadDayStatusHistory();
       calcProfil();
-      maybeShowDailyOracle();
+      maybeShowDailyCheckin();
       render();
     debugUserId();
     } else if(error){
@@ -5053,7 +5324,9 @@ function compressImageFile(file, maxDimension = 1200, quality = 0.78){
 sb.auth.onAuthStateChange((_event, session)=>{
   if(session && state.view !== "app"){
     state.user = session.user; state.view = "app";
-    loadRecipes().then(()=>{ maybeShowDailyOracle(); render(); });
+    loadRecipes().then(()=>{
+      loadDayStatusHistory().then(()=>{ maybeShowDailyCheckin(); render(); });
+    });
   }
 });
 
