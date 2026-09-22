@@ -2527,13 +2527,49 @@ function renderWaveCard(){
   const isHu = currentLang === 'hu';
   const points14 = checkinLast14Points(null);
   const hasAny = points14.some(s => s !== 'none');
-  if(!hasAny) return '';
+
+  const todayStr = new Date().toISOString().slice(0,10);
+  const todayRow = (state.dayStatusHistory || []).find(r => r.log_date === todayStr);
+  const todayColor = todayRow ? (todayRow.status === 'gruen' ? 'green' : (todayRow.status === 'rot' ? 'red' : 'orange')) : null;
+
+  if(!hasAny && !todayColor){
+    // Noch nie ausgefüllt: statt einer leeren Karte gleich zum ersten Check-in einladen.
+    return `<div style="background:var(--card-bg, #F7F0E3); border-radius:16px; padding:18px 16px; margin-bottom:14px;">
+      <div style="font-family:Georgia,serif; font-size:16px; color:var(--pine-dark); margin-bottom:3px;">${isHu ? 'Fel és le' : 'Auf und Ab'}</div>
+      <div style="font-size:12px; color:var(--ink-soft,#8C8577); margin-bottom:14px; line-height:1.4;">${isHu ? 'Nem minden nap egyforma. 3 gyors kérdés, és mutatjuk a mai ajánlást.' : 'Nicht jeder Tag ist gleich. 3 kurze Fragen, dann zeigen wir dir die heutige Empfehlung.'}</div>
+      <button type="button" class="wave-start-checkin-btn" style="width:100%; text-align:center; background:var(--pine); border:none; border-radius:12px; padding:13px 16px; color:#fff; font-size:14px; font-weight:600; cursor:pointer;">${isHu ? 'Mai check-in kitöltése' : 'Heutiges Check-in ausfüllen'}</button>
+    </div>`;
+  }
 
   const width = 300, marginX = 12;
   const stepX = (width - marginX*2) / (points14.length - 1);
   const pts = points14.map((st, i) => ({ x: marginX + i*stepX, y: CHECKIN_COLOR_Y[st] || 46, fill: CHECKIN_COLOR_HEX[st] || '#D8D2C4' }));
   const wavePath = smoothWavePath(pts);
   const dotsHtml = pts.map(p => `<circle cx="${p.x}" cy="${p.y}" r="5" fill="${p.fill}" stroke="var(--card-bg,#F7F0E3)" stroke-width="2"></circle>`).join('');
+
+  let actionHtml;
+  if(todayColor){
+    // Heute schon beantwortet: konkrete Tagesempfehlung direkt auf der Karte, kein zusätzlicher Klick nötig.
+    const c = CHECKIN_COPY[todayColor];
+    const foodIntro = isHu ? c.food_hu : c.food_de;
+    const moveLabel = isHu ? c.move_hu : c.move_de;
+    const suggestedRecipe = todaysColorRecipe(todayColor);
+    const foodTitle = suggestedRecipe ? getRecipeTitle(suggestedRecipe) : (isHu ? 'Nincs elérhető recept' : 'Kein Rezept verfügbar');
+    const walkMinutes = todayColor === 'red' ? 15 : (todayColor === 'orange' ? 20 : 30);
+    actionHtml = `
+    <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--line, rgba(169,130,61,0.2));">
+      <div style="font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--pine-dark); opacity:0.75; margin-bottom:8px;">${isHu ? 'Mai ajánlás' : 'Heutige Empfehlung'}</div>
+      <button type="button" class="wave-food-btn" ${suggestedRecipe ? `data-recipe-id="${suggestedRecipe.id}"` : "disabled"} style="width:100%; text-align:left; background:#fff; border:1px solid var(--line, rgba(169,130,61,0.25)); border-radius:12px; padding:12px 14px; margin-bottom:8px; color:var(--ink); font-size:13.5px; font-weight:600; cursor:pointer;">
+        <span style="display:block; font-size:10px; letter-spacing:0.5px; text-transform:uppercase; opacity:0.6; margin-bottom:3px; font-weight:600;">${escapeHtml(foodIntro)}</span>
+        ${escapeHtml(foodTitle)}
+      </button>
+      <button type="button" class="wave-move-btn" data-minutes="${walkMinutes}" style="width:100%; text-align:left; background:#fff; border:1px solid var(--line, rgba(169,130,61,0.25)); border-radius:12px; padding:12px 14px; color:var(--ink); font-size:13.5px; font-weight:600; cursor:pointer;">${escapeHtml(moveLabel)}</button>
+    </div>`;
+  } else {
+    // Heute noch nicht beantwortet: klare Einladung statt einer stillen Grafik.
+    actionHtml = `
+    <button type="button" class="wave-start-checkin-btn" style="width:100%; text-align:center; margin-top:14px; background:var(--pine); border:none; border-radius:12px; padding:12px 16px; color:#fff; font-size:13.5px; font-weight:600; cursor:pointer;">${isHu ? 'Mai check-in kitöltése' : 'Heutiges Check-in ausfüllen'}</button>`;
+  }
 
   return `<div style="background:var(--card-bg, #F7F0E3); border-radius:16px; padding:18px 16px; margin-bottom:14px;">
     <div style="font-family:Georgia,serif; font-size:16px; color:var(--pine-dark); margin-bottom:3px;">${isHu ? 'Fel és le' : 'Auf und Ab'}</div>
@@ -2547,6 +2583,7 @@ function renderWaveCard(){
       <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:#C9863C;display:inline-block;"></span>${isHu ? 'Narancs' : 'Orange'}</span>
       <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:#9B3F2E;display:inline-block;"></span>${isHu ? 'Piros' : 'Rot'}</span>
     </div>
+    ${actionHtml}
   </div>`;
 }
 
@@ -4479,6 +4516,22 @@ function bindAppEvents(){
   document.querySelectorAll(".checkin-setting-pick").forEach(btn=>{
     btn.addEventListener("click", ()=>{ setCheckinEnabled(btn.dataset.enabled === "true"); });
   });
+  document.querySelectorAll(".wave-start-checkin-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      state.checkinOpen = true;
+      state.checkinStep = 0;
+      state.checkinAnswers = { sleep: null, energy: null, mood: null };
+      render();
+    });
+  });
+  const waveFoodBtn = document.querySelector(".wave-food-btn");
+  if(waveFoodBtn && waveFoodBtn.dataset.recipeId){
+    waveFoodBtn.addEventListener("click", ()=>{ openRecipeDetailById(waveFoodBtn.dataset.recipeId); });
+  }
+  const waveMoveBtn = document.querySelector(".wave-move-btn");
+  if(waveMoveBtn){
+    waveMoveBtn.addEventListener("click", ()=>{ startWalkTimer(Number(waveMoveBtn.dataset.minutes) || 20); });
+  }
   if(state.walkTimer && state.walkTimer.open) bindWalkTimerEvents();
   if(state.challengeOpen) bindChallengePopupEvents();
 }
