@@ -980,8 +980,8 @@ const CHECKIN_COPY = {
     label_hu: 'Zöld nap', label_de: 'Grüner Tag',
     text_hu: 'Ma megy a lendület. Használd ki, amíg tart.',
     text_de: 'Heute läuft es. Nutz den Schwung, solange er da ist.',
-    food_hu: 'Mai recept: válassz bátran, akár újat is',
-    food_de: 'Heutiges Rezept: probier ruhig was Neues aus',
+    food_hu: 'Mai meal prep ajánlás',
+    food_de: 'Heutige Meal-Prep-Empfehlung',
     move_hu: 'Mai mozgás: a szokásos edzésed',
     move_de: 'Heutiges Training: dein normales Programm'
   },
@@ -989,17 +989,17 @@ const CHECKIN_COPY = {
     label_hu: 'Narancs nap', label_de: 'Oranger Tag',
     text_hu: 'Félgáz nap — ez is belefér. Nem kell teljes gázzal menned ahhoz, hogy számítson.',
     text_de: 'Halbgas-Tag — das gehört dazu. Es muss nicht Vollgas sein, damit es zählt.',
-    food_hu: 'Mai recept: gyors és laktató',
-    food_de: 'Heutiges Rezept: schnell und sättigend',
-    move_hu: 'Mai mozgás: rövidebb, könnyebb forma',
-    move_de: 'Heutiges Training: kürzer, leichter'
+    food_hu: 'Mai meal prep ajánlás',
+    food_de: 'Heutige Meal-Prep-Empfehlung',
+    move_hu: 'Mai mozgás: egy laza séta',
+    move_de: 'Heutiges Training: ein lockerer Spaziergang'
   },
   red: {
     label_hu: 'Piros nap', label_de: 'Roter Tag',
     text_hu: 'Ma alacsony fokozat. Az is oké. Nem kell ma többet nyújtanod magadból, mint amennyi belefér.',
     text_de: 'Heute niedrige Stufe. Auch das ist okay. Du musst heute nicht mehr geben, als reinpasst.',
-    food_hu: 'Mai recept: a legegyszerűbb, amit most bírsz',
-    food_de: 'Heutiges Rezept: das Einfachste, was gerade geht',
+    food_hu: 'Mai meal prep ajánlás',
+    food_de: 'Heutige Meal-Prep-Empfehlung',
     move_hu: 'Mai mozgás: elég egy 15 perces séta',
     move_de: 'Heutiges Training: ein 15-minütiger Spaziergang reicht'
   }
@@ -1050,10 +1050,13 @@ function checkinLast14Points(overrideTodayColor){
 // konkretes Rezept passend zur Farbe: bei Orange/Rot nur aus "Schnell"/"Meal Prep", bei Grün frei.
 function todaysColorRecipe(color){
   const all = state.recipes || [];
+  // Immer ein Hauptgericht vorschlagen, nie einen Snack – Snacks wirken als "Tagesempfehlung" zu mager.
+  const mainDishes = all.filter(r => (r.tags||[]).includes('Hauptgericht'));
+  const basePool = mainDishes.length > 0 ? mainDishes : all;
   const pool = color === 'green'
-    ? all
-    : all.filter(r => (r.tags||[]).includes('Schnell') || (r.tags||[]).includes('Meal Prep'));
-  const usablePool = pool.length > 0 ? pool : all;
+    ? basePool
+    : basePool.filter(r => (r.tags||[]).includes('Schnell') || (r.tags||[]).includes('Meal Prep'));
+  const usablePool = pool.length > 0 ? pool : basePool;
   if(usablePool.length === 0) return null;
   const now = new Date();
   const start = new Date(now.getFullYear(), 0, 0);
@@ -2481,7 +2484,7 @@ function renderCheckinCard(){
       </div>
       <button type="button" class="checkin-food-btn" ${suggestedRecipe ? `data-recipe-id="${suggestedRecipe.id}"` : "disabled"} style="width:100%; text-align:left; background:rgba(243,233,209,0.06); border:1px solid rgba(212,175,55,0.3); border-radius:14px; padding:14px 16px; margin-bottom:10px; color:#F3E9D2; font-size:14.5px; font-weight:600; cursor:pointer;">
         <span style="display:block; font-size:10px; letter-spacing:1px; text-transform:uppercase; opacity:0.65; margin-bottom:3px;">${escapeHtml(foodIntro)}</span>
-        ${escapeHtml(foodTitle)}
+        ${escapeHtml(foodTitle)}${suggestedRecipe ? ` <span style="display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; border-radius:50%; border:1.3px solid #D4AF37; color:#D4AF37; font-size:10px; font-weight:700; vertical-align:2px;">?</span>` : ""}
         ${servingSuggestion ? `<span style="display:block; margin-top:4px; font-size:12px; font-weight:400; opacity:0.75;">${escapeHtml(servingSuggestion)}</span>` : ""}
       </button>
       <button type="button" class="checkin-move-btn" data-minutes="${walkMinutes}" style="width:100%; text-align:left; background:rgba(243,233,209,0.06); border:1px solid rgba(212,175,55,0.3); border-radius:14px; padding:14px 16px; margin-bottom:4px; color:#F3E9D2; font-size:14.5px; font-weight:600; cursor:pointer;">${escapeHtml(moveLabel)}</button>
@@ -2577,7 +2580,7 @@ function renderWaveCard(){
       <div style="font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--pine-dark); font-weight:700; margin-bottom:8px;">${isHu ? 'Mai ajánlás' : 'Heutige Empfehlung'}</div>
       <button type="button" class="wave-food-btn" ${suggestedRecipe ? `data-recipe-id="${suggestedRecipe.id}"` : "disabled"} style="width:100%; text-align:left; background:#fff; border:1px solid var(--line, rgba(169,130,61,0.25)); border-radius:12px; padding:12px 14px; margin-bottom:8px; color:var(--ink-on-paper); font-size:13.5px; font-weight:600; cursor:pointer;">
         <span style="display:block; font-size:10px; letter-spacing:0.5px; text-transform:uppercase; color:var(--pine-dark); opacity:0.85; margin-bottom:3px; font-weight:700;">${escapeHtml(foodIntro)}</span>
-        <span style="color:var(--ink-on-paper);">${escapeHtml(foodTitle)}</span>
+        <span style="color:var(--ink-on-paper);">${escapeHtml(foodTitle)}${suggestedRecipe ? ` <span style="display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; border-radius:50%; border:1.3px solid var(--pine-dark); color:var(--pine-dark); font-size:10px; font-weight:700; vertical-align:2px;">?</span>` : ""}</span>
         ${servingSuggestion ? `<span style="display:block; margin-top:4px; font-size:12px; font-weight:400; color:var(--ink-on-paper); opacity:0.7;">${escapeHtml(servingSuggestion)}</span>` : ""}
       </button>
       <button type="button" class="wave-move-btn" data-minutes="${walkMinutes}" style="width:100%; text-align:left; background:#fff; border:1px solid var(--line, rgba(169,130,61,0.25)); border-radius:12px; padding:12px 14px; color:var(--ink-on-paper); font-size:13.5px; font-weight:600; cursor:pointer;">${escapeHtml(moveLabel)}</button>
