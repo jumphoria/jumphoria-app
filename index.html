@@ -746,20 +746,37 @@
     background:#fff; color:var(--pine-dark); border:none; padding:12px 20px; border-radius:12px;
     font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap;
   }
+  .challenge-progress-card{
+    background:linear-gradient(165deg, #fff 0%, var(--card-bg) 100%);
+    border:1px solid var(--line); border-radius:20px; padding:18px 16px 16px;
+    margin-top:18px; box-shadow:0 6px 20px rgba(169,130,61,0.08);
+  }
+  .challenge-progress-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    font-size:13px; color:var(--ink-on-paper); opacity:0.8; margin-bottom:8px;
+  }
+  .challenge-progress-pct{ font-family:Georgia,serif; font-size:16px; font-weight:700; color:var(--pine-dark); opacity:1; }
+  .challenge-progress-track{
+    height:6px; border-radius:4px; background:rgba(169,130,61,0.15); overflow:hidden; margin-bottom:16px;
+  }
+  .challenge-progress-fill{
+    height:100%; background:linear-gradient(90deg, var(--pine-light,#D8B977), var(--pine));
+    border-radius:4px; transition:width .4s ease;
+  }
   .challenge-day-grid{
-    display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; margin:18px 0;
+    display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; margin:0;
   }
   .challenge-day{
     aspect-ratio:1; border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:2px; cursor:pointer; border:1.5px solid var(--line); background:var(--card-bg); position:relative;
-    transition:transform .15s ease;
+    gap:2px; cursor:pointer; border:1.5px solid var(--line); background:#fff; position:relative;
+    transition:transform .15s ease; box-shadow:0 1px 3px rgba(0,0,0,0.04);
   }
   .challenge-day:active{ transform:scale(0.94); }
   .challenge-day-num{ font-size:10px; font-weight:700; color:var(--ink-on-paper); opacity:0.55; }
   .challenge-day-icon{ font-size:17px; }
-  .challenge-day.is-today{ border-color:var(--pine); border-width:2px; }
-  .challenge-day.is-done{ background:var(--pine); }
-  .challenge-day.is-done .challenge-day-num{ color:#fff; opacity:0.85; }
+  .challenge-day.is-today{ border-color:var(--pine); border-width:2px; box-shadow:0 0 0 4px rgba(201,164,92,0.18); }
+  .challenge-day.is-done{ background:linear-gradient(160deg, var(--pine-light,#D8B977), var(--pine)); box-shadow:0 3px 8px rgba(169,130,61,0.3); }
+  .challenge-day.is-done .challenge-day-num{ color:#fff; opacity:0.9; }
   .challenge-day.is-rest{ background:var(--accent-box-bg); border-color:var(--line); }
   .challenge-day.is-rest .challenge-day-num{ color:var(--paper); opacity:0.7; }
   .challenge-day-check{
@@ -767,13 +784,42 @@
     background:var(--terracotta); color:#fff; font-size:10px; display:flex; align-items:center; justify-content:center;
     font-weight:700; box-shadow:0 1px 4px rgba(0,0,0,0.2);
   }
-  .challenge-legend{ display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--ink-on-paper); opacity:0.75; margin-bottom:16px; }
+  .challenge-legend{ display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--ink-on-paper); opacity:0.75; margin:16px 0 0; }
   .challenge-legend span{ display:inline-flex; align-items:center; gap:5px; }
   .challenge-today-card{
     background:var(--accent-box-bg); border-radius:16px; padding:18px 20px; color:var(--paper); margin-bottom:6px;
   }
   .challenge-today-card h4{ color:var(--pine); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 8px; }
   .challenge-today-card p{ font-size:14.5px; margin:0 0 14px; opacity:0.95; line-height:1.5; }
+
+  /* ── Vorher/Nachher-Kacheln in der Challenge ── */
+  .challenge-photos-card{
+    background:var(--card-bg); border:1px solid var(--line); border-radius:20px;
+    padding:16px; margin-top:14px;
+  }
+  .challenge-photos-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:4px; }
+  .challenge-photos-title{ font-family:Georgia,serif; font-size:14px; color:var(--pine-dark); font-weight:700; }
+  .challenge-photos-hint{ font-size:11px; color:var(--ink-on-paper); opacity:0.5; }
+  .challenge-photos-row{ display:flex; gap:12px; }
+  .challenge-photo-tile{
+    flex:1; aspect-ratio:1; border-radius:16px; overflow:hidden; position:relative;
+    cursor:pointer; background:#fff; border:1px solid var(--line);
+  }
+  .challenge-photo-tile img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .challenge-photo-tile-label{
+    position:absolute; left:0; right:0; bottom:0; padding:5px 8px;
+    font-size:10.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase;
+    color:#fff; background:linear-gradient(0deg, rgba(0,0,0,0.55), transparent);
+  }
+  .challenge-photo-tile.is-empty{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    border:1.5px dashed var(--line); background:rgba(201,164,92,0.06);
+  }
+  .challenge-photo-tile.is-empty .challenge-photo-tile-label{
+    position:static; background:none; color:var(--ink-on-paper); opacity:0.6; font-weight:600; text-transform:none; letter-spacing:normal;
+  }
+  .challenge-photo-tile-plus{ font-size:22px; color:var(--pine-dark); font-weight:300; line-height:1; }
+  .challenge-photo-tile.is-uploading{ opacity:0.6; pointer-events:none; }
 
   /* ====== TRAINING (Video-Datenbank) ====== */
   .training-intro{
@@ -1316,13 +1362,17 @@ async function loadProgressPhotos(){
   if(error){ console.error(error); return; }
   const rows = data || [];
   if(rows.length > 0){
-    const paths = rows.map(r => r.storage_path);
+    // Volle Fotos UND die kleinen Vorschauen in einem Rutsch signieren, damit Kartenansichten
+    // (z.B. die Challenge) nur die winzige Vorschau laden müssen, nicht das ganze Bild.
+    const paths = Array.from(new Set(rows.flatMap(r => [r.storage_path, r.thumb_path]).filter(Boolean)));
     const { data: signedData, error: signedError } = await sb.storage
       .from("progress-photos").createSignedUrls(paths, 3600);
     if(!signedError && signedData){
       rows.forEach(r => {
-        const match = signedData.find(s => s.path === r.storage_path);
-        r.signed_url = match ? match.signedUrl : null;
+        const full = signedData.find(s => s.path === r.storage_path);
+        r.signed_url = full ? full.signedUrl : null;
+        const thumb = r.thumb_path ? signedData.find(s => s.path === r.thumb_path) : null;
+        r.thumb_signed_url = thumb ? thumb.signedUrl : r.signed_url;
       });
     }
   }
@@ -1335,14 +1385,23 @@ async function uploadProgressPhoto(file, type){
   state.progressPhotoUploading = true;
   render();
   try{
+    // Zwei Versionen: die normale (für die Detailansicht) und eine winzige Vorschau
+    // (für Kartenansichten wie die Challenge), damit dort kein volles Bild geladen werden muss.
     const compressed = await compressImageFile(file, 1400, 0.8);
-    const fileName = `${state.user.id}/${Date.now()}-${type}.jpg`;
+    const thumb = await compressImageFile(file, 220, 0.55);
+    const baseName = `${state.user.id}/${Date.now()}-${type}`;
+    const fileName = `${baseName}.jpg`;
+    const thumbName = `${baseName}-thumb.jpg`;
     const { error: uploadError } = await sb.storage
       .from("progress-photos")
       .upload(fileName, compressed, { contentType: "image/jpeg", upsert: false });
     if(uploadError) throw uploadError;
+    const { error: thumbUploadError } = await sb.storage
+      .from("progress-photos")
+      .upload(thumbName, thumb, { contentType: "image/jpeg", upsert: false });
+    if(thumbUploadError) throw thumbUploadError;
     const { error: insertError } = await sb.from("progress_photos")
-      .insert({ user_id: state.user.id, storage_path: fileName, photo_type: type, taken_at: new Date().toISOString().slice(0,10) });
+      .insert({ user_id: state.user.id, storage_path: fileName, thumb_path: thumbName, photo_type: type, taken_at: new Date().toISOString().slice(0,10) });
     if(insertError) throw insertError;
     await loadProgressPhotos();
   }catch(err){
@@ -1352,9 +1411,10 @@ async function uploadProgressPhoto(file, type){
   render();
 }
 
-async function deleteProgressPhoto(id, storagePath){
+async function deleteProgressPhoto(id, storagePath, thumbPath){
   if(!confirm(currentLang==='hu' ? 'Biztosan törlöd ezt a fotót?' : 'Dieses Foto wirklich löschen?')) return;
-  await sb.storage.from("progress-photos").remove([storagePath]);
+  const paths = thumbPath ? [storagePath, thumbPath] : [storagePath];
+  await sb.storage.from("progress-photos").remove(paths);
   const { error } = await sb.from("progress_photos").delete().eq("id", id);
   if(error){ alert("Fehler: " + error.message); return; }
   await loadProgressPhotos();
@@ -1665,6 +1725,8 @@ let state = {
   progressPhotosOpen: false,
   progressPhotos: [],
   progressPhotoUploading: false,
+  photoLightboxUrl: null,
+  challengePhotoUploadType: null,
   menuSubView: null,
   userDisplayName: null,
   editingName: false,
@@ -1819,6 +1881,7 @@ function renderAppShell(){
     ${state.walkTimer && state.walkTimer.open ? renderWalkTimerModal() : ""}
     ${state.oracleOpen ? renderOracleCard() : ""}
     ${state.checkinOpen ? renderCheckinCard() : ""}
+    ${state.photoLightboxUrl ? renderPhotoLightbox() : ""}
   `;
 }
 
@@ -3234,17 +3297,38 @@ function renderChallengeTab(){
   </div>`;
 }
 
+function renderChallengePhotoTile(type, photo, isHu){
+  const label = type === 'before' ? (isHu ? 'Előtte' : 'Vorher') : (isHu ? 'Utána' : 'Nachher');
+  const isUploadingThis = state.progressPhotoUploading && state.challengePhotoUploadType === type;
+  if(photo && (photo.thumb_signed_url || photo.signed_url)){
+    const openUrl = photo.signed_url || photo.thumb_signed_url;
+    const thumbUrl = photo.thumb_signed_url || photo.signed_url;
+    return `<div class="challenge-photo-tile" data-open-photo="${escapeAttr(openUrl)}">
+      <img src="${escapeAttr(thumbUrl)}" alt="${escapeAttr(label)}" loading="lazy">
+      <span class="challenge-photo-tile-label">${escapeHtml(label)}</span>
+    </div>`;
+  }
+  return `<div class="challenge-photo-tile is-empty ${isUploadingThis ? 'is-uploading' : ''}" data-upload-photo-type="${type}">
+    <span class="challenge-photo-tile-plus">${isUploadingThis ? '\u23f3' : '+'}</span>
+    <span class="challenge-photo-tile-label">${escapeHtml(label)}</span>
+  </div>`;
+}
+
 function renderChallengePopup(){
   const isHu = currentLang === 'hu';
   const todayNum = currentChallengeDayNumber();
   const todayType = getChallengeDayType(todayNum);
   const doneCount = state.challenge.completedDays.length;
+  const progressPct = Math.round((doneCount / CHALLENGE_LENGTH) * 100);
 
   const todayTip = {
     training: isHu ? 'Jump & Lift vagy talaj-edzés + súlyzós blokk.' : 'Jump & Lift oder Boden-Training + Hantel-Block.',
     walk: isHu ? 'Tempóváltós gyaloglás — nyisd meg az Intervall-Gehen kártyát.' : 'Tempo-Wechsel-Gehen — öffne die Intervall-Gehen-Karte.',
     rest: isHu ? 'Pihenőnap — nyújtás, séta, vagy csak lazítás.' : 'Ruhetag — Dehnen, Spaziergang, oder einfach entspannen.'
   }[todayType];
+
+  const beforePhoto = (state.progressPhotos || []).find(p => p.photo_type === 'before');
+  const afterPhoto = (state.progressPhotos || []).find(p => p.photo_type === 'after');
 
   return `<div class="overlay" id="challenge-overlay"><div class="modal">
     <button class="modal-close" id="challenge-close">\u2715</button>
@@ -3258,27 +3342,46 @@ function renderChallengePopup(){
       </button>
     </div>
 
-    <p style="color:var(--ink-on-paper); opacity:0.7; font-size:13px; margin:18px 0 0;">${isHu ? `${doneCount} / ${CHALLENGE_LENGTH} nap kész` : `${doneCount} / ${CHALLENGE_LENGTH} Tage geschafft`}</p>
-    <div class="challenge-day-grid">
-      ${Array.from({length: CHALLENGE_LENGTH}, (_, i) => i + 1).map(day => {
-        const type = getChallengeDayType(day);
-        const isDone = state.challenge.completedDays.includes(day);
-        const isToday = day === todayNum;
-        const isFuture = day > todayNum;
-        return `<div class="challenge-day ${isDone ? 'is-done' : ''} ${isToday ? 'is-today' : ''} ${type==='rest' ? 'is-rest' : ''}"
-          data-day="${day}" data-clickable="${isFuture ? 'false' : 'true'}" style="${isFuture ? 'opacity:0.4;' : ''}">
-          <span class="challenge-day-icon">${CHALLENGE_DAY_ICONS[type]}</span>
-          <span class="challenge-day-num">${day}</span>
-          ${isDone ? `<span class="challenge-day-check">\u2713</span>` : ""}
-        </div>`;
-      }).join("")}
+    <div class="challenge-progress-card">
+      <div class="challenge-progress-head">
+        <span>${isHu ? `${doneCount} / ${CHALLENGE_LENGTH} nap kész` : `${doneCount} / ${CHALLENGE_LENGTH} Tage geschafft`}</span>
+        <span class="challenge-progress-pct">${progressPct}%</span>
+      </div>
+      <div class="challenge-progress-track"><div class="challenge-progress-fill" style="width:${progressPct}%;"></div></div>
+      <div class="challenge-day-grid">
+        ${Array.from({length: CHALLENGE_LENGTH}, (_, i) => i + 1).map(day => {
+          const type = getChallengeDayType(day);
+          const isDone = state.challenge.completedDays.includes(day);
+          const isToday = day === todayNum;
+          const isFuture = day > todayNum;
+          return `<div class="challenge-day ${isDone ? 'is-done' : ''} ${isToday ? 'is-today' : ''} ${type==='rest' ? 'is-rest' : ''}"
+            data-day="${day}" data-clickable="${isFuture ? 'false' : 'true'}" style="${isFuture ? 'opacity:0.4;' : ''}">
+            <span class="challenge-day-icon">${CHALLENGE_DAY_ICONS[type]}</span>
+            <span class="challenge-day-num">${day}</span>
+            ${isDone ? `<span class="challenge-day-check">\u2713</span>` : ""}
+          </div>`;
+        }).join("")}
+      </div>
+      <div class="challenge-legend">
+        <span>${CHALLENGE_DAY_ICONS.training} ${challengeDayLabel('training')}</span>
+        <span>${CHALLENGE_DAY_ICONS.walk} ${challengeDayLabel('walk')}</span>
+        <span>${CHALLENGE_DAY_ICONS.rest} ${challengeDayLabel('rest')}</span>
+      </div>
     </div>
-    <div class="challenge-legend">
-      <span>${CHALLENGE_DAY_ICONS.training} ${challengeDayLabel('training')}</span>
-      <span>${CHALLENGE_DAY_ICONS.walk} ${challengeDayLabel('walk')}</span>
-      <span>${CHALLENGE_DAY_ICONS.rest} ${challengeDayLabel('rest')}</span>
+
+    <div class="challenge-photos-card">
+      <div class="challenge-photos-head">
+        <span class="challenge-photos-title">\u{1F4F7} ${isHu ? 'Előtte / Utána' : 'Vorher / Nachher'}</span>
+        <span class="challenge-photos-hint">${isHu ? 'Érintsd meg a nagyításhoz' : 'Zum Vergrößern antippen'}</span>
+      </div>
+      <div class="challenge-photos-row">
+        ${renderChallengePhotoTile('before', beforePhoto, isHu)}
+        ${renderChallengePhotoTile('after', afterPhoto, isHu)}
+      </div>
+      <input type="file" id="challenge-photo-input" accept="image/*" style="display:none;">
     </div>
-    <p style="color:var(--ink-on-paper); opacity:0.55; font-size:12px; margin:0;">${isHu ? 'Minden nap számít — kövesd a ritmust, és 21 nap múlva már máshogy fogod érezni magad.' : 'Jeder Tag zählt — bleib im Rhythmus, und in 21 Tagen fühlst du dich schon anders.'}</p>
+
+    <p style="color:var(--ink-on-paper); opacity:0.55; font-size:12px; margin:14px 0 0;">${isHu ? 'Minden nap számít — kövesd a ritmust, és 21 nap múlva már máshogy fogod érezni magad.' : 'Jeder Tag zählt — bleib im Rhythmus, und in 21 Tagen fühlst du dich schon anders.'}</p>
   </div></div>`;
 }
 
@@ -3294,6 +3397,24 @@ function bindChallengePopupEvents(){
       el.addEventListener("click", ()=>{ toggleChallengeDay(parseInt(el.dataset.day, 10)); });
     }
   });
+
+  bindPhotoOpenTriggers();
+  document.querySelectorAll("[data-upload-photo-type]").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      state.challengePhotoUploadType = el.dataset.uploadPhotoType;
+      const input = document.getElementById("challenge-photo-input");
+      if(input) input.click();
+    });
+  });
+  const challengePhotoInput = document.getElementById("challenge-photo-input");
+  if(challengePhotoInput){
+    challengePhotoInput.addEventListener("change", async (e)=>{
+      const file = e.target.files[0]; if(!file) return;
+      const type = state.challengePhotoUploadType || "progress";
+      await uploadProgressPhoto(file, type);
+      challengePhotoInput.value = "";
+    });
+  }
 }
 
 // Rundet die Lymphfluss-Gesamtdauer auf ganze Minuten, für den Zeitfilter-Vergleich (<=X Min)
@@ -3582,10 +3703,10 @@ function renderProgressPhotosPopup(){
     <input type="file" id="progress-photo-input" accept="image/*" style="display:none;">
     ${state.progressPhotos.length === 0 ? `<p style="color:var(--ink-on-paper); opacity:0.55; font-size:13px; margin-top:18px; text-align:center;">${isHu ? 'Még nincs feltöltött fotó.' : 'Noch keine Fotos hochgeladen.'}</p>` : `
     <div class="progress-photo-grid">
-      ${state.progressPhotos.map(p => `<div class="progress-photo-item">
-        ${p.signed_url ? `<img src="${p.signed_url}" alt="Progress">` : ""}
+      ${state.progressPhotos.map(p => `<div class="progress-photo-item" data-open-photo="${escapeAttr(p.signed_url || '')}">
+        ${p.thumb_signed_url ? `<img src="${p.thumb_signed_url}" alt="Progress">` : ""}
         <span class="progress-photo-badge">${typeLabels[p.photo_type] || p.photo_type}</span>
-        <button type="button" class="progress-photo-delete" data-photo-id="${p.id}" data-photo-path="${escapeAttr(p.storage_path)}">\u2715</button>
+        <button type="button" class="progress-photo-delete" data-photo-id="${p.id}" data-photo-path="${escapeAttr(p.storage_path)}" data-thumb-path="${escapeAttr(p.thumb_path || '')}">\u2715</button>
         <span class="progress-photo-date">${p.taken_at}</span>
       </div>`).join("")}
     </div>`}
@@ -3615,8 +3736,36 @@ function bindProgressPhotosEvents(){
   }
 
   document.querySelectorAll(".progress-photo-delete").forEach(btn=>{
-    btn.addEventListener("click", ()=>{ deleteProgressPhoto(btn.dataset.photoId, btn.dataset.photoPath); });
+    btn.addEventListener("click", (e)=>{ e.stopPropagation(); deleteProgressPhoto(btn.dataset.photoId, btn.dataset.photoPath, btn.dataset.thumbPath || null); });
   });
+  bindPhotoOpenTriggers();
+}
+
+function bindPhotoOpenTriggers(){
+  document.querySelectorAll("[data-open-photo]").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const url = el.dataset.openPhoto;
+      if(url){ state.photoLightboxUrl = url; render(); }
+    });
+  });
+}
+
+// Ganzflächige Ansicht für ein einzelnes Foto (Vorher/Nachher-Kacheln, Progress-Fotos-Raster) –
+// so wird das grosse Bild nur geladen, wenn wirklich draufgetippt wird.
+function renderPhotoLightbox(){
+  return `<div class="overlay" id="photo-lightbox-overlay" style="background:rgba(10,8,5,0.88); z-index:260;">
+    <button class="modal-close" id="photo-lightbox-close" style="position:fixed; top:18px; right:18px; z-index:261; background:rgba(255,255,255,0.9);">✕</button>
+    <img src="${escapeAttr(state.photoLightboxUrl)}" alt="Foto" style="max-width:92vw; max-height:88vh; border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,0.5); object-fit:contain;">
+  </div>`;
+}
+
+function bindPhotoLightboxEvents(){
+  const overlay = document.getElementById("photo-lightbox-overlay");
+  if(!overlay) return;
+  const close = ()=>{ state.photoLightboxUrl = null; render(); };
+  overlay.addEventListener("click", (e)=>{ if(e.target.id==="photo-lightbox-overlay") close(); });
+  const closeBtn = document.getElementById("photo-lightbox-close");
+  if(closeBtn) closeBtn.addEventListener("click", close);
 }
 
 /* ---------- KÖRPERBEHANDLUNGEN ---------- */
@@ -4460,6 +4609,7 @@ function bindAppEvents(){
   if(state.autoWeekOpen) bindAutoWeekEvents();
   if(state.oracleOpen) bindOracleEvents();
   if(state.checkinOpen) bindCheckinEvents();
+  if(state.photoLightboxUrl) bindPhotoLightboxEvents();
   if(state.modalOpen) bindModalEvents();
 
   // Profil events
@@ -4502,7 +4652,7 @@ function bindAppEvents(){
   const challengeStartBtn = document.getElementById("challenge-start-btn");
   if(challengeStartBtn) challengeStartBtn.addEventListener("click", ()=>{ startChallengeNow(); });
   const challengeOpenBtn = document.getElementById("challenge-open-btn");
-  if(challengeOpenBtn) challengeOpenBtn.addEventListener("click", ()=>{ state.challengeOpen = true; render(); });
+  if(challengeOpenBtn) challengeOpenBtn.addEventListener("click", ()=>{ state.challengeOpen = true; render(); loadProgressPhotos(); });
 
   document.querySelectorAll(".time-filter-chip").forEach(chip=>{
     chip.addEventListener("click", ()=>{
