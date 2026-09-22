@@ -777,7 +777,7 @@
   .challenge-day.is-today{ border-color:var(--pine); box-shadow:0 0 0 3px rgba(201,164,92,0.14); }
   .challenge-day.is-done{ background:var(--card-bg); border-color:var(--pine); box-shadow:none; }
   .challenge-day.is-done .challenge-day-num{ color:var(--pine-dark); opacity:0.85; }
-  .challenge-day.is-rest{ background:rgba(110,124,86,0.06); }
+  .challenge-day.is-rest{ background:rgba(192,75,63,0.06); }
   .challenge-day-check{
     color:var(--pine-dark); font-size:12px; font-weight:600; line-height:1;
   }
@@ -1649,7 +1649,7 @@ const CHALLENGE_DAY_LABELS = {
 const CHALLENGE_DAY_ICONS = { training: "\ud83c\udfcb\ufe0f", walk: "\ud83d\udeb6", rest: "\ud83c\udf3f" };
 // Gedämpfte, editoriale Akzentfarbe je Tagestyp – ersetzt die großen Piktogramm-Emojis in
 // den Kacheln/Legende/Today-Card durch einen dezenten Farbpunkt, für einen erwachseneren Look.
-const CHALLENGE_TYPE_COLOR = { training: "var(--pine-dark)", walk: "var(--terracotta)", rest: "#6E7C56" };
+const CHALLENGE_TYPE_COLOR = { training: "#5E8A5A", walk: "#D9843A", rest: "#C04B3F" };
 function challengeDayLabel(type){ return CHALLENGE_DAY_LABELS[currentLang === "hu" ? "hu" : "de"][type]; }
 
 // ── NUR diese Felder für die Listenansicht laden (spart ~70% Egress) ──
