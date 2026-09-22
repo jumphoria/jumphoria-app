@@ -1037,6 +1037,37 @@ function checkinLast14Points(overrideTodayColor){
   return out;
 }
 
+// Wählt für heute (und alle Nutzer:innen gleich, ändert sich jeden Tag von selbst) ein
+// konkretes Rezept passend zur Farbe: bei Orange/Rot nur aus "Schnell"/"Meal Prep", bei Grün frei.
+function todaysColorRecipe(color){
+  const all = state.recipes || [];
+  const pool = color === 'green'
+    ? all
+    : all.filter(r => (r.tags||[]).includes('Schnell') || (r.tags||[]).includes('Meal Prep'));
+  const usablePool = pool.length > 0 ? pool : all;
+  if(usablePool.length === 0) return null;
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((now - start) / (1000*60*60*24));
+  const index = dayOfYear % usablePool.length;
+  return usablePool[index];
+}
+
+async function openRecipeDetailById(recipeId){
+  const baseRecipe = state.recipes.find(r => r.id === recipeId);
+  if(!baseRecipe) return;
+  state.detailRecipe = { ...baseRecipe, _loading: true };
+  state.detailServings = baseRecipe.servings || 1;
+  render();
+  const { data, error } = await sb.from("recipes")
+    .select("id,title,title_hu,kcal,protein,carbs,fat,tags,photo_url,servings,meal_type,ingredients,steps,ingredients_structured,steps_hu,ingredients_structured_hu")
+    .eq("id", baseRecipe.id)
+    .single();
+  if(!error && data){ state.detailRecipe = data; }
+  else { state.detailRecipe = { ...baseRecipe, _loading: false }; }
+  render();
+}
+
 const KCAL_BANDS = ["100 kcal","200 kcal","300 kcal","400 kcal"];
 const FILTER_GROUPS = [
   { labelKey: "de_ernaehrung", label: "Ern\u00e4hrung", tags: ["Vegan","Vegetarisch","Fleisch","Balanced Macros","Wenig Carbs","Wenig Fett","High Protein","Laktosefrei","Glutenfrei","IR"] },
@@ -1304,7 +1335,7 @@ async function deleteProgressPhoto(id, storagePath){
 async function loadUserLanguage(){
   if(!state.user) return;
   const { data, error } = await sb.from("user_settings")
-    .select("preferred_lang, display_name")
+    .select("preferred_lang, display_name, checkin_enabled")
     .eq("user_id", state.user.id)
     .single();
   if(!error && data){
@@ -1314,7 +1345,20 @@ async function loadUserLanguage(){
       document.documentElement.setAttribute("lang", currentLang);
     }
     if(data.display_name) state.userDisplayName = data.display_name;
+    if(data.checkin_enabled === false) state.checkinEnabled = false;
   }
+}
+
+async function setCheckinEnabled(enabled){
+  state.checkinEnabled = enabled;
+  render();
+  if(!state.user) return;
+  const { error } = await sb.from("user_settings").upsert({
+    user_id: state.user.id,
+    checkin_enabled: enabled,
+    updated_at: new Date().toISOString()
+  });
+  if(error) console.error("checkin_enabled konnte nicht gespeichert werden:", error);
 }
 
 async function saveUserDisplayName(name){
@@ -1605,6 +1649,7 @@ let state = {
   checkinStep: 0,
   checkinAnswers: { sleep: null, energy: null, mood: null },
   dayStatusHistory: [],
+  checkinEnabled: true,
   chatMessages: [],
   chatLoading: false,
   chatLastSentAt: 0,
@@ -2336,6 +2381,7 @@ async function saveDayStatus(color, answers){
 // für heute noch kein day_status-Eintrag existiert (z.B. von einem anderen Gerät).
 function maybeShowDailyCheckin(){
   try{
+    if(!state.checkinEnabled) return;
     const todayStr = new Date().toISOString().slice(0,10);
     if(localStorage.getItem("jumphoria_checkin_last") === todayStr) return;
     const alreadyLogged = (state.dayStatusHistory || []).some(r => r.log_date === todayStr);
@@ -2381,8 +2427,12 @@ function renderCheckinCard(){
     const c = CHECKIN_COPY[color];
     const label = isHu ? c.label_hu : c.label_de;
     const text = isHu ? c.text_hu : c.text_de;
-    const foodLabel = isHu ? c.food_hu : c.food_de;
+    const foodIntro = isHu ? c.food_hu : c.food_de;
     const moveLabel = isHu ? c.move_hu : c.move_de;
+
+    const suggestedRecipe = todaysColorRecipe(color);
+    const foodTitle = suggestedRecipe ? getRecipeTitle(suggestedRecipe) : (isHu ? 'Nincs elérhető recept' : 'Kein Rezept verfügbar');
+    const walkMinutes = color === 'red' ? 15 : (color === 'orange' ? 20 : 30);
 
     const points14 = checkinLast14Points(color);
     const width = 280, marginX = 12;
@@ -2404,8 +2454,11 @@ function renderCheckinCard(){
           ${dotsHtml}
         </svg>
       </div>
-      <button type="button" class="checkin-food-btn" style="width:100%; text-align:left; background:rgba(243,233,209,0.06); border:1px solid rgba(212,175,55,0.3); border-radius:14px; padding:14px 16px; margin-bottom:10px; color:#F3E9D2; font-size:14.5px; font-weight:600; cursor:pointer;">${escapeHtml(foodLabel)}</button>
-      <button type="button" class="checkin-move-btn" style="width:100%; text-align:left; background:rgba(243,233,209,0.06); border:1px solid rgba(212,175,55,0.3); border-radius:14px; padding:14px 16px; margin-bottom:4px; color:#F3E9D2; font-size:14.5px; font-weight:600; cursor:pointer;">${escapeHtml(moveLabel)}</button>
+      <button type="button" class="checkin-food-btn" ${suggestedRecipe ? `data-recipe-id="${suggestedRecipe.id}"` : "disabled"} style="width:100%; text-align:left; background:rgba(243,233,209,0.06); border:1px solid rgba(212,175,55,0.3); border-radius:14px; padding:14px 16px; margin-bottom:10px; color:#F3E9D2; font-size:14.5px; font-weight:600; cursor:pointer;">
+        <span style="display:block; font-size:10px; letter-spacing:1px; text-transform:uppercase; opacity:0.65; margin-bottom:3px;">${escapeHtml(foodIntro)}</span>
+        ${escapeHtml(foodTitle)}
+      </button>
+      <button type="button" class="checkin-move-btn" data-minutes="${walkMinutes}" style="width:100%; text-align:left; background:rgba(243,233,209,0.06); border:1px solid rgba(212,175,55,0.3); border-radius:14px; padding:14px 16px; margin-bottom:4px; color:#F3E9D2; font-size:14.5px; font-weight:600; cursor:pointer;">${escapeHtml(moveLabel)}</button>
     `;
   }
 
@@ -2443,9 +2496,20 @@ function bindCheckinEvents(){
   });
 
   const foodBtn = document.querySelector(".checkin-food-btn");
-  if(foodBtn) foodBtn.addEventListener("click", dismiss);
+  if(foodBtn && foodBtn.dataset.recipeId){
+    foodBtn.addEventListener("click", ()=>{
+      const id = foodBtn.dataset.recipeId;
+      state.checkinOpen = false;
+      openRecipeDetailById(id);
+    });
+  }
   const moveBtn = document.querySelector(".checkin-move-btn");
-  if(moveBtn) moveBtn.addEventListener("click", dismiss);
+  if(moveBtn){
+    moveBtn.addEventListener("click", ()=>{
+      state.checkinOpen = false;
+      startWalkTimer(Number(moveBtn.dataset.minutes) || 20);
+    });
+  }
 }
 
 function renderWaveCard(){
@@ -2743,6 +2807,15 @@ function renderProfil(){
         <h4 style="color:var(--terracotta); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 10px;">${isHu ? 'Testi átalakulás' : 'Körperliche Transformation'}</h4>
         <p style="font-size:13px; color:var(--ink-on-paper); opacity:0.75; margin:0 0 12px;">${isHu ? 'Dokumentáld a fejlődésed előtte/utána fotókkal — csak te látod.' : 'Dokumentiere deinen Fortschritt mit Vorher/Nachher-Fotos — nur du siehst sie.'}</p>
         <button type="button" class="btn btn-block" id="open-progress-photos-btn">\u{1F4F7} ${isHu ? 'Progressz fotók megnyitása' : 'Fortschritts-Fotos öffnen'}</button>
+      </div>
+
+      <div style="background:var(--card-bg); border-radius:16px; padding:18px; border:1px solid var(--line); margin-top:16px;">
+        <h4 style="color:var(--terracotta); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 10px;">${isHu ? 'Napi hullám check-in' : 'Tägliches Wellen-Check-in'}</h4>
+        <p style="font-size:13px; color:var(--ink-on-paper); opacity:0.75; margin:0 0 12px;">${isHu ? 'Belépéskor naponta egyszer megkérdezzük az alvásod, energiád és hangulatod — ebből lesz egy zöld/narancs/piros nap, konkrét recept- és mozgás-ajánlással.' : 'Beim Öffnen fragen wir einmal täglich Schlaf, Energie und Stimmung ab — daraus wird ein grüner/oranger/roter Tag mit konkreter Rezept- und Bewegungs-Empfehlung.'}</p>
+        <div style="display:flex; gap:10px;">
+          <button type="button" class="checkin-setting-pick ${state.checkinEnabled ? 'active' : ''}" data-enabled="true" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${state.checkinEnabled ? 'var(--pine)' : '#fff'}; color:${state.checkinEnabled ? '#fff' : 'var(--input-ink)'}; font-weight:600; cursor:pointer;">${isHu ? 'Bekapcsolva' : 'Eingeschaltet'}</button>
+          <button type="button" class="checkin-setting-pick ${!state.checkinEnabled ? 'active' : ''}" data-enabled="false" style="flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:${!state.checkinEnabled ? 'var(--pine)' : '#fff'}; color:${!state.checkinEnabled ? '#fff' : 'var(--input-ink)'}; font-weight:600; cursor:pointer;">${isHu ? 'Kikapcsolva' : 'Ausgeschaltet'}</button>
+        </div>
       </div>
     </div>
   `;
@@ -4390,6 +4463,9 @@ function bindAppEvents(){
     state.progressPhotosOpen = true;
     render();
     loadProgressPhotos();
+  });
+  document.querySelectorAll(".checkin-setting-pick").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ setCheckinEnabled(btn.dataset.enabled === "true"); });
   });
   if(state.walkTimer && state.walkTimer.open) bindWalkTimerEvents();
   if(state.challengeOpen) bindChallengePopupEvents();
