@@ -996,7 +996,7 @@ const CHECKIN_COPY = {
   }
 };
 
-const CHECKIN_COLOR_HEX = { green:'#6E7C56', orange:'#B4703F', red:'#A85C42', none:'#D8D2C4' };
+const CHECKIN_COLOR_HEX = { green:'#6E7C56', orange:'#C9863C', red:'#9B3F2E', none:'#D8D2C4' };
 const CHECKIN_COLOR_Y   = { green: 22, orange: 46, red: 70, none: 46 };
 
 function checkinComputeColor(a){
@@ -2440,7 +2440,7 @@ function renderCheckinCard(){
     const pts = points14.map((st, i) => ({ x: marginX + i*stepX, y: CHECKIN_COLOR_Y[st] || 46, fill: CHECKIN_COLOR_HEX[st] || '#8C8577' }));
     const wavePath = smoothWavePath(pts);
     const dotsHtml = pts.map(p => `<circle cx="${p.x}" cy="${p.y}" r="4.5" fill="${p.fill}" stroke="#171310" stroke-width="1.5"></circle>`).join('');
-    const resultBg = color === 'green' ? 'rgba(138,155,110,0.16)' : (color === 'orange' ? 'rgba(212,150,102,0.16)' : 'rgba(196,110,80,0.16)');
+    const resultBg = color === 'green' ? 'rgba(138,155,110,0.16)' : (color === 'orange' ? 'rgba(201,134,60,0.16)' : 'rgba(155,63,46,0.16)');
 
     inner = `
       <div style="background:${resultBg}; border-radius:16px; padding:22px 18px; margin-bottom:16px;">
@@ -2532,8 +2532,8 @@ function renderWaveCard(){
     </svg>
     <div style="display:flex; gap:14px; margin-top:10px; font-size:11px; color:var(--ink-soft,#8C8577);">
       <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:#6E7C56;display:inline-block;"></span>${isHu ? 'Zöld' : 'Grün'}</span>
-      <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:#B4703F;display:inline-block;"></span>${isHu ? 'Narancs' : 'Orange'}</span>
-      <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:#A85C42;display:inline-block;"></span>${isHu ? 'Piros' : 'Rot'}</span>
+      <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:#C9863C;display:inline-block;"></span>${isHu ? 'Narancs' : 'Orange'}</span>
+      <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:#9B3F2E;display:inline-block;"></span>${isHu ? 'Piros' : 'Rot'}</span>
     </div>
   </div>`;
 }
