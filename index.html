@@ -2525,7 +2525,8 @@ function renderWaveCard(){
   const dotsHtml = pts.map(p => `<circle cx="${p.x}" cy="${p.y}" r="5" fill="${p.fill}" stroke="var(--card-bg,#F7F0E3)" stroke-width="2"></circle>`).join('');
 
   return `<div style="background:var(--card-bg, #F7F0E3); border-radius:16px; padding:18px 16px; margin-bottom:14px;">
-    <div style="font-family:Georgia,serif; font-size:10.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--pine-dark); margin-bottom:10px;">${isHu ? 'Az utolsó 14 nap' : 'Die letzten 14 Tage'}</div>
+    <div style="font-family:Georgia,serif; font-size:16px; color:var(--pine-dark); margin-bottom:3px;">${isHu ? 'A hullámod' : 'Deine Welle'}</div>
+    <div style="font-size:12px; color:var(--ink-soft,#8C8577); margin-bottom:14px; line-height:1.4;">${isHu ? 'Nem minden nap egyforma — az elmúlt 14 nap mintázata.' : 'Nicht jeder Tag ist gleich – das Muster deiner letzten 14 Tage.'}</div>
     <svg viewBox="0 0 300 84" width="100%" height="70" style="display:block;">
       <path d="${wavePath}" fill="none" stroke="var(--pine,#C9A45C)" stroke-width="2.5" stroke-linecap="round"></path>
       ${dotsHtml}
