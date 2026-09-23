@@ -1213,7 +1213,10 @@ const QUICK_SIDES = [
   { key: "vollkornbrot", name_de: "Vollkornbrot",   name_hu: "Teljes kiőrlésű kenyér",  kcal: 250, protein: 9,  carbs: 41, fat: 3.5 },
   { key: "wrap",     name_de: "Wrap",               name_hu: "Tortilla wrap",          kcal: 310, protein: 8,  carbs: 50, fat: 7 },
   { key: "wrap_vollkorn", name_de: "Wrap (Vollkorn)", name_hu: "Tortilla wrap (teljes kiőrlésű)", kcal: 290, protein: 9,  carbs: 44, fat: 7.5 },
-  { key: "zsemle",   name_de: "Brötchen (Weizen)",  name_hu: "Zsemle (búza)",          kcal: 275, protein: 9,  carbs: 55, fat: 1.5 }
+  { key: "zsemle",   name_de: "Brötchen (Weizen)",  name_hu: "Zsemle (búza)",          kcal: 275, protein: 9,  carbs: 55, fat: 1.5 },
+  { key: "zsemle_vollkorn", name_de: "Brötchen (Vollkorn)", name_hu: "Zsemle (teljes kiőrlésű)", kcal: 260, protein: 9,   carbs: 46, fat: 3 },
+  { key: "zsemle_cottage", name_de: "Cottage-Cheese-Brötchen (ohne Belag)", name_hu: "Cottage cheese zsemle (feltét nélkül)", kcal: 145, protein: 9.4, carbs: 17, fat: 3.6 },
+  { key: "zsemle_linsen", name_de: "Linsen-Brötchen (ohne Belag)", name_hu: "Lencse zsemle (feltét nélkül)", kcal: 380, protein: 22,  carbs: 46, fat: 9 }
 ];
 function quickSideName(side){ return currentLang === "hu" ? side.name_hu : side.name_de; }
 // Gibt einen Text mit dem geschätzten gekochten Gewicht zurück, falls ein Kochfaktor vorhanden ist
