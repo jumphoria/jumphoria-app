@@ -3593,20 +3593,6 @@ function renderRise(){
     <div style="max-width:520px; margin:0 auto;">
       ${renderMythCard()}
       ${renderChallengeTab()}
-      <div style="background:var(--card-bg); border-radius:16px; padding:18px; border:1px solid var(--line); margin-bottom:18px;">
-        <h4 style="color:var(--terracotta); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 12px;">${isHu ? 'Edzés előtt és után' : 'Vor & nach dem Training'}</h4>
-        <div style="font-size:14px; color:var(--ink-on-paper); line-height:1.6;">
-          <div style="margin-bottom:12px;">
-            <div>⚡ <strong>${isHu ? 'Edzés előtt' : 'Vorher'}</strong> <span style="opacity:0.6; font-size:12px;">${isHu ? '(30-60 perccel korábban)' : '(30-60 Min vorher)'}</span></div>
-            <div style="opacity:0.85; margin-top:3px;">${isHu ? 'Könnyen emészthető, inkább szénhidrátban gazdag, kevés zsírral — pl. banán, zabkása, egy pirítós mézzel, vagy kevés joghurt gyümölccsel. Ne edd tele magad, csak töltsd fel az üzemanyagot.' : 'Leicht verdaulich, eher kohlenhydratreich, wenig Fett — z. B. eine Banane, Haferbrei, ein Toast mit Honig oder etwas Joghurt mit Obst. Nicht vollstopfen, nur auftanken.'}</div>
-          </div>
-          <div>
-            <div>\u{1F4AA} <strong>${isHu ? 'Edzés után' : 'Danach'}</strong> <span style="opacity:0.6; font-size:12px;">${isHu ? '(kb. 60 percen belül)' : '(innerhalb von ca. 60 Min)'}</span></div>
-            <div style="opacity:0.85; margin-top:3px;">${isHu ? 'Fehérje + szénhidrát a regenerációhoz — pl. túró vagy sajtkrém gyümölccsel, csirke rizzsel, vagy egy tojásos szendvics. Ha nincs rögtön étvágyad, nem gond, a következő rendes étkezés is teljesen jó.' : 'Eiweiß + Kohlenhydrate zur Regeneration — z. B. Topfen oder Hüttenkäse mit Obst, Hähnchen mit Reis, oder ein Ei-Sandwich. Wenn du direkt danach keinen Hunger hast, ist das kein Problem — die nächste normale Mahlzeit reicht völlig.'}</div>
-          </div>
-        </div>
-        <button type="button" class="btn btn-block" id="pw-recipes-btn" style="background:var(--pine); margin-top:14px;">\u{1F37D}️ ${isHu ? 'Recept-ötletek megnézése' : 'Rezept-Ideen ansehen'}</button>
-      </div>
       <div class="training-intro">
         <h3>${isHu ? 'Legújabb edzések' : 'Neueste Workouts'}</h3>
         <p>${isHu ? 'Csúsztasd oldalra, és nézd meg az összes edzésedet.' : 'Wisch zur Seite, um alle deine Workouts zu sehen.'}</p>
