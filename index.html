@@ -2032,7 +2032,7 @@ function renderFamilyMealHint(){
   return `<div style="background:var(--card-bg); border:1px solid var(--line); border-radius:16px; padding:16px 18px; margin-bottom:14px; position:relative;">
     <button type="button" id="family-hint-close" style="position:absolute; top:10px; right:12px; background:none; border:none; color:var(--ink-on-paper); opacity:0.5; font-size:15px; cursor:pointer; padding:2px;">\u2715</button>
     <h4 style="color:var(--pine-dark); font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 8px; padding-right:20px;">${isHu ? 'Nem kell külön diétásan főznöd' : 'Kein separates Diät-Essen nötig'}</h4>
-    <p style="font-size:13.5px; color:var(--ink-on-paper); opacity:0.85; line-height:1.55; margin:0;">${isHu ? 'Főzz a családnak, az app pedig kiszámolja a te adagod grammra pontos mennyiségét – csak kiméred, dobozba teszed, és kész.' :'Du musst dir nicht extra und diätisch kochen. Koch dein Rezept einfach in der Menge, die deine ganze Familie braucht — die Portionenzahl im Rezept oben einfach hochstellen. Beim Eintragen für dich gibst du nur deine eigene Portion an, die App rechnet automatisch aus, wie viele Gramm das sind. Kein Extra-Kochen — nur abwiegen und in die Dose.'}</p>
+    <p style="font-size:13.5px; color:var(--ink-on-paper); opacity:0.85; line-height:1.55; margin:0;">${isHu ? 'Főzz a családnak, az app pedig kiszámolja a te adagod grammra pontos mennyiségét – csak kiméred, dobozba teszed, és kész.' : 'Koche für die ganze Familie – die App berechnet deine Portionsgröße in Gramm. Dann einfach deine Portion vom fertigen Essen abwiegen und fertig.'}</p>
   </div>`;
 }
 
@@ -3388,7 +3388,8 @@ function renderChallengeTab(){
       <span><span class="challenge-legend-dot" style="background:${CHALLENGE_TYPE_COLOR.walk};"></span>${challengeDayLabel('walk')}</span>
       <span><span class="challenge-legend-dot" style="background:${CHALLENGE_TYPE_COLOR.rest};"></span>${challengeDayLabel('rest')}</span>
     </div>
-    <p style="color:var(--paper); opacity:0.6; font-size:12px; margin:0;">${isHu ? 'Minden nap számít — kövesd a ritmust, és 21 nap múlva már máshogy fogod érezni magad.' : 'Jeder Tag zählt — bleib im Rhythmus, und in 21 Tagen fühlst du dich schon anders.'}</p>
+    <p style="color:var(--paper); opacity:0.6; font-size:12px; margin:0 0 14px;">${isHu ? 'Minden nap számít — kövesd a ritmust, és 21 nap múlva már máshogy fogod érezni magad.' : 'Jeder Tag zählt — bleib im Rhythmus, und in 21 Tagen fühlst du dich schon anders.'}</p>
+    <button type="button" class="btn-outline challenge-restart-btn" id="challenge-restart-btn" style="width:100%;">${isHu ? '↻ Challenge újraindítása elölről' : '↻ Challenge von vorne beginnen'}</button>
   </div>`;
 }
 
@@ -3461,6 +3462,7 @@ function renderChallengePopup(){
         <span><span class="challenge-legend-dot" style="background:${CHALLENGE_TYPE_COLOR.walk};"></span>${challengeDayLabel('walk')}</span>
         <span><span class="challenge-legend-dot" style="background:${CHALLENGE_TYPE_COLOR.rest};"></span>${challengeDayLabel('rest')}</span>
       </div>
+      <button type="button" class="btn-outline challenge-restart-btn" id="challenge-restart-btn-popup" style="width:100%; margin-top:10px;">${isHu ? '↻ Challenge újraindítása elölről' : '↻ Challenge von vorne beginnen'}</button>
     </div>
 
     <div class="challenge-photos-card">
@@ -4783,6 +4785,14 @@ function bindAppEvents(){
   if(challengeStartBtn) challengeStartBtn.addEventListener("click", ()=>{ startChallengeNow(); });
   const challengeOpenBtn = document.getElementById("challenge-open-btn");
   if(challengeOpenBtn) challengeOpenBtn.addEventListener("click", ()=>{ state.challengeOpen = true; render(); loadProgressPhotos(); });
+
+  document.querySelectorAll(".challenge-restart-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const isHu = currentLang === 'hu';
+      const msg = isHu ? 'Biztosan újraindítod a Challenge-t az elejétől? Az eddigi haladásod törlődik.' : 'Möchtest du die Challenge wirklich von vorne beginnen? Dein bisheriger Fortschritt wird gelöscht.';
+      if(window.confirm(msg)) startChallengeNow();
+    });
+  });
 
   document.querySelectorAll(".time-filter-chip").forEach(chip=>{
     chip.addEventListener("click", ()=>{
