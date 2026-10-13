@@ -2163,7 +2163,7 @@ function renderHomeTab(){
         ${recipe.photo_url ? `<img class="today-entry-thumb" src="${escapeAttr(recipe.photo_url)}" alt="">` : ""}
         <div class="today-entry-info today-entry-clickable" data-recipe-id="${recipe.id}">
           <strong>${escapeHtml(getRecipeTitle(recipe))}</strong>
-          <span>${e.servings_logged} Portion${e.servings_logged==1?'':'en'}${kcalForEntry!==null?` \u00b7 ${kcalForEntry} kcal${isBatchEntry?'/Portion':''}`:''}</span>
+          <span>${e.servings_logged} Portion${e.servings_logged==1?'':'en'}${kcalForEntry!==null?` \u00b7 ${kcalForEntry} kcal`:''}</span>
           ${(recipe.tags||[]).length ? `<div class="card-tags" style="margin-top:3px;">${(recipe.tags||[]).slice(0,3).map(tg=>`<span class="tag-badge ${tagColorClass(tg)}">${trTag(tg)}</span>`).join("")}</div>` : ""}
         </div>
         <div class="today-entry-controls">
@@ -2373,7 +2373,7 @@ function renderWeek(){
                 ${recipe.photo_url ? `<img class="today-entry-thumb" src="${escapeAttr(recipe.photo_url)}" alt="">` : ""}
                 <div class="today-entry-info today-entry-clickable" data-recipe-id="${recipe.id}">
                   <strong>${escapeHtml(getRecipeTitle(recipe))}</strong>
-                  <span>${e.servings_logged} Portion${e.servings_logged==1?'':'en'}${kcalForEntry!==null?` \u00b7 ${kcalForEntry} kcal${isBatchEntry?'/Portion':''}`:''}</span>
+                  <span>${e.servings_logged} Portion${e.servings_logged==1?'':'en'}${kcalForEntry!==null?` \u00b7 ${kcalForEntry} kcal`:''}</span>
                 </div>
                 <div class="today-entry-controls">
                   ${isToday ? `<button type="button" class="today-eaten-toggle ${e.eaten?'is-eaten':''}" data-log-id="${e.id}" data-eaten="${e.eaten}" title="${currentLang==='hu' ? 'Megettem' : 'Gegessen'}">\u2713</button>` : ""}
@@ -4987,6 +4987,14 @@ function bindAutoWeekEvents(){
   document.querySelectorAll("[data-kcal]").forEach(btn=>{
     btn.addEventListener("click", async ()=>{
       const targetKcal = parseInt(btn.dataset.kcal);
+      // Schutz: Ein bereits erstellter Plan wird nie versehentlich ersetzt.
+      const existingPlanned = (state.weekLog || []).filter(e => !e.eaten);
+      if(existingPlanned.length > 0){
+        const okReplace = confirm(currentLang==='hu'
+          ? "Már van megtervezett heted. Ha újat generálsz, az eddigi (még meg nem evett) terv lecserélődik, és más receptek jönnek. Biztosan újat szeretnél?"
+          : "Du hast diese Woche schon einen Plan. Wenn du einen neuen erstellst, wird der bisherige (noch nicht gegessene) Plan ersetzt und es kommen andere Rezepte. Wirklich neu erstellen?");
+        if(!okReplace) return;
+      }
       state.autoWeekOpen = false;
       btn.disabled = true;
 
@@ -5116,15 +5124,42 @@ function bindAutoWeekEvents(){
 
         // Snack für diesen Block bestimmen, um die Lücke zum Tagesziel zu schließen
         let blockKcalOhneSnack = 0;
-        const freuhServings = frueh ? computeServingsForTarget(frueh, kcalFrueh) : 0;
-        const mittagServings = mittag ? computeServingsForTarget(mittag, kcalMittag) : 0;
-        const abendServings = abend ? computeServingsForTarget(abend, kcalAbend) : 0;
+        let freuhServings = frueh ? computeServingsForTarget(frueh, kcalFrueh) : 0;
+        let mittagServings = mittag ? computeServingsForTarget(mittag, kcalMittag) : 0;
+        let abendServings = abend ? computeServingsForTarget(abend, kcalAbend) : 0;
         if(frueh) blockKcalOhneSnack += (frueh.kcal / (frueh.servings || 1)) * freuhServings;
         if(mittag) blockKcalOhneSnack += (mittag.kcal / (mittag.servings || 1)) * mittagServings;
         if(abend) blockKcalOhneSnack += (abend.kcal / (abend.servings || 1)) * abendServings;
         const restKcal = targetKcal - blockKcalOhneSnack;
         const snack = (restKcal >= 50 && snackPool.length > 0) ? pickClosest(snackPool, restKcal, fatSnack, usedSnack) : null;
-        const snackServings = snack ? computeServingsForTarget(snack, restKcal) : 0;
+        let snackServings = snack ? computeServingsForTarget(snack, restKcal) : 0;
+
+        // Feinabstimmung: Die Tagessumme soll das gewählte Kalorienziel wirklich treffen.
+        // Rundung auf halbe Portionen und die Obergrenze pro Mahlzeit lassen sonst Lücken (z.B. 2700 -> 2300 kcal).
+        (function calibrateDay(){
+          const parts = [
+            { r: frueh, get: ()=>freuhServings, set: v=>{ freuhServings = v; } },
+            { r: mittag, get: ()=>mittagServings, set: v=>{ mittagServings = v; } },
+            { r: abend, get: ()=>abendServings, set: v=>{ abendServings = v; } },
+            { r: snack, get: ()=>snackServings, set: v=>{ snackServings = v; } }
+          ].filter(x => x.r);
+          const ps = x => x.r.kcal / (x.r.servings || 1);
+          const total = () => parts.reduce((sum, x) => sum + ps(x) * x.get(), 0);
+          for(let it = 0; it < 24; it++){
+            const diff = targetKcal - total();
+            if(Math.abs(diff) <= targetKcal * 0.03) break;
+            let best = null, bestErr = Math.abs(diff);
+            parts.forEach(x => {
+              const step = diff > 0 ? 0.5 : -0.5;
+              const nv = x.get() + step;
+              if(nv < 0.5 || nv > 6) return;
+              const err = Math.abs(diff - step * ps(x));
+              if(err < bestErr){ bestErr = err; best = { x, nv }; }
+            });
+            if(!best) break;
+            best.x.set(best.nv);
+          }
+        })();
 
         blockDates.forEach(date => {
           if(frueh) rows.push({ user_id: state.user.id, recipe_id: frueh.id, log_date: date, servings_logged: freuhServings });
@@ -5159,7 +5194,16 @@ function bindSwapEvents(){
       const { logId } = state.swapTarget;
       const newRecipe = state.recipes.find(r => r.id === newRecipeId);
       try{
-        const { error } = await sb.from("daily_log").update({ recipe_id: newRecipeId, servings_logged: 1 }).eq("id", logId);
+        // Beim Tauschen die Kalorien des Platzes beibehalten (statt immer auf 1 Portion zu fallen).
+        let newServings = 1;
+        const oldEntry = (state.weekLog || []).find(e => e.id === logId);
+        const oldRecipe = oldEntry ? state.recipes.find(r => r.id === oldEntry.recipe_id) : null;
+        if(oldEntry && oldRecipe && oldRecipe.kcal != null && newRecipe && newRecipe.kcal != null){
+          const oldKcal = oldEntry.servings_logged * oldRecipe.kcal / (oldRecipe.servings || 1);
+          const newPs = newRecipe.kcal / (newRecipe.servings || 1);
+          if(newPs > 0) newServings = Math.max(0.5, Math.min(6, Math.round(oldKcal / newPs * 2) / 2));
+        }
+        const { error } = await sb.from("daily_log").update({ recipe_id: newRecipeId, servings_logged: newServings }).eq("id", logId);
         if(error) throw error;
         state.swapTarget = null;
         await loadWeekLog();
