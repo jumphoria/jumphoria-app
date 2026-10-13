@@ -32,13 +32,13 @@
     --card-bg:#F7F0E3;
     --input-ink:#241F17;
     --ink-soft:#B8AE9D;
-    --pine:#C9A45C;
-    --pine-dark:#A9823D;
-    --pine-light:#D8B977;
+    --pine:#D9C5A0;
+    --pine-dark:#8E7646;
+    --pine-light:#E8D9BC;
     --terracotta:#CFA6A0;
     --terracotta-soft:rgba(207,166,160,0.24);
-    --line:rgba(201,164,92,0.30);
-    --shadow: 0 10px 26px rgba(0,0,0,0.55), 0 1px 3px rgba(201,164,92,0.06);
+    --line:rgba(217,197,160,0.30);
+    --shadow: 0 10px 26px rgba(0,0,0,0.55), 0 1px 3px rgba(217,197,160,0.06);
     /* Auth/Login-Fenster: eigenes Schwarz-Gold-Thema, passend zur neuen Webador-Startseite */
     --auth-bg:#15130F;
     --auth-bg-soft:#1E1B16;
@@ -54,8 +54,8 @@
     overflow-x:hidden;
     width:100%;
     background:
-      radial-gradient(620px 480px at calc(100% - 60px) -60px, rgba(201,164,92,0.22), transparent 62%),
-      radial-gradient(1000px 520px at 50% -80px, rgba(201,164,92,0.10), transparent 65%),
+      radial-gradient(620px 480px at calc(100% - 60px) -60px, rgba(217,197,160,0.22), transparent 62%),
+      radial-gradient(1000px 520px at 50% -80px, rgba(217,197,160,0.10), transparent 65%),
       linear-gradient(180deg, #15130F 0px, #15130F 220px, #181611 420px, #1E1B16 640px, #1E1B16 100%);
     background-repeat:no-repeat;
     color:var(--ink);
@@ -491,7 +491,7 @@
   .tag-badge.tag-gray{ background:rgba(140,133,119,0.20); color:#7A7365; }
   .tag-badge.tag-pink{ background:var(--terracotta-soft); color:var(--terracotta); }
   .tag-badge.tag-peach{ background:rgba(212,150,102,0.22); color:#B4703F; }
-  .tag-badge.tag-sand{ background:rgba(201,164,92,0.20); color:var(--pine-dark); }
+  .tag-badge.tag-sand{ background:rgba(217,197,160,0.20); color:var(--pine-dark); }
   .empty-state{
     text-align:center; padding:60px 20px; color:var(--ink-soft);
   }
@@ -500,12 +500,12 @@
   /* ====== FAB ====== */
   .fab{
     position:fixed; bottom:24px; right:24px; width:46px; height:46px;
-    border-radius:50%; background:linear-gradient(135deg, var(--pine) 0%, #EAD9A8 100%); color:var(--input-ink);
+    border-radius:50%; background:linear-gradient(135deg, var(--pine) 0%, #E8D9BC 100%); color:var(--input-ink);
     font-size:22px; font-weight:700; border:none; box-shadow:var(--shadow); cursor:pointer;
     display:flex; align-items:center; justify-content:center; line-height:0;
     z-index:40;
   }
-  .fab:hover{ background:linear-gradient(135deg, var(--pine-dark) 0%, #EAD9A8 100%); }
+  .fab:hover{ background:linear-gradient(135deg, var(--pine-dark) 0%, #E8D9BC 100%); }
 
   /* ====== MODAL ====== */
   .overlay{
@@ -635,7 +635,7 @@
   .today-macro-compact-item:not(:last-child){ border-right:1px solid var(--line); }
   .today-macro-compact-item strong{ font-size:14px; color:var(--ink-on-paper); font-family:Georgia,serif; }
   .today-macro-compact-item span{ font-size:9.5px; color:var(--ink-on-paper); opacity:0.6; text-transform:uppercase; letter-spacing:.02em; }
-  .today-macro-compact-track{ width:100%; height:4px; border-radius:4px; background:rgba(201,164,92,0.18); overflow:hidden; margin-top:4px; }
+  .today-macro-compact-track{ width:100%; height:4px; border-radius:4px; background:rgba(217,197,160,0.18); overflow:hidden; margin-top:4px; }
   .today-macro-compact-fill{ height:100%; border-radius:4px; background:var(--pine); transition:width .3s ease; }
   .today-macro-compact-fill.is-over{ background:var(--terracotta); }
   .today-macro-fill.is-over{ background:var(--terracotta); }
@@ -674,7 +674,7 @@
   }
   .chat-wrap{ max-width:520px; margin:0 auto; display:flex; flex-direction:column; height:calc(100vh - 230px); min-height:360px; }
   .chat-hint{
-    font-size:12px; color:var(--paper); opacity:0.75; background:rgba(201,164,92,0.14);
+    font-size:12px; color:var(--paper); opacity:0.75; background:rgba(217,197,160,0.14);
     border:1px solid var(--line); border-radius:10px; padding:9px 12px; margin-bottom:10px; text-align:center;
   }
   .chat-messages{
@@ -746,7 +746,7 @@
   .myth-row:last-child{ margin-bottom:0; }
   .myth-icon{ flex-shrink:0; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; margin-top:1px; }
   .myth-icon.is-false{ background:var(--terracotta-soft); color:var(--terracotta); }
-  .myth-icon.is-true{ background:rgba(201,164,92,0.20); color:var(--pine-dark); }
+  .myth-icon.is-true{ background:rgba(217,197,160,0.20); color:var(--pine-dark); }
   .myth-text{ font-size:14px; line-height:1.55; color:var(--ink-on-paper); }
   .myth-text strong{ color:var(--ink-on-paper); }
 
@@ -806,7 +806,7 @@
   .challenge-day:active{ transform:scale(0.94); }
   .challenge-day-num{ font-family:Georgia,serif; font-size:12.5px; font-weight:500; color:var(--ink-on-paper); opacity:0.6; }
   .challenge-day-dot{ width:5px; height:5px; border-radius:50%; display:block; opacity:0.85; }
-  .challenge-day.is-today{ border-color:var(--pine); box-shadow:0 0 0 3px rgba(201,164,92,0.14); }
+  .challenge-day.is-today{ border-color:var(--pine); box-shadow:0 0 0 3px rgba(217,197,160,0.14); }
   .challenge-day.is-done{ background:var(--card-bg); border-color:var(--pine); box-shadow:none; }
   .challenge-day.is-done .challenge-day-num{ color:var(--pine-dark); opacity:0.85; }
   .challenge-day.is-rest{ background:rgba(192,75,63,0.06); }
@@ -844,7 +844,7 @@
   }
   .challenge-photo-tile.is-empty{
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
-    border:1.5px dashed var(--line); background:rgba(201,164,92,0.06);
+    border:1.5px dashed var(--line); background:rgba(217,197,160,0.06);
   }
   .challenge-photo-tile.is-empty .challenge-photo-tile-label{
     position:static; background:none; color:var(--ink-on-paper); opacity:0.6; font-weight:600; text-transform:none; letter-spacing:normal;
@@ -2519,18 +2519,18 @@ function renderOracleCard(){
         box-shadow:0 20px 60px rgba(0,0,0,0.5), inset 0 0 40px rgba(212,175,55,0.05);
         text-align:center; position:relative;
       ">
-      <div style="font-size:10.5px; letter-spacing:2.5px; color:#D4AF37; opacity:0.85; margin-bottom:18px; font-weight:700;">${eyebrow}</div>
-      <div style="width:34px; height:1px; background:linear-gradient(90deg, transparent, #D4AF37, transparent); margin:0 auto 22px;"></div>
+      <div style="font-size:10.5px; letter-spacing:2.5px; color:#D9C5A0; opacity:0.85; margin-bottom:18px; font-weight:700;">${eyebrow}</div>
+      <div style="width:34px; height:1px; background:linear-gradient(90deg, transparent, #D9C5A0, transparent); margin:0 auto 22px;"></div>
       <p style="color:#F3E9D2; font-size:18px; line-height:1.5; margin:0 0 ${uebung ? '22px' : '26px'}; font-weight:600;">${escapeHtml(spruch)}</p>
       ${uebung ? `
         <div style="border-top:1px solid rgba(212,175,55,0.25); padding-top:16px; margin-bottom:26px;">
-          <div style="font-size:10px; letter-spacing:1.8px; color:#D4AF37; opacity:0.75; margin-bottom:8px; font-weight:700;">${uebungLabel}</div>
+          <div style="font-size:10px; letter-spacing:1.8px; color:#D9C5A0; opacity:0.75; margin-bottom:8px; font-weight:700;">${uebungLabel}</div>
           <p style="color:#E9DFC8; opacity:0.9; font-size:14px; line-height:1.4; margin:0;">${escapeHtml(uebung)}</p>
         </div>
       ` : ""}
       <button type="button" id="oracle-close" style="
-          width:100%; padding:13px; border-radius:12px; border:1px solid #D4AF37;
-          background:transparent; color:#D4AF37; font-size:14px; font-weight:700;
+          width:100%; padding:13px; border-radius:12px; border:1px solid #D9C5A0;
+          background:transparent; color:#D9C5A0; font-size:14px; font-weight:700;
           font-family:inherit; cursor:pointer; letter-spacing:0.3px;
         ">${closeLabel}</button>
     </div>
@@ -2625,10 +2625,10 @@ function renderCheckinCard(){
   if(isQuestion){
     const s = CHECKIN_STEPS[step];
     const title = isHu ? s.title_hu : s.title_de;
-    const progressDots = [0,1,2].map(i => `<span style="width:8px;height:8px;border-radius:50%;display:inline-block;margin:0 4px;background:${i<=step ? '#D4AF37' : 'rgba(212,175,55,0.3)'};"></span>`).join('');
+    const progressDots = [0,1,2].map(i => `<span style="width:8px;height:8px;border-radius:50%;display:inline-block;margin:0 4px;background:${i<=step ? '#D9C5A0' : 'rgba(212,175,55,0.3)'};"></span>`).join('');
     const optionsHtml = s.options.map(o => {
       const label = isHu ? o.label_hu : o.label_de;
-      const dots = [1,2,3].map(n => `<span style="width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:3px;background:${n<=o.value+1 ? '#D4AF37' : 'rgba(212,175,55,0.3)'};"></span>`).join('');
+      const dots = [1,2,3].map(n => `<span style="width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:3px;background:${n<=o.value+1 ? '#D9C5A0' : 'rgba(212,175,55,0.3)'};"></span>`).join('');
       return `<button type="button" class="checkin-option" data-key="${s.key}" data-value="${o.value}" style="
           display:flex; align-items:center; gap:12px; width:100%; text-align:left;
           background:rgba(243,233,209,0.06); border:1px solid rgba(212,175,55,0.3);
@@ -2670,9 +2670,9 @@ function renderCheckinCard(){
         <p style="color:#F3E9D2; font-size:14.5px; line-height:1.55; margin:0; text-align:center;">${escapeHtml(text)}</p>
       </div>
       <div style="background:rgba(243,233,209,0.06); border:1px solid rgba(212,175,55,0.2); border-radius:16px; padding:16px; margin-bottom:16px;">
-        <div style="font-size:10px; letter-spacing:1.5px; color:#D4AF37; opacity:0.8; text-transform:uppercase; margin-bottom:10px;">${isHu ? 'Az utolsó 14 nap' : 'Die letzten 14 Tage'}</div>
+        <div style="font-size:10px; letter-spacing:1.5px; color:#D9C5A0; opacity:0.8; text-transform:uppercase; margin-bottom:10px;">${isHu ? 'Az utolsó 14 nap' : 'Die letzten 14 Tage'}</div>
         <svg viewBox="0 0 280 84" width="100%" height="70" style="display:block;">
-          <path d="${wavePath}" fill="none" stroke="#D4AF37" stroke-width="2.5" stroke-linecap="round"></path>
+          <path d="${wavePath}" fill="none" stroke="#D9C5A0" stroke-width="2.5" stroke-linecap="round"></path>
           ${dotsHtml}
         </svg>
       </div>
@@ -2804,7 +2804,7 @@ function renderWaveCard(){
     <div style="font-family:Georgia,serif; font-size:16px; color:var(--pine-dark); margin-bottom:3px;">${isHu ? 'Fel és le' : 'Auf und Ab'}</div>
     <div style="font-size:12px; color:var(--ink-soft,#8C8577); margin-bottom:8px; line-height:1.4;">${isHu ? 'Nem minden nap egyforma — az elmúlt 14 nap mintázata.' : 'Nicht jeder Tag ist gleich – das Muster deiner letzten 14 Tage.'}</div>
     <svg viewBox="0 0 300 ${chartH}" width="100%" height="${chartH}" style="display:block;">
-      <path d="${wavePath}" fill="none" stroke="var(--pine,#C9A45C)" stroke-width="2.5" stroke-linecap="round"></path>
+      <path d="${wavePath}" fill="none" stroke="var(--pine,#D9C5A0)" stroke-width="2.5" stroke-linecap="round"></path>
       ${dotsHtml}
     </svg>
     <div style="display:flex; gap:14px; margin-top:6px; font-size:11px; color:var(--ink-soft,#8C8577);">
